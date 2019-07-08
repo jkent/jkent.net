@@ -4,6 +4,7 @@ export FLASK_ENV=development
 if [ ! -d .venv ]; then
   pipenv install
 fi
+mkdir -p instance
 if [ ! -f instance/jkent_net.db ]; then
   pipenv run flask init-db
   pipenv run flask add-user --password password --is-admin jeff@jkent.net
