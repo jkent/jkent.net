@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+cd "$(dirname "$(realpath "$0")")/.."
+
+args="-b 0.0.0.0:18080 -k gevent"
+
+if [ "${FLASK_ENV}" = "development" ]; then
+	export OAUTHLIB_RELAX_TOKEN_SCOPE="1"
+	export OAUTHLIB_INSECURE_TRANSPORT="1"
+	args="$args --reload"
+fi
+
+exec gunicorn $args wsgi:app

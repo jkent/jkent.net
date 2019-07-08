@@ -1,0 +1,13 @@
+{%- extends 'base.html' %}
+{%- block title %}Home{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', filename='me.jpg') }}"><p>Hi there, I'm Jeff
+Kent!  I am a digital wizard.  No really, I do very cool things with both
+hardware and software.  I contribute as a developer to a handful of open source
+projects, design and build things, and just geek out. You can find me
+<a href="https://github.com/jkent/">on GitHub</a>,
+<a href="https://www.facebook.com/jeff.kent.9638">on Facebook</a> or even
+<a href="https://kiwiirc.com/nextclient/#irc://irc.jkent.net:+6697/#UnderGND"
+>on IRC</a>.</p>
+{% endblock %}

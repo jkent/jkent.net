@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}{% endblock %} - jkent.net</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+
+<div id="header">
+<div class="float">
+<div class="menu">
+{%- for item in current_menu.children[1:] %}
+  <a href="{{ item.url }}">{{ item.text }}</a>
+{%- endfor %}
+{%- if g.user %}
+  <a href="/logout">Logout</a>
+{%- else %}
+  <a href="/login">Login</a>
+{%- endif %}
+</div>
+<a href="#" class="hamburger"><i class="fas fa-bars"></i></a>
+</div>
+<h1>jkent.net</h1>
+</div>
+{%- if breadcrumbs %}
+<ol id="breadcrumb">
+{%- for breadcrumb in breadcrumbs %}
+  <li><a href="{{ breadcrumb.url }}">
+  {%- if loop.first -%}<i class="fas fa-home"></i>{%- else -%}{{ breadcrumb.text }}{%- endif -%}
+  </a></li>
+{%- endfor %}
+</ol>
+{%- endif %}
+
+<div id="content">
+{%- block content %}This is a template{% endblock -%}
+</div>
+
+<script src="{{ url_for('static', filename='menu.js') }}"></script>
+</body>
+</html>
