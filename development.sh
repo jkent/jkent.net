@@ -5,8 +5,7 @@ if [ ! -d .venv ]; then
   pipenv install
 fi
 mkdir -p instance
-if [ ! -f instance/jkent_net.db ]; then
-  pipenv run flask init-db
-  pipenv run flask add-user --password password --is-admin jeff@jkent.net
-fi
+rm -r instance/jkent_net.db
+pipenv run flask init-db
+pipenv run flask add-user --password password --is-admin jeff@jkent.net
 exec pipenv run bin/gunicorn-run
