@@ -33,6 +33,18 @@ def create_app():
     def projects():
         return render_template('index.html')
 
+    @app.route('/projects/pybot')
+    @register_menu(app, '.projects.pybot', 'Pybot')
+    @register_breadcrumb(app, '.projects.pybot', 'Pybot')
+    def pybot():
+        return render_template('index.html')
+
+    @app.route('/projects/pybot/modules')
+    @register_menu(app, '.projects.pybot.modules', 'Modules')
+    @register_breadcrumb(app, '.projects.pybot.modules', 'Modules')
+    def modules():
+        return render_template('index.html')
+
     @app.route('/contact')
     @register_menu(app, '.contact', 'Contact')
     @register_breadcrumb(app, '.contact', 'Contact')

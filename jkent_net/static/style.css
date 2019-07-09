@@ -19,37 +19,46 @@ a:hover{
 }
 #header .float{
  float: right;
- margin-top: 0.5em;
  font-size: 150%;
 }
 #header .menu{
  display: none;
- top: 55px;
- padding: 1em 0.5em;
 }
-#header .menu.expanded{
+#header .menu.visible{
  display: block;
  position: absolute;
- box-sizing: border-box;
- left: 0;
- width: 100%;
- padding: 0.5em 0.5em;
  z-index: 100;
- background-color: rgba(255,255,255,0.75);
-}
-#header .menu a{
- display: inline-block;
- padding: 0.5em;
- text-decoration: none;
- font-size: 12pt;
-}
-#header .menu.expanded a{
- box-sizing: border-box;
+ left: 0px;
+ top: 55px;
  width: 100%;
+ background-color: rgba(255,255,255,0.85);
+ font-size: 14pt;
+}
+#header .menu.visible ul{
+ display: block;
+ list-style-type:  none;
+ width: 100%;
+ box-sizing: border-box;
+ margin: 0;
+ padding: 0;
+}
+#header .menu.visible ul li{
+ display: block;
+ width: 100%;
+}
+#header .menu.visible ul ul{
+ display: none;
  color: black;
 }
+#header .menu.visible a{
+ display: block;
+ width: 100%;
+ color: black;
+ padding: 0.75em 1em;
+}
 #header .hamburger{
- margin: 0 1em;
+ display: block;
+ margin: 0.5em 1em;
  text-decoration: none;
 }
 #header .hamburger:hover{
@@ -149,24 +158,6 @@ a:hover{
  color: rgb(253,187,45);
  background-color: transparent;
 }
-@media (min-width: 650px){
- #header .hamburger{
-  display: none;
- }
- #header .menu, #header .menu.expanded{
-  position: relative;
-  display: inline;
-  top: auto;
-  background-color: transparent;
- }
- #header .menu a, #header .menu.expanded a{
-  display: inline;
-  color: white;
- }
- #header .menu a:hover{
-  color: black;
- } 
-}
 .login-box{
  width: 400px;
  margin: 0 auto;
@@ -183,4 +174,48 @@ a:hover{
  display: inline-block;
  width: 150px;
  margin-right: 0.5em;
+}
+@media (min-width: 650px){
+ #header .menu{
+  display: block;
+  background-color: transparent;
+  padding: 0.25em 0.5em;
+  margin: 0;
+ }
+ #header .menu a{
+  display: block;
+  color: white;
+  padding: 0.5em;
+  font-size: 12pt;
+ }
+ #header .menu ul{
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+ }
+ #header .menu ul li{
+  position: relative;
+  display: inline-block;
+ }
+ #header .menu ul ul{
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #666;
+  min-width: 160px;
+ }
+ #header .menu ul ul li{
+  display: block;
+  padding: 0.25em;
+ }
+
+ #header .menu ul li:hover ul{
+  display: block;
+ }
+ #header .menu a:hover{
+  color: black;
+ }
+ #header .hamburger{
+  display: none;
+ }
 }
