@@ -56,6 +56,13 @@ a:hover{
  color: black;
  padding: 0.75em 1em;
 }
+#header .menu .auth-picture{
+ display: none;
+ border-radius: 100%;
+}
+#header .menu.visible ul .auth-picture + ul{
+ display: block;
+}
 #header .hamburger{
  display: block;
  margin: 0.5em 1em;
@@ -208,12 +215,20 @@ a:hover{
   display: block;
   padding: 0.25em;
  }
-
  #header .menu ul li:hover ul{
   display: block;
  }
  #header .menu a:hover{
   color: black;
+ }
+ #header .menu .auth-picture {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  vertical-align: middle;
+ }
+ #header .menu .auth-picture + ul {
+  display: none;
  }
  #header .hamburger{
   display: none;

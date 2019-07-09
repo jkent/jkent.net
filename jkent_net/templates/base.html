@@ -26,18 +26,28 @@
 {%- endif %}
 {%- endfor %}
  <li>
-  {%- if g.user %}
-  <a href="/logout">Logout</a>
+  {%- if session.auth_picture %}
+  <img src="{{ session.auth_picture }}" class="auth-picture">
   {%- else %}
-  <a href="/login">Login</a>
+  <i class="fas fa-user-circle auth-picture"></i>
   {%- endif %}
-  </li>
- </ul>
+  <ul>
+   {%- if g.user %}
+   <li><a href="/profile">Profile</a></li>
+   <li><a href="/logout">Logout</a></li>
+   {%- else %}
+   <li><a href="/login">Login</a></li>
+   <li><a href="/regsiter">Register</a></li>
+   {%- endif %}
+  </ul>
+ </li>
+</ul>
 </div>
 <a href="#" class="hamburger"><i class="fas fa-bars"></i></a>
 </div>
 <h1>jkent.net</h1>
 </div>
+
 {%- if breadcrumbs %}
 <ul id="breadcrumb">
 {%- for breadcrumb in breadcrumbs %}
