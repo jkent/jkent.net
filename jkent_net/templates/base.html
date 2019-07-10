@@ -14,7 +14,7 @@
 <div class="float">
 <div class="menu">
 <ul>
-{%- for item in current_menu.children[1:] recursive %}
+{%- for item in current_menu.children recursive %}
 {%- if loop.depth <= 2 %}
  <li>
   <a href="{{ item.url }}">{{ item.text }}</a>
@@ -45,18 +45,8 @@
 </div>
 <a href="#" class="hamburger"><i class="fas fa-bars"></i></a>
 </div>
-<h1>jkent.net</h1>
+<h1><a href="/">jkent.net</a></h1>
 </div>
-
-{%- if breadcrumbs %}
-<ul id="breadcrumb">
-{%- for breadcrumb in breadcrumbs %}
-  <li><a href="{{ breadcrumb.url }}">
-  {%- if loop.first -%}<i class="fas fa-home"></i>{%- else -%}{{ breadcrumb.text }}{%- endif -%}
-  </a></li>
-{%- endfor %}
-</ul>
-{%- endif %}
 
 <div id="content">
 {%- block content %}This is a template{% endblock -%}

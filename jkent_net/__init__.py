@@ -1,7 +1,6 @@
 import os
 from flask import Flask, g, render_template
 from flask_menu import register_menu
-from flask_breadcrumbs import register_breadcrumb
 from jkent_net.auth import login_required
 
 
@@ -23,33 +22,18 @@ def create_app():
 
     @app.route('/')
     @register_menu(app, '.', 'Home')
-    @register_breadcrumb(app, '.', 'Home')
     def index():
         return render_template('index.html')
 
-    @app.route('/projects')
-    @register_menu(app, '.projects', 'Projects')
-    @register_breadcrumb(app, '.projects', 'Projects')
-    def projects():
-        return render_template('index.html')
+    @app.route('/about')
+    @register_menu(app, '.about', 'About')
+    def about():
+        return render_template('about.html')
 
-    @app.route('/projects/pybot')
-    @register_menu(app, '.projects.pybot', 'Pybot')
-    @register_breadcrumb(app, '.projects.pybot', 'Pybot')
-    def pybot():
-        return render_template('index.html')
-
-    @app.route('/projects/pybot/modules')
-    @register_menu(app, '.projects.pybot.modules', 'Modules')
-    @register_breadcrumb(app, '.projects.pybot.modules', 'Modules')
-    def modules():
-        return render_template('index.html')
-
-    @app.route('/contact')
-    @register_menu(app, '.contact', 'Contact')
-    @register_breadcrumb(app, '.contact', 'Contact')
+    @app.route('/connect')
+    @register_menu(app, '.connect', 'Connect')
     def contact():
-        return render_template('index.html')
+        return render_template('connect.html')
 
     import jkent_net.cli
     cli.init_app(app)

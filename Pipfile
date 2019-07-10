@@ -5,19 +5,15 @@ name = "pypi"
 verify_ssl = true
 
 [packages]
-alembic = "*"
-coverage = "*"
 flask = "*"
 flask_sqlalchemy = "*"
-flask_breadcrumbs = "*"
+flask_menu = "*"
 gevent = "*"
 google-api-python-client = "*"
 google-auth-oauthlib = "*"
 gunicorn = "*"
 mysqlclient = "*"
 pyjwt = "*"
-pyopenssl = "*"
-requests = "*"
 
 [dev-packages]
 pylint = "*"

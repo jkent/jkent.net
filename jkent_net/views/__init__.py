@@ -1,8 +1,8 @@
 from .auth import *
-from flask_breadcrumbs import Breadcrumbs
+from flask_menu import Menu
 
-breadcrumbs = Breadcrumbs()
+menu = Menu()
 
 def init_app(app):
-    breadcrumbs.init_app(app)
+    menu.init_app(app)
     app.register_blueprint(auth.bp)

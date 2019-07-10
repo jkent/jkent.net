@@ -1,236 +1,173 @@
 body{
- margin: 0;
- padding: 0;
- background-color: black;
- font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: black;
+	font-family: Arial, Helvetica, sans-serif;
 }
 a{
- text-decoration: none;
- color: white;
+	text-decoration: none;
+	color: white;
 }
 a:hover{
- background-color: rgb(253,187,45);
- color: black;
+	background-color: rgb(253,187,45);
+	color: black;
 }
 #header{
- background: linear-gradient(0deg, rgb(0,0,0) 0%, rgb(0,0,127) 100%);
- color: white;
- height: 55px;
+	background: linear-gradient(0deg, rgb(0,0,0) 0%, rgb(0,0,127) 100%);
+	color: white;
+	height: 55px;
 }
 #header .float{
- float: right;
- font-size: 150%;
+	float: right;
+	font-size: 150%;
 }
 #header .menu{
- display: none;
+	display: none;
 }
 #header .menu.visible{
- display: block;
- position: absolute;
- z-index: 100;
- left: 0px;
- top: 55px;
- width: 100%;
- background-color: rgba(255,255,255,0.85);
- font-size: 14pt;
+	display: block;
+	position: absolute;
+	z-index: 100;
+	left: 0px;
+	top: 55px;
+	width: 100%;
+	background-color: rgba(255,255,255,0.85);
+	font-size: 14pt;
 }
 #header .menu.visible ul{
- display: block;
- list-style-type:  none;
- width: 100%;
- box-sizing: border-box;
- margin: 0;
- padding: 0;
+	display: block;
+	list-style-type:  none;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
 }
 #header .menu.visible ul li{
- display: block;
- width: 100%;
+	display: block;
+	width: 100%;
 }
 #header .menu.visible ul ul{
- display: none;
- color: black;
+	display: none;
+	color: black;
 }
 #header .menu.visible a{
- display: block;
- width: 100%;
- color: black;
- padding: 0.75em 1em;
+	display: block;
+	width: 100%;
+	color: black;
+	padding: 0.75em 1em;
 }
 #header .menu .auth-picture{
- display: none;
- border-radius: 100%;
+	display: none;
+	border-radius: 100%;
 }
 #header .menu.visible ul .auth-picture + ul{
- display: block;
+	display: block;
 }
 #header .hamburger{
- display: block;
- margin: 0.5em 1em;
- text-decoration: none;
+	display: block;
+	margin: 0.5em 1em;
+	text-decoration: none;
 }
 #header .hamburger:hover{
- background-color: transparent;
- color: white;
+	background-color: transparent;
+	color: white;
 }
 #header h1{
- margin: 0;
- padding: 0.5em 1em 0;
- font-size: 150%
+	margin: 0;
+	padding: 0.5em 0;
+	font-size: 150%;
 }
-#breadcrumb{
- list-style-type: none;
- display: inline-block;
- margin: 10px 20px;
- padding: 5px;
-}
-#breadcrumb li{
- float: left;
-}
-#breadcrumb li a{
- display: block;
- background: #666;
- text-decoration: none;
- position: relative;
- height: 40px;
- line-height: 40px;
- padding: 0 10px 0 5px;
- text-align: center;
- margin-right: 23px;
-}
-#breadcrumb li:nth-child(even) a:before{
- border-left-color: transparent;
-}
-#breadcrumb li:first-child a{
- padding-left: 15px;
- border-top-left-radius: 8px;
- border-bottom-left-radius: 8px;
-}
-#breadcrumb li:first-child a:before{
- border: none;
-}
-#breadcrumb li:last-child a{
- padding-right: 15px;
- border-top-right-radius: 8px;
- border-bottom-right-radius: 8px;
-}
-#breadcrumb li:last-child a:after{
- border: none;
-}
-#breadcrumb li a:before, #breadcrumb li a:after{
- content: "";
- position: absolute;
- top: 0;
- border: 0 solid #666;
- border-width: 20px 10px;
- width: 0;
- height: 0;
-}
-#breadcrumb li a:before{
- left: -20px;
- border-left-color: transparent;
-}
-#breadcrumb li a:after{
- left: 100%;
- border-color: transparent;
- border-left-color: #666;
-}
-#breadcrumb li a:hover{
- background: rgb(253,187,45);
-}
-#breadcrumb li a:hover:before{
- border-color: rgb(253,187,45);
- border-left-color: transparent;
-}
-#breadcrumb li a:hover:after{
- border-left-color: rgb(253,187,45);
+#header h1 a {
+	padding: 0.5em;
 }
 #content{
- max-width: 600px;
- padding: 0 2em;
- color: white;
- margin: 0 auto;
+	max-width: 600px;
+	padding: 2em;
+	color: white;
+	margin: 0 auto;
 }
 #content p{
- line-height: 1.5em;
+	line-height: 1.5em;
+	margin-top: 0;
 }
 #content img{
- float: left;
- margin: 0.5em 1.5em 0.5em 0;
- border-radius: 2em;
+	float: left;
+	margin: 0.5em 1.5em 0.5em 0;
+	border-radius: 2em;
 }
 #content a{
- color: #777;
+	color: #777;
 }
 #content a:hover{
- color: rgb(253,187,45);
- background-color: transparent;
+	color: rgb(253,187,45);
+	background-color: transparent;
 }
 .login-box{
- width: 400px;
- margin: 0 auto;
- text-align: center;
+	width: 400px;
+	margin: 0 auto;
+	text-align: center;
 }
 .login-box h4 {
- color: red;
+	color: red;
 }
 .login-box div{
- margin: 0.75em 0;
+	margin: 0.75em 0;
 }
 .login-box div label{
- text-align: right;
- display: inline-block;
- width: 150px;
- margin-right: 0.5em;
+	text-align: right;
+	display: inline-block;
+	width: 150px;
+	margin-right: 0.5em;
 }
 @media (min-width: 650px){
- #header .menu{
-  display: block;
-  background-color: transparent;
-  padding: 0.4em 0.5em;
-  margin: 0;
- }
- #header .menu a{
-  display: block;
-  color: white;
-  padding: 0.5em;
-  font-size: 12pt;
- }
- #header .menu ul{
-  padding: 0;
-  margin: 0;
-  list-style-type: none;
- }
- #header .menu ul li{
-  position: relative;
-  display: inline-block;
- }
- #header .menu ul ul{
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: #666;
-  min-width: 160px;
- }
- #header .menu ul ul li{
-  display: block;
-  padding: 0.25em;
- }
- #header .menu ul li:hover ul{
-  display: block;
- }
- #header .menu a:hover{
-  color: black;
- }
- #header .menu .auth-picture {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  vertical-align: middle;
- }
- #header .menu .auth-picture + ul {
-  display: none;
- }
- #header .hamburger{
-  display: none;
- }
+	#header .menu{
+		display: block;
+		background-color: transparent;
+		padding: 0.4em 0.5em;
+		margin: 0;
+	}
+	#header .menu a{
+		display: block;
+		color: white;
+		padding: 0.5em;
+		font-size: 12pt;
+	}
+	#header .menu ul{
+		padding: 0;
+		margin: 0;
+		list-style-type: none;
+	}
+	#header .menu ul li{
+		position: relative;
+		display: inline-block;
+	}
+	#header .menu ul ul{
+		display: none;
+		position: absolute;
+		right: 0;
+		background-color: #666;
+		min-width: 160px;
+	}
+	#header .menu ul ul li{
+		display: block;
+		padding: 0.25em;
+	}
+	#header .menu ul li:hover ul{
+		display: block;
+	}
+	#header .menu a:hover{
+		color: black;
+	}
+	#header .menu .auth-picture {
+		display: inline-block;
+		width: 32px;
+		height: 32px;
+		vertical-align: middle;
+	}
+	#header .menu .auth-picture + ul {
+		display: none;
+	}
+	#header .hamburger{
+		display: none;
+	}
 }
