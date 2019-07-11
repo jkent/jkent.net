@@ -1,8 +1,8 @@
+from ..models import db
 from datetime import datetime
 import enum
 from flask import current_app, url_for
 from html import escape
-from jkent_net.models import db
 from markdown import markdown
 import random
 import string
@@ -33,7 +33,11 @@ file_extensions = {
 }
 
 
-markdown_extensions = ['codehilite', 'fenced_code', 'tables']
+markdown_extensions = [
+    'jkent_net.markdown.codehilite:CodeHiliteExtension',
+    'jkent_net.markdown.fenced_code:FencedCodeExtension',
+    'tables'
+]
 
 
 class Document(db.Model):   
@@ -78,41 +82,76 @@ class Document(db.Model):
         return source_timestamp <= cache_timestamp
 
     @property
-    def source(self):
-        filename = self.id + file_extensions[self.type]
-        with open(self.source_path, 'r') as f:
-            data = f.read()
+    def source_draft(self):
+        try:
+            with open(self.source_path, 'r') as f:
+                data = f.read()
+        except:
+            data = ''
         return data
 
-    @source.setter
-    def source(self, data):
-        filename = self.id + file_extensions[self.type]
+    @source_draft.setter
+    def source_draft(self, data):
         with open(self.source_path, 'w') as f:
             f.write(data)
 
     @property
+    def source(self):
+        return current_app.repo.get_index(self.source_relative_path) or ''
+
+    @property
     def html(self):
-        return self.__html__()
-
-    def __html__(self):
-        if self.type == DocumentType.html:
-            return self.source
-
         #if self.cache_valid:
         #    with open(self.cache_path, 'r') as f:
         #        return f.read()
+
+        output = '<div class="rendered">'
+        if self.type == DocumentType.markdown:
+            output += markdown(self.source, extensions=markdown_extensions)
+        elif self.type == DocumentType.html:
+            output += self.source
+        else:
+            output += '<pre>' + escape(self.source, False) + '</pre>'
+        output += '</div>'
+
+        with open(self.cache_path, 'w') as f:
+            f.write(output)
         
+        return output
+
+    @property
+    def html_draft(self):
         with open(self.source_path, 'r') as f:
             input = f.read()
 
         output = '<div class="rendered">'
         if self.type == DocumentType.markdown:
             output += markdown(input, extensions=markdown_extensions)
+        elif self.type == DocumentType.html:
+            output += input        
         else:
-            output += '<pre>' + html.escape(src.read(), False) + '</pre>'
+            output += '<pre>' + escape(input, False) + '</pre>'
         output += '</div>'
 
-        with open(self.cache_path, 'w') as f:
-            f.write(output)
-
         return output
+
+    def get_info(self):
+        return current_app.repo.get_info(self.source_relative_path)
+
+    @property
+    def has_draft(self):
+        return self.get_info()['modified']
+
+    def revert(self):
+        current_app.repo.checkout(self.source_relative_path)
+    
+    def save(self):
+        current_app.repo.add(self.source_relative_path)
+        current_app.repo.commit()
+
+    def change_type(self, type):
+        src = self.source_path
+        self.type = DocumentType[type]
+        dst = self.source_path
+        current_app.repo.move(src, dst)
+    

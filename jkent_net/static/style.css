@@ -120,22 +120,58 @@ a:hover{
 	margin-right: 0.5em;
 }
 #content .codehilite pre{
-	max-height: 300px;
+	max-height: 250px;
 	overflow-x: auto;
 	overflow-y: auto;
 	padding: 0.5em;
 	background-color: black;
 	border: 1px solid #666;
+	counter-reset: line;
+}
+#content .codehilite code{
+	counter-increment: line;
+	display: block;
+}
+#content .codehilite code:before{
+	content: counter(line);
+	display: inline-block;
+	width: 2.4em;
+	border-right: 1px solid #666;
+	margin-right: 0.5em;
+}
+#content .codehilite code:nth-child(odd){
+	width: 100%;
+	background-color: #111;
 }
 #actionbar{
 	position: fixed;
-	float: right;
+	text-align: right;
 	bottom: 0;
 	right: 0;
+	left: 0;
 	margin: 0.5em;
+	height: 1.25em;
 }
-#actionbar i, #actionbar span{
+#actionbar i{
 	padding: 0 0.5em;
+}
+#content > textarea.source {
+	border: none;
+	background-color: black;
+	color: white;
+	width: 100%;
+	white-space: pre;
+	outline: none;
+	-webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+	resize: none;
+}
+.highlight {
+	color: rgb(253,187,45) !important;
+}
+.hidden {
+	display: none !important;
 }
 @media (min-width: 650px){
 	#header .menu{

@@ -1,11 +1,13 @@
+from ..auth import admin_required
+from ..models import Document, DocumentType, db
+from ..models.document import file_extensions
 from calendar import monthrange
 from datetime import date, timedelta
-from flask import Blueprint, Response, g, render_template, request, url_for
+import patch
+from flask import Blueprint, Response, current_app, g, redirect, render_template, request, url_for
 from flask_menu import register_menu
 from html import escape
 from jinja2 import Markup
-from jkent_net.auth import admin_required
-from jkent_net.models import Document, DocumentType, db
 import re
 
 __all__ = ['bp']
@@ -20,23 +22,57 @@ def post_by_id(post_id):
     if not document:
         return 'document not found'
 
-    raw = request.args.get('raw')
-    source = request.args.get('source')
-    if raw:
-        return Response(document.source, mimetype='text/plain')
-    elif source:
-        html = '<pre>' + escape(document.source) + '</pre>'
+    if g.user and g.user.is_admin:
+        revert = request.args.get('revert')
+        if revert:
+            document.revert()
+            return redirect(url_for('posts.p', path=post_id, source=1))
+        
+        save = request.args.get('save')
+        if save:
+            document.save()
+            return redirect(url_for('posts.p', path=post_id))
+
+    if request.args.get('raw'):
+        if g.user and g.user.is_admin and request.args.get('draft'): 
+            source = document.source_draft
+        else:
+            source = document.source
+        return Response(source, mimetype='text/plain')
+
+    if request.args.get('source'):
+        if g.user and g.user.is_admin and document.has_draft:
+            source = document.source_draft
+            is_draft = True
+        else:
+            source = document.source
+            is_draft = False
+
+        args = {
+            'content': source[:-1],
+            'post_id': post_id,
+            'viewonly': not g.user or not g.user.is_admin,
+            'doctype': document.type.name,
+            'is_draft': is_draft,
+            'extension': file_extensions[document.type],
+        }
+        args.update(document.get_info())
+        return render_template('edit_post.html', **args)
+
+    if g.user and g.user.is_admin and request.args.get('draft') and document.has_draft:
+        html = document.html_draft
+        is_draft = True
     else:
         html = document.html
+        is_draft = False
 
-    args = {
+    args ={
         'content': Markup(html),
         'post_id': post_id,
-        'source': source,
-        'markdown': document.type == DocumentType.markdown
+        'doctype': document.type.name,
+        'is_draft': is_draft,
     }
-
-    return render_template('post.html', **args)
+    return render_template('view_post.html', **args)
 
 def posts_by_date(start_date=None, end_date=None):
     return 'posts from %s to %s' % (start_date, end_date)
@@ -86,6 +122,16 @@ def p_edit(post_id):
     if not document:
         return 'document not found'
 
-    document.source = request.form['markdown']
+    diff = request.form.get('diff')
+    if diff:
+        ps = patch.fromstring(diff.encode('utf-8'))
+        ps.apply(1, current_app.repo_path)
+        return document.get_info()
 
-    return post_by_id(post_id)
+    doctype = request.form.get('doctype')
+    if doctype:
+        document.change_type(doctype)
+        db.session.add(document)
+        db.session.commit()
+    
+    return {}

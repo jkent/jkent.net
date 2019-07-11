@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5d7079eff3fab075bf7796e3fb208f8236e294ea98eaad85fd5cfeec2b5b6d2b"
+            "sha256": "10c4c3514f074a4f778900fe7ba5dc0171977680bffd425da5a2bda880914c48"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -170,6 +170,13 @@
             ],
             "index": "pypi",
             "version": "==1.4.2.post1"
+        },
+        "patch": {
+            "hashes": [
+                "sha256:c62073f356cff054c8ac24496f1a3d7cfa137835c31e9af39a9f5292fd75bd9f"
+            ],
+            "index": "pypi",
+            "version": "==1.16"
         },
         "pygments": {
             "hashes": [

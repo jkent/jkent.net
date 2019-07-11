@@ -12,6 +12,7 @@ gevent = "*"
 gunicorn = "*"
 markdown = "*"
 mysqlclient = "*"
+patch = "*"
 pygments = "*"
 
 [dev-packages]
