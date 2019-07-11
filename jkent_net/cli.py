@@ -1,7 +1,7 @@
 import click
 from flask.cli import with_appcontext
 from werkzeug.security import generate_password_hash
-from jkent_net.models import User, db
+from jkent_net.models import Document, DocumentType, User, db
 
 
 @click.command('add-user')
@@ -15,6 +15,7 @@ def add_user_command(email, password, is_admin):
     user = User(email=email, hash=hash, is_admin=is_admin)
     db.session.add(user)
     db.session.commit()
+    return user.id
 
 
 @click.command('del-user')
@@ -34,11 +35,26 @@ def del_user_command(email):
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    """Creates and initializes a database"""
+    """Creates and initializes a database."""
     db.create_all()
+
+
+@click.command('init-demo')
+@click.pass_context
+@with_appcontext
+def init_demo_command(ctx):
+    """Initializes everything for a demo."""
+    ctx.invoke(init_db_command)
+    user_id = ctx.invoke(add_user_command, email='user@example.com', password='password', is_admin=True)
+    document = Document(id='test', owner=user_id, title='Hello world!', type=DocumentType.markdown)
+    db.session.add(document)
+    document = Document(id='!found', owner=user_id, title='Not found!', type=DocumentType.markdown)
+    db.session.add(document)
+    db.session.commit()
 
 
 def init_app(app):
     app.cli.add_command(add_user_command)
     app.cli.add_command(del_user_command)
     app.cli.add_command(init_db_command)
+    app.cli.add_command(init_demo_command)

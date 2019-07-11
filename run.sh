@@ -9,8 +9,7 @@ if [[ "$1" == "development" ]]; then
   export FLASK_ENV=development
   mkdir -p instance
   rm -f instance/jkent_net.db
-  pipenv run flask init-db
-  pipenv run flask add-user --password password --is-admin jeff@jkent.net
+  pipenv run flask init-demo
 else
   echo "Starting in production mode"
   export FLASK_ENV=production

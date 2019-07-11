@@ -37,3 +37,4 @@ def init_app(app):
 
 
 from .user import *
+from .document import *

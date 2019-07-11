@@ -5,6 +5,7 @@
 <title>{% block title %}{% endblock %} - jkent.net</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='codehilite.css') }}">
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
@@ -26,11 +27,7 @@
 {%- endif %}
 {%- endfor %}
  <li>
-  {%- if session.auth_picture %}
-  <img src="{{ session.auth_picture }}" class="auth-picture">
-  {%- else %}
-  <i class="fas fa-user-circle auth-picture"></i>
-  {%- endif %}
+  <img src="{{ session.auth_picture or url_for('static', filename='user.png') }}" class="auth-picture">
   <ul>
    {%- if g.user %}
    <li><a href="/profile">Profile</a></li>

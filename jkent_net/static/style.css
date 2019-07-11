@@ -119,6 +119,24 @@ a:hover{
 	width: 150px;
 	margin-right: 0.5em;
 }
+#content .codehilite pre{
+	max-height: 300px;
+	overflow-x: auto;
+	overflow-y: auto;
+	padding: 0.5em;
+	background-color: black;
+	border: 1px solid #666;
+}
+#actionbar{
+	position: fixed;
+	float: right;
+	bottom: 0;
+	right: 0;
+	margin: 0.5em;
+}
+#actionbar i, #actionbar span{
+	padding: 0 0.5em;
+}
 @media (min-width: 650px){
 	#header .menu{
 		display: block;

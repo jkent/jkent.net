@@ -9,11 +9,10 @@ flask = "*"
 flask_sqlalchemy = "*"
 flask_menu = "*"
 gevent = "*"
-google-api-python-client = "*"
-google-auth-oauthlib = "*"
 gunicorn = "*"
+markdown = "*"
 mysqlclient = "*"
-pyjwt = "*"
+pygments = "*"
 
 [dev-packages]
 pylint = "*"
