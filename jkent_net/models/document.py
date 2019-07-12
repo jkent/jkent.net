@@ -181,7 +181,7 @@ class Document(db.Model):
             f.write(text)
 
     def revert(self):
-        if not current_app.repository.in_index(self.relative_path):
+        if current_app.repository.is_unknown(self.relative_path):
             shutil.rmtree(self.path)
         else:
             current_app.repository.checkout(self.relative_path)

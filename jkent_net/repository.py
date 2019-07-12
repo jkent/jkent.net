@@ -41,7 +41,6 @@ class Repository:
         result = result.decode('utf8').strip()
         if os.path.isdir(path) and not path.endswith('/'):
             path += '/'
-        print(result)
         if result[:2] == '??' and result[3:] == path:
             return True
         return False
@@ -57,21 +56,6 @@ class Repository:
                 return True
         return False
 
-    def get_info(self, path):
-        result = subprocess.check_output(['git', '-C', self.path, 'status',
-            '--porcelain', '--', path])
-        if not result:
-            return {
-                'in_index': False,
-                'modified': False,
-            }
-        result = result.decode('utf8')
-        X, Y = result[:2]
-        return {
-            'in_index': X not in ['A'],
-            'modified': True,
-        }
-    
     def checkout(self, path):
         subprocess.check_call(['git', '-C', self.path, 'checkout', 'HEAD', '--', path])
 
