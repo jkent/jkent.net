@@ -1,23 +1,48 @@
 from ..models import db
 from datetime import datetime
+from diff_match_patch import diff_match_patch
 import enum
 from flask import current_app, url_for
 from html import escape
 from markdown import markdown
-import random
-import string
 import os
+import random
+import shutil
+import string
+import subprocess
 
 
 __all__ = ['Document', 'DocumentType']
 
 
-def generate_id():
+def id_generator():
     while True:
         id = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
         if not db.session.query(db.exists().where(Document.id == id)).scalar():
             break
     return id
+
+def text_converter(data):
+    output = '<div class="rendered"><pre>'
+    output += escape(data)
+    output += '</pre></div>'
+    return output
+
+def html_converter(data):
+    output = '<div class="rendered">'
+    output += data
+    output += '</div>'
+    return output
+
+def markdown_converter(data):
+    output = '<div class="rendered">'
+    output += markdown(data, extensions=[
+        'jkent_net.markdown.codehilite:CodeHiliteExtension',
+        'jkent_net.markdown.fenced_code:FencedCodeExtension',
+        'tables',
+    ])
+    output += '</div>'
+    return output
 
 
 class DocumentType(enum.Enum):
@@ -25,23 +50,21 @@ class DocumentType(enum.Enum):
     html = 1
     markdown = 2
 
-
 file_extensions = {
     DocumentType.text: '.txt',
     DocumentType.html: '.html',
     DocumentType.markdown: '.md',
 }
 
-
-markdown_extensions = [
-    'jkent_net.markdown.codehilite:CodeHiliteExtension',
-    'jkent_net.markdown.fenced_code:FencedCodeExtension',
-    'tables'
-]
+converters = {
+    DocumentType.text: text_converter,
+    DocumentType.html: html_converter,
+    DocumentType.markdown: markdown_converter,
+}
 
 
 class Document(db.Model):   
-    id = db.Column(db.String(6), primary_key=True, default=generate_id)
+    id = db.Column(db.String(6), primary_key=True, default=id_generator)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     type = db.Column(db.Enum(DocumentType), nullable=False, default=DocumentType.text)
     title = db.Column(db.Unicode(128), nullable=False)
@@ -52,106 +75,127 @@ class Document(db.Model):
         return '<Document %r>' % self.id
 
     @property
-    def source_relative_path(self):
-        filename = self.id + file_extensions[self.type]
-        return os.path.join('documents', filename)
+    def relative_path(self):
+        return self.id
 
     @property
-    def source_path(self):
-        return os.path.join(current_app.repo_path, self.source_relative_path)
+    def path(self):
+        path = os.path.join(current_app.repository_path, self.relative_path)
+        os.makedirs(path, exist_ok=True)
+        return path
 
     @property
     def cache_path(self):
-        filename = self.id + '.html'
-        return os.path.join(current_app.cache_path, 'documents', filename)
+        path = os.path.join(current_app.cache_path, self.relative_path)
+        os.makedirs(path, exist_ok=True)
+        return path
 
     @property
-    def cache_valid(self):
-        source_timestamp = current_app.repo.get_timestamp(self.source_relative_path)
-        if not source_timestamp:
-            source_timestamp = os.path.getmtime(self.source_relative_path)
+    def index_relative_path(self):
+        path = os.path.join(self.relative_path, 'index{}'.format(file_extensions[self.type]))
+        return path
 
-        if self.type == DocumentType.html:
-            return False
+    @property
+    def index_path(self):
+        path = os.path.join(current_app.repository_path, self.index_relative_path)
+        return path        
+
+    @property
+    def cache(self):
+        if not current_app.repository.file_exists(self.index_relative_path):
+            return ''
+
+        src_timestamp = current_app.repository.timestamp(self.relative_path)
 
         try:
-            cache_timestamp = os.path.getmtime(self.cache_path)
+            dst = os.path.join(self.cache_path, 'index.html')
+            dst_timestamp = os.path.getmtime(dst)
         except FileNotFoundError:
-            return False
+            dst_timestamp = 0
 
-        return source_timestamp <= cache_timestamp
+        if src_timestamp < dst_timestamp:
+            with open(dst, 'r') as f:
+                return f.read()
+
+        converter = converters[self.type]
+        data = current_app.repository.cat(self.index_relative_path)
+        data = converter(data)
+        with open(dst, 'w') as f:
+            f.write(data)
+
+        return data
 
     @property
-    def source_draft(self):
+    def raw(self):
+        return current_app.repository.cat(self.index_relative_path)
+
+    @property
+    def draft(self):
         try:
-            with open(self.source_path, 'r') as f:
+            src = os.path.join(self.index_path)
+            with open(src, 'r') as f:
+                data = f.read()
+        except:
+            data = ''
+        
+        converter = converters[self.type]
+        data = converter(data)
+        return data
+
+    @draft.setter
+    def draft(self, data):
+        with open(self.index_path, 'w') as f:
+            f.write(data)
+
+    @property
+    def raw_draft(self):
+        try:
+            with open(self.index_path, 'r') as f:
                 data = f.read()
         except:
             data = ''
         return data
 
-    @source_draft.setter
-    def source_draft(self, data):
-        with open(self.source_path, 'w') as f:
-            f.write(data)
-
-    @property
-    def source(self):
-        return current_app.repo.get_index(self.source_relative_path) or ''
-
-    @property
-    def html(self):
-        #if self.cache_valid:
-        #    with open(self.cache_path, 'r') as f:
-        #        return f.read()
-
-        output = '<div class="rendered">'
-        if self.type == DocumentType.markdown:
-            output += markdown(self.source, extensions=markdown_extensions)
-        elif self.type == DocumentType.html:
-            output += self.source
-        else:
-            output += '<pre>' + escape(self.source, False) + '</pre>'
-        output += '</div>'
-
-        with open(self.cache_path, 'w') as f:
-            f.write(output)
-        
-        return output
-
-    @property
-    def html_draft(self):
-        with open(self.source_path, 'r') as f:
-            input = f.read()
-
-        output = '<div class="rendered">'
-        if self.type == DocumentType.markdown:
-            output += markdown(input, extensions=markdown_extensions)
-        elif self.type == DocumentType.html:
-            output += input        
-        else:
-            output += '<pre>' + escape(input, False) + '</pre>'
-        output += '</div>'
-
-        return output
-
-    def get_info(self):
-        return current_app.repo.get_info(self.source_relative_path)
-
     @property
     def has_draft(self):
-        return self.get_info()['modified']
+        return current_app.repository.is_dirty(self.index_relative_path)
+
+    @property
+    def has_commit(self):
+        return not current_app.repository.is_unknown(self.index_relative_path)
+
+    def apply_patch(self, patch_text):
+        print(self.path)
+        print(self.index_path)
+        try:
+            with open(self.index_path, 'r') as f:
+                text = f.read()
+        except FileNotFoundError:
+            text = ''
+
+        dmp = diff_match_patch()
+        patch = dmp.patch_fromText(patch_text)
+        text, _ = dmp.patch_apply(patch, text)
+        
+        with open(self.index_path, 'w') as f:
+            f.write(text)
 
     def revert(self):
-        current_app.repo.checkout(self.source_relative_path)
-    
-    def save(self):
-        current_app.repo.add(self.source_relative_path)
-        current_app.repo.commit()
+        if not current_app.repository.in_index(self.relative_path):
+            shutil.rmtree(self.path)
+        else:
+            current_app.repository.checkout(self.relative_path)
 
-    def change_type(self, type):
-        src = self.source_path
-        self.type = DocumentType[type]
-        dst = self.source_path
-        current_app.repo.move(src, dst)
-    
+    def commit(self):
+        current_app.repository.add(self.relative_path)
+        current_app.repository.commit()
+
+    def change_type(self, new_type):
+        if self.type == new_type:
+            return
+        src = os.path.join(self.path, 'index{}'.format(file_extensions[self.type]))
+        self.type = new_type
+        dst = os.path.join(self.path, 'index{}'.format(file_extensions[self.type]))
+        os.rename(src, dst)
+        db.session.add(self)
+        db.session.commit()

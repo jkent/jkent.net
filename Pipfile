@@ -5,6 +5,7 @@ name = "pypi"
 verify_ssl = true
 
 [packages]
+diff-match-patch = "*"
 flask = "*"
 flask_sqlalchemy = "*"
 flask_menu = "*"
@@ -12,7 +13,6 @@ gevent = "*"
 gunicorn = "*"
 markdown = "*"
 mysqlclient = "*"
-patch = "*"
 pygments = "*"
 
 [dev-packages]

@@ -3,7 +3,6 @@ from ..models import Document, DocumentType, db
 from ..models.document import file_extensions
 from calendar import monthrange
 from datetime import date, timedelta
-import patch
 from flask import Blueprint, Response, current_app, g, redirect, render_template, request, url_for
 from flask_menu import register_menu
 from html import escape
@@ -17,62 +16,55 @@ date_re = r'^(?P<year>\d{4})(?:-(?P<month>\d{1,2})(?:-(?P<day>\d{1,2}))?)?$'
 bp = Blueprint('posts', __name__)
 
 
-def post_by_id(post_id):
+def view_post(post_id):
     document = db.session.query(Document).filter_by(id=post_id).first()
     if not document:
         return 'document not found'
 
-    if g.user and g.user.is_admin:
-        revert = request.args.get('revert')
-        if revert:
-            document.revert()
-            return redirect(url_for('posts.p', path=post_id, source=1))
-        
-        save = request.args.get('save')
-        if save:
-            document.save()
-            return redirect(url_for('posts.p', path=post_id))
+    is_draft = g.user and g.user.is_admin and request.args.get('draft') and document.has_draft
+    html = document.draft if is_draft else document.cache
 
     if request.args.get('raw'):
-        if g.user and g.user.is_admin and request.args.get('draft'): 
-            source = document.source_draft
-        else:
-            source = document.source
-        return Response(source, mimetype='text/plain')
-
-    if request.args.get('source'):
-        if g.user and g.user.is_admin and document.has_draft:
-            source = document.source_draft
-            is_draft = True
-        else:
-            source = document.source
-            is_draft = False
-
-        args = {
-            'content': source[:-1],
-            'post_id': post_id,
-            'viewonly': not g.user or not g.user.is_admin,
-            'doctype': document.type.name,
-            'is_draft': is_draft,
-            'extension': file_extensions[document.type],
-        }
-        args.update(document.get_info())
-        return render_template('edit_post.html', **args)
-
-    if g.user and g.user.is_admin and request.args.get('draft') and document.has_draft:
-        html = document.html_draft
-        is_draft = True
-    else:
-        html = document.html
-        is_draft = False
+        raw = document.raw_draft if is_draft else document.raw
+        return Response(raw, mimetype='text/plain')
 
     args ={
         'content': Markup(html),
         'post_id': post_id,
         'doctype': document.type.name,
+        'has_draft': g.user and g.user.is_admin and document.has_draft,
         'is_draft': is_draft,
     }
     return render_template('view_post.html', **args)
+
+
+def edit_post(post_id):
+    document = db.session.query(Document).filter_by(id=post_id).first()
+    if not document:
+        return 'document not found'
+
+    is_draft = g.user and g.user.is_admin and document.has_draft
+    raw = document.raw_draft if is_draft else document.raw
+    viewonly = not (g.user and g.user.is_admin)
+
+    args = {
+        'content': raw,
+        'post_id': post_id,
+        'viewonly': viewonly,
+        'doctype': document.type.name,
+        'extension': file_extensions[document.type],
+        'has_draft': document.has_draft,
+        'has_commit': document.has_commit,
+        'is_draft': is_draft,
+    }
+    return render_template('edit_post.html', **args)
+
+
+def post_by_id(post_id):
+    if request.args.get('source'):
+        return edit_post(post_id)
+    else:    
+        return view_post(post_id)
 
 def posts_by_date(start_date=None, end_date=None):
     return 'posts from %s to %s' % (start_date, end_date)
@@ -122,11 +114,24 @@ def p_edit(post_id):
     if not document:
         return 'document not found'
 
-    diff = request.form.get('diff')
-    if diff:
-        ps = patch.fromstring(diff.encode('utf-8'))
-        ps.apply(1, current_app.repo_path)
-        return document.get_info()
+    save = request.form.get('commit')
+    if save:
+        document.commit()
+        return {}
+
+    revert = request.form.get('revert')
+    if revert:
+        document.revert()
+        return {}
+        
+    patch_text = request.form.get('patch_text')
+    if patch_text:
+        print(patch_text)
+        document.apply_patch(patch_text)
+        return {
+            'has_draft': document.has_draft,
+            'has_commit': document.has_commit,
+        }
 
     doctype = request.form.get('doctype')
     if doctype:

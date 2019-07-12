@@ -13,45 +13,41 @@
 </select>
 </span>
 <span style="float: right;">
-<a href="#" title="Save" class="hidden"><i class="fas fa-save"></i></a>
+<a href="#" title="Commit" class="hidden"><i class="fas fa-save"></i></a>
 <a href="#" title="Revert" class="hidden"><i class="fas fa-history"></i></a>
 <a href="#" title="Preview" class="highlight"><i class="{% if doctype == 'markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
 </span>
 </div>
 
-<script src="{{ url_for('static', filename='difflib-browser.js') }}"></script>
+<script src="{{ url_for('static', filename='diff_match_patch.js') }}"></script>
 <script>
 $(() => {
     var textarea = $('#content > textarea.source');
     var preview_button = $('#actionbar a[title="Preview"]');
     var revert_button = $('#actionbar a[title="Revert"]');
-    var save_button = $('#actionbar a[title="Save"]');
+    var commit_button = $('#actionbar a[title="Commit"]');
     var doctype_select = $('#actionbar select');
-    var in_index = {{ in_index | lower }};
-    var modified = {{ modified | lower }};
-    var markdown_last = textarea.val()
+    var has_draft = {{ has_draft | lower }};
+    var has_commit = {{ has_commit | lower }};
+    var markdown_last = textarea.val();
     var timeout = null;
+    var dmp = new diff_match_patch();
 
-    function save_diff(markdown, fn) {
-        diff = difflib.unifiedDiff(markdown_last.split('\n'), markdown.split('\n'), {
-            fromfile: 'a/documents/{{ post_id }}{{ extension }}',
-            tofile: 'b/documents/{{ post_id }}{{ extension }}',
-            lineterm: ''
-        });
-        var url = new URL(window.location);
-        url.search = null;
-        $.post(url, {
-            diff: diff.join('\n')
+    function save_patch(markdown, fn) {
+        var patch = dmp.patch_make(markdown_last, markdown)
+        var patch_text = dmp.patch_toText(patch);
+        $.post('{{ url_for('posts.p', path=post_id) }}', {
+            patch_text: patch_text,
         }, (data) => {
-            in_index = data.in_index;
-            modified = data.modified;
             markdown_last = markdown;
-            if (modified) {
-                save_button.removeClass('hidden');
+            has_draft = data.has_draft;
+            has_commit = data.has_commit;
+            if (has_draft) {
+               commit_button.removeClass('hidden');
             } else {
-                save_button.addClass('hidden');
+               commit_button.addClass('hidden');
             }
-            if (modified && in_index) {
+            if (has_draft && has_commit) {
                 revert_button.removeClass('hidden');
             } else {
                 revert_button.addClass('hidden');
@@ -65,9 +61,9 @@ $(() => {
     function textarea_resize(textarea) {
         textarea.height('inherit');
         var height = parseInt(textarea.css('border-top-width'), 10)
-                + parseInt(textarea.css('padding-top'), 10)
+                - parseInt(textarea.css('padding-top'), 10)
                 + textarea.prop('scrollHeight')
-                + parseInt(textarea.css('padding-bottom'), 10)
+                - parseInt(textarea.css('padding-bottom'), 10)
                 + parseInt(textarea.css('border-bottom-width'), 10);
         textarea.height(height + 'px');
     }
@@ -81,55 +77,59 @@ $(() => {
             timeout = null;
         }
         timeout = setTimeout(() => {
-            save_diff(textarea.val());
+            save_patch(textarea.val());
             timeout = null;
         }, 1000);
     });
 
     preview_button.on('click', () => {
-        save_diff(textarea.val(), () => {
-            if ({{ viewonly | lower }} || modified === false) {
-                window.location = "{{ url_for('posts.p', path=post_id) }}";
+        save_patch(textarea.val(), () => {
+            if ({{ viewonly | lower }} || has_draft === false) {
+                window.location = '{{ url_for('posts.p', path=post_id) }}';
             } else {
-                window.location = "{{ url_for('posts.p', path=post_id, draft=1) }}";
+                window.location = '{{ url_for('posts.p', path=post_id, draft=1) }}';
             }
         });
         return false;
     });
 
-    revert_button.on('click', () => {
-        window.location = "{{ url_for('posts.p', path=post_id, revert=1) }}";
+    commit_button.on('click', () => {
+        $.post('{{ url_for('posts.p', path=post_id) }}', {
+            'commit': true,
+        }, () => {
+            window.location = '{{ url_for('posts.p', path=post_id) }}';
+        });
         return false;
     });
 
-    save_button.on('click', () => {
-        save_diff(textarea.val(), () => {
-            window.location = "{{ url_for('posts.p', path=post_id, save=1) }}";
+    revert_button.on('click', () => {
+        $.post('{{ url_for('posts.p', path=post_id) }}', {
+            'revert': true,
+        }, () => {
+            window.location = '{{ url_for('posts.p', path=post_id, source=1) }}';
         });
         return false;
-    })
+    });
 
     doctype_select.on('change', () => {        
-        var url = new URL(window.location);
-        url.search = '';
-        var doctype = doctype_select.val();
-        $.post(url, {
-            doctype: doctype
+        $.post('{{ url_for('posts.p', path=post_id) }}', {
+            doctype: doctype_select.val(),
         }, () => {
-            window.location = "{{ url_for('posts.p', path=post_id, source=1) }}"
+            window.location = '{{ url_for('posts.p', path=post_id, source=1) }}';
         });
     });
 {% if viewonly %}
     textarea.prop('readonly', true);
 {% else %}
     doctype_select.removeClass('hidden');
-    if (modified && in_index) {
+    if (has_draft && has_commit) {
         revert_button.removeClass('hidden');
     }
-    if (modified) {
-        save_button.removeClass('hidden');
+    if (has_draft) {
+        commit_button.removeClass('hidden');
     } 
 {% endif %}
+    textarea.focus();
 });
 
 </script>

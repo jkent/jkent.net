@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "10c4c3514f074a4f778900fe7ba5dc0171977680bffd425da5a2bda880914c48"
+            "sha256": "9d522a8d362df3f0e68a60c2eaa5fe3b9c8e21db45bf6175c69b5ebf10b5e38b"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -20,6 +20,13 @@
                 "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
             ],
             "version": "==7.0"
+        },
+        "diff-match-patch": {
+            "hashes": [
+                "sha256:a809a996d0f09b9bbd59e9bbd0b71eed8c807922512910e05cbd3f9480712ddb"
+            ],
+            "index": "pypi",
+            "version": "==20181111"
         },
         "flask": {
             "hashes": [
@@ -170,13 +177,6 @@
             ],
             "index": "pypi",
             "version": "==1.4.2.post1"
-        },
-        "patch": {
-            "hashes": [
-                "sha256:c62073f356cff054c8ac24496f1a3d7cfa137835c31e9af39a9f5292fd75bd9f"
-            ],
-            "index": "pypi",
-            "version": "==1.16"
         },
         "pygments": {
             "hashes": [

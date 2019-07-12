@@ -1,6 +1,6 @@
 import os
 from flask import Flask, g, render_template
-from jkent_net.git import GitRepo
+from jkent_net.repository import Repository
 from jkent_net.auth import login_required
 
 
@@ -13,14 +13,12 @@ def create_app():
         SQLALCHEMY_TRACK_MODIFICATIONS = False,
     )
     app.config.from_pyfile('config.py', silent=True)
-    app.repo_path = os.path.join(app.instance_path, 'repo')
+    os.makedirs(app.instance_path, exist_ok=True)
+
+    app.repository_path = os.path.join(app.instance_path, 'repository')
     app.cache_path = os.path.join(app.instance_path, 'cache')
 
-    os.makedirs(app.instance_path, exist_ok=True)
-    os.makedirs(app.repo_path, exist_ok=True)
-    os.makedirs(os.path.join(app.cache_path, 'documents'), exist_ok=True)
-
-    app.repo = GitRepo(app.repo_path)
+    app.repository = Repository(app.repository_path)
 
     import jkent_net.models
     models.init_app(app)
