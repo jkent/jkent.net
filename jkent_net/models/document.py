@@ -23,27 +23,26 @@ def id_generator():
     return id
 
 def text_converter(data):
-    output = '<div class="rendered"><pre>'
+    output = '<div class="rendered"><pre>\n'
     output += escape(data)
-    output += '</pre></div>'
+    output += '\n</pre></div>'
     return output
 
 def html_converter(data):
-    output = '<div class="rendered">'
+    output = '<div class="rendered">\n'
     output += data
-    output += '</div>'
+    output += '\n</div>'
     return output
 
 def markdown_converter(data):
-    output = '<div class="rendered">'
+    output = '<div class="rendered">\n'
     output += markdown(data, extensions=[
         'jkent_net.markdown.codehilite:CodeHiliteExtension',
         'jkent_net.markdown.fenced_code:FencedCodeExtension',
         'tables',
     ])
-    output += '</div>'
+    output += '\n</div>'
     return output
-
 
 class DocumentType(enum.Enum):
     text = 0

@@ -16,7 +16,7 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
 
     app.repository_path = os.path.join(app.instance_path, 'repository')
-    app.cache_path = os.path.join(app.instance_path, 'cache')
+    app.cache_root = os.path.join(app.instance_path, 'cache')
 
     app.repository = Repository(app.repository_path)
 
