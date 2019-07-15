@@ -1,7 +1,7 @@
 import click
 from flask.cli import with_appcontext
 from werkzeug.security import generate_password_hash
-from jkent_net.models import Document, DocumentType, User, db
+from jkent_net.models import Subtree, User, db
 
 
 @click.command('add-user')
@@ -15,7 +15,7 @@ def add_user_command(email, password, is_admin):
     user = User(email=email, hash=hash, is_admin=is_admin)
     db.session.add(user)
     db.session.commit()
-    return user.id
+    return user
 
 
 @click.command('del-user')
@@ -45,11 +45,15 @@ def init_db_command():
 def init_demo_command(ctx):
     """Initializes everything for a demo."""
     ctx.invoke(init_db_command)
-    user_id = ctx.invoke(add_user_command, email='user@example.com', password='password', is_admin=True)
-    document = Document(id='test', owner=user_id, title='Hello world!', type=DocumentType.markdown)
-    db.session.add(document)
-    document = Document(id='!found', owner=user_id, title='Not found!', type=DocumentType.markdown)
-    db.session.add(document)
+    user = ctx.invoke(add_user_command, email='user@example.com', password='password', is_admin=True)
+    subtree = Subtree(user)
+    db.session.add(subtree)
+    subtree.write('index.md', b'# Hello world!\n\nThis is in the HEAD~1')
+    subtree.commit('first commit')
+    subtree.write('index.md', b'# Hello world!\n\nThis is in the HEAD')
+    subtree.commit('second commit')
+    subtree.write('index.md', b'# Hello world!\n\nThis is in the index')
+    print(subtree.id)
     db.session.commit()
 
 

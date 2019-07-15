@@ -1,59 +1,60 @@
-from .converter import convert_to_html
+from ..converter import convert_to_html
+from ..models import db
 from diff_match_patch import diff_match_patch
-from io import BytesIO
+from flask import current_app
 import magic
 import os
+import random
 import re
 import string
+from sqlalchemy.orm import validates
+
+
+__all__ = ['Subtree']
 
 ID_LENGTH = 6
 
 
-class Subtree(object):
-    def __init__(self, repository, cache_root, id=None):
-        self._repository = repository
-        if id:
-            if not re.match(r'[A-Za-z0-9]{{{}}}'.format(ID_LENGTH), id):
-                raise ValueError('id is invalid')
-            self._exists = os.path.exists(os.path.join(repository.path, id))
-        else:
-            while True:
-                id = ''.join(random.choices(string.ascii_letters + string.digits, k=ID_LENGTH))
-                if not os.path.exists(os.path.join(repository.path, id)):
-                    break
-            self._exists = False
-        self._cache_root = cache_root
-        self._id = id
+class Subtree(db.Model):
+    id = db.Column(db.String(6), primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    owner = db.relationship('User', primaryjoin='Subtree.owner_id==User.id')
+    title = db.Column(db.Unicode(256), nullable=True)
+    published = db.Column(db.Boolean, nullable=False, default=False)
 
-    @property
-    def id(self):
-        return self._id
+    @staticmethod
+    def id_generator():
+        while True:
+            id = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+            if not db.session.query(db.exists().where(Subtree.id == id)).scalar():
+                break
+        return id
 
-    @property
-    def exists(self):
-        return self._exists
+    def __init__(self, owner):
+        self.id = Subtree.id_generator()
+        self.owner = owner
 
-    def create(self):
-        if self._exists:
-            raise Exception('subtree exists')
-        
-        os.mkdir(os.path.join(self._repository.path, self._id))
-        self._exists = True
+        os.makedirs(os.path.join(current_app.repository.path, self.id), exist_ok=True)
 
-    def file_exists(self, path, version='HEAD'):
+    @validates('id')
+    def validate_id(self, key, id):
+        assert re.match(r'[A-Za-z0-9]{{{}}}'.format(ID_LENGTH), id)
+        return id
+
+    def exists(self, path, version='HEAD'):
         if version:
-            return self._repository.exists(os.path.join(self._id, path), version)
+            return current_app.repository.exists(os.path.join(self.id, path), version)
 
-        return os.path.exists(os.path.join(self._repository.path, self._id, path))
+        return os.path.exists(os.path.join(current_app.repository.path, self.id, path))
 
     def find_index(self, path, version='HEAD'):
-        if self.file_exists(os.path.join(path, 'index.html'), version):
+        if self.exists(os.path.join(path, 'index.html'), version):
             return os.path.join(path, 'index.html')
-        elif self.file_exists(os.path.join(path, 'index.htm'), version):
+        elif self.exists(os.path.join(path, 'index.htm'), version):
             return os.path.join(path, 'index.htm')
-        elif self.file_exists(os.path.join(path, 'index.md'), version):
+        elif self.exists(os.path.join(path, 'index.md'), version):
             return os.path.join(path, 'index.md')
-        elif self.file_exists(os.path.join(path, 'index.txt'), version):
+        elif self.exists(os.path.join(path, 'index.txt'), version):
             return os.path.join(path, 'index.txt')
         else:
             return None
@@ -70,12 +71,13 @@ class Subtree(object):
     def read(self, path, version='HEAD', raw=False):
         mimetype = self._mimetype_from_path(path)
         if not raw and version:
-            hash = self._repository.log(os.path.join(self._id, path), version, 1)
-            if not hash:
+            rows = current_app.repository.history(os.path.join(self.id, path), version, 1)
+            if not rows:
                 return None, None
+            hash = rows[0][0]
 
             # check for cache hit
-            cache_path = os.path.join(self._cache_root, self._id, hash, path)
+            cache_path = os.path.join(current_app.cache_root, self.id, hash, path)
             if os.path.exists(cache_path):
                 file = open(cache_path, 'rb')
                 if mimetype in ['text/markdown', 'text/plain']:
@@ -86,7 +88,7 @@ class Subtree(object):
                 return file, mimetype
 
         # raw or cache miss or non-cacheable
-        file = self._repository.read(os.path.join(self._id, path), version)
+        file = current_app.repository.read(os.path.join(self.id, path), version)
         if file == None:
             return None, None
         if mimetype == None:
@@ -113,17 +115,17 @@ class Subtree(object):
         return file, mimetype
 
     def write(self, path, data):
-        self._repository.write(os.path.join(self._id, path), data)
+        current_app.repository.write(os.path.join(self.id, path), data)
 
-    def commit(self, path, message=None):
-        self._repository.add(path)
-        self._repository.commit(message)
+    def commit(self, message=None):
+        current_app.repository.add(self.id)
+        current_app.repository.commit(message)
 
     def revert(self, version='HEAD'):
-        self._repository.checkout(self, self._id, version)
+        current_app.repository.checkout(self.id, version)
 
     def patch(self, path, patch_text):
-        data = self.read(self, path)
+        data = self.read(self, path, None)
         dmp = diff_match_patch()
         patch = dmp.patch_fromText(patch_text)
         data, hunks_ok = dmp.patch_apply(patch, text)
@@ -131,10 +133,10 @@ class Subtree(object):
         return all(hunks_ok)
     
     def list(self, path, version=None):
-        return self._repository.list(os.path.join(self._id, path), version)
+        return current_app.repository.list(os.path.join(self.id, path), version)
 
     def isdir(self, path, version=None):
-        return self._repository.isdir(os.path.join(self._id, path), version)
+        return current_app.repository.isdir(os.path.join(self.id, path), version)
 
     def history(self, path, version=None, num=None):
-        return self._repository.history(os.path.join(self._id, path), version, num)
+        return current_app.repository.history(os.path.join(self.id, path), version, num)

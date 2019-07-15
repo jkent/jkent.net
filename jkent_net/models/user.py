@@ -17,7 +17,7 @@ class User(db.Model):
     name = db.Column(db.Unicode(256), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False)
     image_source = db.Column(db.Enum(ImageSource), nullable=False, default=ImageSource.none)
-    documents = db.relationship('Document', backref='user', lazy='dynamic')
+    #documents = db.relationship('Document', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return '<User %r>' % self.email

@@ -8,7 +8,8 @@ class Repository:
         self._path = path
         if not os.path.exists(os.path.join(self._path, '.git')):
             os.makedirs(self._path, exist_ok=True)
-            subprocess.check_call(['git', '-C', self._path, 'init'])
+            subprocess.check_call(['git', '-C', self._path, 'init'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     @property
     def path(self):
