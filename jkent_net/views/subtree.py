@@ -17,12 +17,19 @@ def subtree(id, path=''):
     s = Subtree(current_app.repository, current_app.cache_root, id)
 
     version = request.args.get('v')
+    raw = request.args.get('raw')
 
-    if request.path.endswith('/') and s.file_exists(path, version):
-        data = b'\n'.join(s.list(path, version))
-        return Response(data, mimetype='text/plain')
+    if not s.file_exists(path, version):
+        abort(404)
 
-    file, mimetype = s.read(path, version)
+    if s.isdir(path, version):
+        index = s.find_index(path, version)
+        if not index:
+            data = b'\n'.join(s.list(path, version))
+            return Response(data, mimetype='text/plain')
+        path = index
+
+    file, mimetype = s.read(path, version, raw)
     if file == None:
         abort(404)
 

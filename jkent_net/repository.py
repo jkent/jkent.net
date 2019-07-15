@@ -23,7 +23,7 @@ class Repository:
         return True
 
     def read(self, path, version='HEAD'):
-        if version == None:
+        if not version:
             if not os.path.isfile(os.path.join(self._path, path)):
                 return None
             try:
@@ -86,33 +86,27 @@ class Repository:
             return result.decode('utf8')
         return map(lambda x: x.decode('utf8'), result.split('\n'))
 
-    def list(self, path='.', version='master', recursive=False):
-        if recursive:
-            result = subprocess.check_output(['git', '-C', self.path, 'ls-tree',
-                '-r', '--name-only', version, '--', path])
-        else:
-            result = subprocess.check_output(['git', '-C', self.path, 'ls-tree',
-                '--name-only', version, '--', path])
-        return result.rstrip().split('\n')
-
-
     def list(self, path, version='HEAD', recursive=False):
         if version:
-            prefix = os.path.dirname(path)
-            if recursive:
-                result = subprocess.check_output(['git', '-C', self.path,
-                    'ls-tree', '-r', '--name-only', '--directory', version, '--', path])
-            else:
-                result = subprocess.check_output(['git', '-C', self.path,
-                    'ls-tree', '--name-only', '--full-name', version, '--', path])
-            paths = result.rstrip().split(b'\n')
+            try:
+                prefix = os.path.dirname(path)
+                if recursive:
+                    result = subprocess.check_output(['git', '-C', self.path,
+                        'ls-tree', '-r', '--name-only', version, '--', path],
+                        stderr=subprocess.DEVNULL)
+                else:
+                    result = subprocess.check_output(['git', '-C', self.path,
+                        'ls-tree', '--name-only', version, '--', path],
+                        stderr=subprocess.DEVNULL)
+                paths = result.rstrip().split(b'\n')
+            except subprocess.CalledProcessError:
+                paths = []
         else:
-            print('here!')
             prefix = os.path.dirname(os.path.join(self._path, path))
             paths = []
             for root, dirs, files in os.walk(os.path.join(self._path, path)):
                 for dir in dirs:
-                    dirname = os.path.normpath(os.path.join(root, dir))
+                    dirname = os.path.normpath(os.path.join(root, dir)) + os.sep
                     paths.append(dirname.encode('utf8'))
                 if recursive:
                     dirs[:] = [d for d in dirs if not d.startswith('.')]
@@ -125,3 +119,17 @@ class Repository:
         paths = list(map(lambda x: x[len(prefix) + 1:], paths))
         paths.sort()
         return paths
+
+    def isdir(self, path, version='HEAD'):
+        if version:
+            try:
+                result = subprocess.check_output(['git', '-C', self.path,
+                    'ls-tree', '-r', '--name-only', version, '--', path],
+                    stderr=subprocess.DEVNULL)
+                return result.rstrip().split(b'\n')[0].decode('utf8') != path
+            except subprocess.CalledProcessError:
+                return False
+            except:
+                return False
+        else:
+            return os.path.isdir(os.path.join(self._path, path))

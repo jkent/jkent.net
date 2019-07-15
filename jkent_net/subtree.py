@@ -46,7 +46,7 @@ class Subtree(object):
 
         return os.path.exists(os.path.join(self._repository.path, self._id, path))
 
-    def _find_index(self, path, version=None):
+    def find_index(self, path, version='HEAD'):
         if self.file_exists(os.path.join(path, 'index.html'), version):
             return os.path.join(path, 'index.html')
         elif self.file_exists(os.path.join(path, 'index.htm'), version):
@@ -67,28 +67,9 @@ class Subtree(object):
             return 'text/plain'
         return None
 
-    def read_raw(self, path, version='HEAD'):
-        if path.endswith('/'):
-            path = self._find_index(path, version)
-            if not path:
-                return None, None
+    def read(self, path, version='HEAD', raw=False):
         mimetype = self._mimetype_from_path(path)
-        file = self._repository.read(os.path.join(self._id, path), version)
-        if file == None:
-            return None, None
-        if mimetype == None:
-            mimetype = magic.from_buffer(file.read(1024), mime=True)
-            file.seek(0)
-        return file, mimetype
-
-    def read(self, path, version='HEAD'):
-        if path.endswith('/'):
-            path = self._find_index(path, version)
-            if not path:
-                return None, None
-        mimetype = self._mimetype_from_path(path)
-
-        if version != None:
+        if not raw and version:
             hash = self._repository.log(os.path.join(self._id, path), version, 1)
             if not hash:
                 return None, None
@@ -104,15 +85,21 @@ class Subtree(object):
                     file.seek(0)
                 return file, mimetype
 
-        # cache miss or non-cacheable
-        file, mimetype = self.read_raw(path, version)
-        if mimetype == 'text/html' and data.find('<title>') >= 0:
+        # raw or cache miss or non-cacheable
+        file = self._repository.read(os.path.join(self._id, path), version)
+        if file == None:
+            return None, None
+        if mimetype == None:
+            mimetype = magic.from_buffer(file.read(1024), mime=True)
+            file.seek(0)
+
+        if raw or mimetype == 'text/html' and data.find('<title>') >= 0:
             pass
         elif mimetype in ('text/html', 'text/markdown', 'text/plain'):
             file = convert_to_html(file, mimetype)
             mimetype = 'text/html'
 
-        if version != None:
+        if not raw and version:
             os.makedirs(os.path.dirname(cache_path), exist_ok=True)
             cache = open(cache_path, 'wb')
             while True:
@@ -145,3 +132,6 @@ class Subtree(object):
     
     def list(self, path, version=None):
         return self._repository.list(os.path.join(self._id, path), version)
+
+    def isdir(self, path, version=None):
+        return self._repository.isdir(os.path.join(self._id, path), version)
