@@ -44,14 +44,6 @@ class Repository:
         with open(os.path.join(self._path, path), 'wb') as f:
             f.write(data)
 
-    def timestamp(self, path, version='HEAD'):
-        try:
-            result = subprocess.check_output(['git', '-C', self._path, 'log',
-                '--pretty=format:%at', '-n1', '--', path])
-        except subprocess.CalledProcessError:
-            return 0
-        return int(result)
-
     def checkout(self, path, version='HEAD'):
         subprocess.check_call(['git', '-C', self._path, 'checkout', version,
             '--', path])
@@ -68,23 +60,29 @@ class Repository:
             command += ['-m', message]
         subprocess.check_call(command)
 
-    def log(self, path='.', version='HEAD', num=None):
+    def history(self, path=None, version='HEAD', num=None):
+        if not version:
+            return []
+
         try:
-            if not num:
+            if num:
                 result = subprocess.check_output(['git', '-C', self.path, 'log',
-                    '--pretty=format:%H', version, '--', path], 
-                    stderr=subprocess.DEVNULL)
+                    '-n{}'.format(num), '--pretty=format:%H %at %s', version,
+                    '--', path], stderr=subprocess.DEVNULL)
             else:
                 result = subprocess.check_output(['git', '-C', self.path, 'log',
-                    '-n{}'.format(num), '--pretty=format:%H', version, '--',
-                    path], stderr=subprocess.DEVNULL)
+                    '--pretty=format:%H %at %s', version, '--', path], 
+                    stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
-            return None
+            return ''
 
-        result = result.rstrip()
-        if num == 1:
-            return result.decode('utf8')
-        return map(lambda x: x.decode('utf8'), result.split('\n'))
+        results = []
+        for line in result.rstrip().decode('utf8').split('\n'):
+            if line:
+                line = tuple(line.split(' ', 2))
+                if self.exists(path, line[0]):
+                    results.append(line)
+        return results
 
     def list(self, path, version='HEAD', recursive=False):
         if version:

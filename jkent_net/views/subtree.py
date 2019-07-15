@@ -18,6 +18,11 @@ def subtree(id, path=''):
 
     version = request.args.get('v')
     raw = request.args.get('raw')
+    history = request.args.get('history')
+
+    if history:
+        history = s.history(path, version)
+        return Response(repr(history), mimetype='text/plain')
 
     if not s.file_exists(path, version):
         abort(404)

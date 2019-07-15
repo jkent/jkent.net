@@ -135,3 +135,6 @@ class Subtree(object):
 
     def isdir(self, path, version=None):
         return self._repository.isdir(os.path.join(self._id, path), version)
+
+    def history(self, path, version=None, num=None):
+        return self._repository.history(os.path.join(self._id, path), version, num)
