@@ -65,21 +65,17 @@ class Repository:
             return []
 
         try:
-            if num:
-                result = subprocess.check_output(['git', '-C', self.path, 'log',
-                    '-n{}'.format(num), '--pretty=format:%H %at %s', version,
-                    '--', path], stderr=subprocess.DEVNULL)
-            else:
-                result = subprocess.check_output(['git', '-C', self.path, 'log',
-                    '--pretty=format:%H %at %s', version, '--', path], 
-                    stderr=subprocess.DEVNULL)
+            result = subprocess.check_output(['git', '-C', self.path, 'log'] +
+                (['-n{}'.format(num)] if num else []) +
+                ['--pretty=format:%H %at %ae %s', version, '--', path],
+                stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             return ''
 
         results = []
         for line in result.rstrip().decode('utf8').split('\n'):
             if line:
-                line = tuple(line.split(' ', 2))
+                line = tuple(line.split(' ', 3))
                 if self.exists(path, line[0]):
                     results.append(line)
         return results
@@ -88,14 +84,9 @@ class Repository:
         if version:
             try:
                 prefix = os.path.dirname(path)
-                if recursive:
-                    result = subprocess.check_output(['git', '-C', self.path,
-                        'ls-tree', '-r', '--name-only', version, '--', path],
-                        stderr=subprocess.DEVNULL)
-                else:
-                    result = subprocess.check_output(['git', '-C', self.path,
-                        'ls-tree', '--name-only', version, '--', path],
-                        stderr=subprocess.DEVNULL)
+                result = subprocess.check_output(['git', '-C', self.path,
+                    'ls-tree'] + (['-r'] if recursive else []) + ['--name-only',
+                    version, '--', path], stderr=subprocess.DEVNULL)
                 paths = result.rstrip().split(b'\n')
             except subprocess.CalledProcessError:
                 paths = []
