@@ -16,9 +16,9 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
 
     app.repository_path = os.path.join(app.instance_path, 'repository')
-    app.cache_root = os.path.join(app.instance_path, 'cache')
-
     app.repository = Repository(app.repository_path)
+
+    app.cache_root = os.path.join(app.instance_path, 'cache')
 
     import jkent_net.models
     models.init_app(app)

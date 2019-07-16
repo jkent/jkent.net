@@ -1,10 +1,5 @@
-from ..auth import admin_required
 from ..models import db, Subtree
-from flask import Blueprint, Response, abort, current_app, g, redirect, render_template, request, send_file, url_for
-import io
-from jinja2 import Markup
-import magic
-import re
+from flask import Blueprint, Response, abort, request, send_file
 
 
 __all__ = ['bp']

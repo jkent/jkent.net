@@ -6,7 +6,6 @@ from werkzeug.urls import url_parse, url_join
 from jkent_net.models import User, db
 from jkent_net.utils import get_redirect_target
 
-
 __all__ = ['bp']
 
 

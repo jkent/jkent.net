@@ -1,7 +1,7 @@
 import click
 from flask.cli import with_appcontext
 from werkzeug.security import generate_password_hash
-from jkent_net.models import Subtree, User, db
+from jkent_net.models import Page, Subtree, User, db
 
 
 @click.command('add-user')
@@ -53,7 +53,8 @@ def init_demo_command(ctx):
     subtree.write('index.md', b'# Hello world!\n\nThis is in the HEAD')
     subtree.commit('second commit')
     subtree.write('index.md', b'# Hello world!\n\nThis is in the index')
-    print(subtree.id)
+    page = Page(subtree, 'test', '.test', 'Test')
+    db.session.add(page)
     db.session.commit()
 
 

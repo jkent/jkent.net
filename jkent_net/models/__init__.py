@@ -36,5 +36,6 @@ def init_app(app):
             g.user = User.query.filter_by(email=email).first()
 
 
-from .user import *
+from .page import *
 from .subtree import *
+from .user import *

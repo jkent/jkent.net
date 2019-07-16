@@ -16,11 +16,12 @@ ID_LENGTH = 6
 
 
 class Subtree(db.Model):
-    id = db.Column(db.String(6), primary_key=True)
+    id = db.Column(db.String(ID_LENGTH), primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     owner = db.relationship('User', primaryjoin='Subtree.owner_id==User.id')
     title = db.Column(db.Unicode(256), nullable=True)
     published = db.Column(db.Boolean, nullable=False, default=False)
+    page = db.relationship('Page', uselist=False, back_populates='subtree')
 
     @staticmethod
     def id_generator():
