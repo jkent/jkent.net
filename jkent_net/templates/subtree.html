@@ -1,0 +1,13 @@
+{%- extends 'base.html' %}
+{%- block title %}{{ title }}{% endblock %}
+{% block content %}
+{% if mode == 'render' %}
+{{ content }}
+{% elif mode == 'raw' %}
+<textarea class="source">{{ content }}</textarea>
+{% elif mode == 'edit' %}
+<!--<input class="title" type="text" value="{{ title }}">-->
+<textarea class="source">{{ content }}</textarea>
+{% endif %}
+{% include 'actionbar.html' %}
+{% endblock %}

@@ -2,16 +2,23 @@
 <span style="float: left;">
 </span>
 <span style="float: right;">
-{% if actionbar == 'view' %}
-{% if g.user.is_admin %}
-{{ draft }}
+{% if mode == 'render' %}
 {% if page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
+<a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% if g.user.is_admin %}
+<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
 {% endif %}
-<a href="#" title="{% if g.user.is_admin %}Edit source{% else %}View source{% endif %}" class="source"><i class="{% if doctype == 'markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
-{% elif actionbar == 'edit' %}
+{% elif mode == 'raw' %}
+{% if page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
+<a href="#" title="View source" class="raw highlight"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% if g.user.is_admin %}
+<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
+{% endif %}
+{% elif  mode == 'edit' %}
 <a href="#" title="Commit" class="commit hidden"><i class="fas fa-save"></i></a>
 <a href="#" title="Revert" class="revert hidden"><i class="fas fa-history"></i></a>
-<a href="#" title="Preview" class="preview highlight"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+<a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+<a href="#" title="Edit" class="edit highlight"><i class="fas fa-edit"></i></a>
 {% endif %}
 </span>
 </div>
@@ -23,6 +30,7 @@ $(() => {
     var url = new URL(window.location);
     url.search = '';
 
+    var mode = '{{ mode }}';
     var dirty = {{ page.subtree.dirty(path) | lower }};
     var viewonly = {{ viewonly | lower }};
     var version = {{ version | tojson }};
@@ -32,9 +40,9 @@ $(() => {
     var dmp = new diff_match_patch();
     var commit_btn = $('#actionbar .commit');
     var revert_btn = $('#actionbar .revert');
-    var preview_btn = $('#actionbar .preview');
     var draft_btn = $('#actionbar .draft');
-    var source_btn = $('#actionbar .source');
+    var raw_btn = $('#actionbar .raw');
+    var edit_btn = $('#actionbar .edit');
 
     function source_save_patch(complete) {
         var source_text = source.val();
@@ -104,43 +112,47 @@ $(() => {
         });
         return false;
     });
-    
-    preview_btn.on('click', () => {
-        source_save_patch(() => {
-            if (version == null) {
-                window.location = url;
-            } else {
-                var parts = window.location.pathname.slice(1).split('/');
-                var page = parts.shift();
-                var _ = parts.shift();
-                console.log([page, _]);
-                //window.location.pathname = '/' + page + '/' + parts.join('/');
-            }
-        });
+
+    raw_btn.on('click', () => {
+        var search = new URLSearchParams();
+        if (mode != 'raw' || mode == 'edit') {
+            search.set('raw', '1');
+        }
+        url.search = search;
+        window.location = url;
         return false;
     });
 
-    source_btn.on('click', () => {
+    edit_btn.on('click', () => {
         var search = new URLSearchParams();
-        search.set('source', '1'); 
+        if (mode != 'edit' || mode == 'raw') {
+            search.set('edit', '1');
+        }
         url.search = search;
-        console.log(url);
         window.location = url;
+        return false;
     });
+
 
     draft_btn.on('click', () => {
         var parts = window.location.pathname.slice(1).split('/');        
         var page = parts.shift();
+        var pathname;
         if (version == null) {
-            window.location.pathname = '/' + page + '/_HEAD/' + parts.join('/');
+            pathname = '/' + page + '/_HEAD';
         } else {
             var _ = parts.shift();
-            window.location.pathname = '/' + page + '/' + parts.join('/');
+            pathname = '/' + page
         }
+        if (parts.length > 0 && parts[0] != '') {
+            pathname += '/' + parts.join('/');
+        }
+        window.location.pathname = pathname;
+        return false;
     });
 
-    revert_btn.toggleClass('hidden', !dirty || viewonly);
-    commit_btn.toggleClass('hidden', !dirty || viewonly);
-    source.prop('readonly', viewonly);
+    revert_btn.toggleClass('hidden', !dirty);
+    commit_btn.toggleClass('hidden', !dirty);
+    source.prop('readonly', mode != 'edit');
 });
 </script>
