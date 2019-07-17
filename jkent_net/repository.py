@@ -64,7 +64,7 @@ class Repository:
             return []
 
         try:
-            result = subprocess.check_output(['/usr/bin/git', '-C', self.path,
+            result = subprocess.check_output(['/usr/bin/git', '-C', self._path,
                 'log'] + (['-n{}'.format(num)] if num else []) +
                 ['--pretty=format:%H %at %ae %s', version, '--', path],
                 stderr=subprocess.DEVNULL)
@@ -84,7 +84,7 @@ class Repository:
             try:
                 prefix = os.path.dirname(path)
                 result = subprocess.check_output(['/usr/bin/git', '-C',
-                    self.path, 'ls-tree'] + (['-r'] if recursive else []) +
+                    self._path, 'ls-tree'] + (['-r'] if recursive else []) +
                     ['--name-only', version, '--', path],
                     stderr=subprocess.DEVNULL)
                 paths = result.rstrip().split(b'\n')
@@ -113,7 +113,7 @@ class Repository:
         if version:
             try:
                 result = subprocess.check_output(['/usr/bin/git', '-C',
-                    self.path, 'ls-tree', '-r', '--name-only', version, '--',
+                    self._path, 'ls-tree', '-r', '--name-only', version, '--',
                     path], stderr=subprocess.DEVNULL)
                 return result.rstrip().split(b'\n')[0].decode('utf8') != path
             except subprocess.CalledProcessError:
@@ -125,7 +125,7 @@ class Repository:
 
     def dirty(self, path):
         try:
-            result = subprocess.check_output(['/usr/bin/git', '-C', self.path,
+            result = subprocess.check_output(['/usr/bin/git', '-C', self._path,
                 'status', '--porcelain'], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             return False
