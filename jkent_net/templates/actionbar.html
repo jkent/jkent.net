@@ -3,13 +3,13 @@
 </span>
 <span style="float: right;">
 {% if mode == 'render' %}
-{% if page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
+{% if g.user.is_admin and page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
 <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
 {% if g.user.is_admin %}
 <a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
 {% endif %}
 {% elif mode == 'raw' %}
-{% if page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
+{% if g.user.is_admin and page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
 <a href="#" title="View source" class="raw highlight"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
 {% if g.user.is_admin %}
 <a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
