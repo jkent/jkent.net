@@ -150,10 +150,14 @@ a:hover{
 	right: 0;
 	left: 0;
 	margin: 0.5em;
-	height: 1.25em;
+	height: 1.4em;
 }
 #actionbar i{
 	padding: 0 0.5em;
+}
+#actionbar input {
+	position: relative;
+	top: -2px;
 }
 #content > textarea.source {
 	border: 1px solid #111;
@@ -174,6 +178,7 @@ a:hover{
 .hidden {
 	display: none !important;
 }
+
 @media (min-width: 650px){
 	#header .menu{
 		display: block;
