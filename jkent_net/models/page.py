@@ -15,6 +15,6 @@ class Page(db.Model):
     def __init__(self, subtree, path, menu_path, title, menu_order=0):
         self.subtree = subtree
         self.path = path
-        self.menu_path = path
+        self.menu_path = menu_path
         self.title = title
         self.menu_order = menu_order

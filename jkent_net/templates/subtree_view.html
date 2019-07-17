@@ -3,7 +3,7 @@
 
 {% block content %}
 {{ content }}
-<div id="actionbar">
-</div>
-{{ type }}
+{% with actionbar='view' %}
+{% include 'actionbar.html' %}
+{% endwith %}
 {% endblock %}

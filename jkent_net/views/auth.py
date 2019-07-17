@@ -14,7 +14,7 @@ bp = Blueprint('auth', __name__)
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
-    r = get_redirect_target('posts.index')
+    r = get_redirect_target('index')
     if g.user:
         return redirect(request.args.get('r', r))
 
@@ -44,11 +44,11 @@ def login():
 @bp.route('/register')
 def register():
     if g.user:
-        return redirect(url_for('posts.index'))
+        return redirect(url_for('index'))
     
     return render_template('auth/base.html')
 
 @bp.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('posts.index'))
+    return redirect(url_for('index'))

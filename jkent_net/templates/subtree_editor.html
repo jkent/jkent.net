@@ -1,0 +1,10 @@
+{%- extends 'base.html' %}
+{%- block title %}Editing {{ title }}{% endblock %}
+
+{% block content %}
+<input class="title" type="text" value="{{ title }}">
+<textarea class="source">{{ content }}</textarea>
+{% with actionbar='edit' %}
+{% include 'actionbar.html' %}
+{% endwith %}
+{% endblock %}

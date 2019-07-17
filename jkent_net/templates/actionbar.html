@@ -1,0 +1,146 @@
+<div id="actionbar">
+<span style="float: left;">
+</span>
+<span style="float: right;">
+{% if actionbar == 'view' %}
+{% if g.user.is_admin %}
+{{ draft }}
+{% if page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
+{% endif %}
+<a href="#" title="{% if g.user.is_admin %}Edit source{% else %}View source{% endif %}" class="source"><i class="{% if doctype == 'markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% elif actionbar == 'edit' %}
+<a href="#" title="Commit" class="commit hidden"><i class="fas fa-save"></i></a>
+<a href="#" title="Revert" class="revert hidden"><i class="fas fa-history"></i></a>
+<a href="#" title="Preview" class="preview highlight"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% endif %}
+</span>
+</div>
+
+<script src="{{ url_for('static', filename='diff_match_patch.js') }}"></script>
+
+<script>
+$(() => {
+    var url = new URL(window.location);
+    url.search = '';
+
+    var dirty = {{ page.subtree.dirty(path) | lower }};
+    var viewonly = {{ viewonly | lower }};
+    var version = {{ version | tojson }};
+    var source = $('#content > textarea.source');
+    var source_last = source.val();
+    var source_timeout = null;
+    var dmp = new diff_match_patch();
+    var commit_btn = $('#actionbar .commit');
+    var revert_btn = $('#actionbar .revert');
+    var preview_btn = $('#actionbar .preview');
+    var draft_btn = $('#actionbar .draft');
+    var source_btn = $('#actionbar .source');
+
+    function source_save_patch(complete) {
+        var source_text = source.val();
+        var patch = dmp.patch_make(source_last, source_text);
+        var patch_text = dmp.patch_toText(patch);
+        $.post(url, {
+            action: 'patch',
+            patch: patch_text,
+        }, (data) => {
+            source_last = source_text;
+            dirty = data.dirty;
+            revert_btn.toggleClass('hidden', !dirty);
+            commit_btn.toggleClass('hidden', !dirty);
+            if (typeof complete == 'function') {
+                complete();
+            }
+        });
+    }
+
+    function source_resize() {
+        source.height('inherit');
+        var height = parseInt(source.css('border-top-width'), 10)
+                   - parseInt(source.css('padding-top'), 10)
+                   + source.prop('scrollHeight')
+                   - parseInt(source.css('padding-bottom'), 10)
+                   + parseInt(source.css('border-bottom-width'), 10);
+        source.height(height + 'px');
+    }
+    source_resize();
+
+    source.on('input', (event) => {
+        source_resize();
+        if (source_timeout) {
+            clearTimeout(source_timeout);
+            source_timeout = null;
+        }
+        source_timeout = setTimeout(() => {
+            source_save_patch();
+            source_timeout = null;
+        }, 1000);
+    });
+    
+    commit_btn.on('click', () => {
+        if (source_timeout) {
+            clearTimeout(source_timeout);
+            source_timeout = null;
+        }
+        source_save_patch(() => {
+            $.post(url, {
+                action: 'commit',
+            }, (data) => {
+                window.location = url;
+            });
+        });
+        return false;
+    });
+
+    revert_btn.on('click', () => {
+        if (source_timeout) {
+            clearTimeout(source_timeout);
+            source_timeout = null;
+        }
+        $.post(url, {
+            action: 'revert',
+        }, (data) => {
+            location.reload();
+        });
+        return false;
+    });
+    
+    preview_btn.on('click', () => {
+        source_save_patch(() => {
+            if (version == null) {
+                window.location = url;
+            } else {
+                var parts = window.location.pathname.slice(1).split('/');
+                var page = parts.shift();
+                var _ = parts.shift();
+                console.log([page, _]);
+                //window.location.pathname = '/' + page + '/' + parts.join('/');
+            }
+        });
+        return false;
+    });
+
+    source_btn.on('click', () => {
+        var search = new URLSearchParams();
+        search.set('source', '1'); 
+        url.search = search;
+        console.log(url);
+        window.location = url;
+    });
+
+    draft_btn.on('click', () => {
+        var parts = window.location.pathname.slice(1).split('/');        
+        var page = parts.shift();
+        if (version == null) {
+            window.location.pathname = '/' + page + '/_HEAD/' + parts.join('/');
+        } else {
+            var _ = parts.shift();
+            window.location.pathname = '/' + page + '/' + parts.join('/');
+        }
+    });
+
+    revert_btn.toggleClass('hidden', !dirty || viewonly);
+    commit_btn.toggleClass('hidden', !dirty || viewonly);
+    source.prop('readonly', viewonly);
+});
+</script>

@@ -51,14 +51,12 @@ class Repository:
         subprocess.check_call(['git', '-C', self._path, 'clean', '-fd', '--',
             path])
 
-    def add(self, path):
+    def add(self, path='.'):
         subprocess.check_call(['git', '-C', self._path, 'add', path])
     
-    def commit(self, message=None):
+    def commit(self, message=''):
         command = ['git', '-C', self._path, 'commit', '-q',
-            '--allow-empty-message']
-        if message:
-            command += ['-m', message]
+            '--allow-empty-message', '-m', message]
         subprocess.check_call(command)
 
     def history(self, path=None, version='HEAD', num=None):
@@ -123,3 +121,13 @@ class Repository:
                 return False
         else:
             return os.path.isdir(os.path.join(self._path, path))
+
+    def dirty(self, path):
+        try:
+            result = subprocess.check_output(['git', '-C', self.path,
+                'status', '--porcelain'], stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            return False
+        if result.startswith((b'M', b' M', b'??')):
+            return True
+        return False

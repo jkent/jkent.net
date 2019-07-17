@@ -69,37 +69,47 @@ class Subtree(db.Model):
             return 'text/plain'
         return None
 
-    def read(self, path, version='HEAD', raw=False):
+    def open(self, path, version='HEAD', raw=False):
+        fragment = False
         mimetype = self._mimetype_from_path(path)
         if not raw and version:
             rows = current_app.repository.history(os.path.join(self.id, path), version, 1)
             if not rows:
-                return None, None
+                return None, mimetype, fragment
             hash = rows[0][0]
 
             # check for cache hit
             cache_path = os.path.join(current_app.cache_root, self.id, hash, path)
             if os.path.exists(cache_path):
                 file = open(cache_path, 'rb')
-                if mimetype in ['text/markdown', 'text/plain']:
+                if mimetype == 'text/html':
+                    buf = file.read(16384)
+                    fragment = b'<title>' not in buf
+                    file.seek(0)
+                elif mimetype.startswith('text/'):
+                    fragment = True
                     mimetype = 'text/html'
                 elif mimetype == None:
                     mimetype = magic.from_buffer(file.read(1024), mime=True)
                     file.seek(0)
-                return file, mimetype
+                return file, mimetype, fragment
 
         # raw or cache miss or non-cacheable
         file = current_app.repository.read(os.path.join(self.id, path), version)
         if file == None:
-            return None, None
+            return None, mimetype, fragment
         if mimetype == None:
             mimetype = magic.from_buffer(file.read(1024), mime=True)
             file.seek(0)
 
-        if raw or mimetype == 'text/html' and data.find('<title>') >= 0:
-            pass
-        elif mimetype in ('text/html', 'text/markdown', 'text/plain'):
-            file = convert_to_html(file, mimetype)
+        if raw and mimetype == 'text/html':
+            buf = file.read(16384)
+            fragment = b'<title>' not in buf
+            file.seek(0)
+        elif raw and mimetype.startswith('text/'):
+            fragment = True
+        elif mimetype.startswith('text/'):
+            file, fragment = convert_to_html(file, mimetype)
             mimetype = 'text/html'
 
         if not raw and version:
@@ -113,12 +123,12 @@ class Subtree(db.Model):
             cache.close()
             file.seek(0)
 
-        return file, mimetype
+        return file, mimetype, fragment
 
     def write(self, path, data):
         current_app.repository.write(os.path.join(self.id, path), data)
 
-    def commit(self, message=None):
+    def commit(self, message=''):
         current_app.repository.add(self.id)
         current_app.repository.commit(message)
 
@@ -126,10 +136,11 @@ class Subtree(db.Model):
         current_app.repository.checkout(self.id, version)
 
     def patch(self, path, patch_text):
-        data = self.read(self, path, None)
+        file, mimetype = self.open(path, None)
+        data = file.read()
         dmp = diff_match_patch()
         patch = dmp.patch_fromText(patch_text)
-        data, hunks_ok = dmp.patch_apply(patch, text)
+        data, hunks_ok = dmp.patch_apply(patch, data)
         self.write(path, data)
         return all(hunks_ok)
     
@@ -141,3 +152,6 @@ class Subtree(db.Model):
 
     def history(self, path, version=None, num=None):
         return current_app.repository.history(os.path.join(self.id, path), version, num)
+
+    def dirty(self, path=''):
+        return current_app.repository.dirty(os.path.join(self.id, path))
