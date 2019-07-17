@@ -90,6 +90,14 @@ a:hover{
 	background-color: black;
 	color: white;
 	font-size: 90%;
+	width: 100%;
+	white-space: pre;
+	outline: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	resize: none;
+	padding: 0.5em;
 }
 .highlight {
 	color: rgb(253,187,45) !important;
