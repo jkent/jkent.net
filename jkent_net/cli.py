@@ -58,7 +58,7 @@ def init_demo_command(ctx):
     page = Page(subtree, 'connect', '.connect', 'Connect')
     db.session.add(subtree)
     db.session.add(page)
-    subtree.write('index.md', b'# Connect\n\nWant to connect with me?  Here is a non-exhaustive list of the ways you can!\n\n[<i class="fas fa-at"></i> E-mail](mailto:jeff@jkent.net)<br>\n[<i class="fab fa-facebook"></i> Facebook](https://www.facebook.com/jeff.kent.9638)<br>\n[<i class="fab fa-github"></i> GitHub](https://github.com/jkent)<br>\n[<i class="fas fa-comment-dots"></i> IRC](https://kiwiirc.com/nextclient/#irc://irc.jkent.net:+6697/#UnderGND)<br>\n<i class="fab fa-reddit"></i> Reddit](https://reddit.com/user/jakent)<br>\n[<i class="fab fa-twitter"></i> Twitter](https://twitter.com/jkent_net)<br>')
+    subtree.write('index.md', b'# Connect\n\nWant to connect with me?  Here is a non-exhaustive list of the ways you can!\n\n[<i class="fas fa-at"></i> E-mail](mailto:jeff@jkent.net)<br>\n[<i class="fab fa-facebook"></i> Facebook](https://www.facebook.com/jeff.kent.9638)<br>\n[<i class="fab fa-github"></i> GitHub](https://github.com/jkent)<br>\n[<i class="fas fa-comment-dots"></i> IRC](https://kiwiirc.com/nextclient/#irc://irc.jkent.net:+6697/#UnderGND)<br>\n[<i class="fab fa-reddit"></i> Reddit](https://reddit.com/user/jakent)<br>\n[<i class="fab fa-twitter"></i> Twitter](https://twitter.com/jkent_net)<br>')
     subtree.commit()
  
     db.session.commit()
