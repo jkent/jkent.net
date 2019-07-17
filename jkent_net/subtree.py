@@ -1,3 +1,4 @@
+from jkent_net.models import db
 from diff_match_patch import diff_match_patch
 from flask import Markup, abort, g, redirect, render_template, request, send_file, url_for
 
@@ -89,6 +90,11 @@ def subtree(page, path, version):
             return {}
         elif action == 'commit':
             page.subtree.commit()
+            return {}
+        elif action == 'set-title':
+            page.title = request.form.get('title')
+            db.session.add(page)
+            db.session.commit()
             return {}
 
     if request.args.get('raw'):

@@ -15,12 +15,14 @@
 <a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
 {% endif %}
 {% elif  mode == 'edit' %}
+<a href="#" title="Title" class="title"><i class="fas fa-heading"></i></a>
 <a href="#" title="Commit" class="commit hidden"><i class="fas fa-save"></i></a>
 <a href="#" title="Revert" class="revert hidden"><i class="fas fa-history"></i></a>
 <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
 <a href="#" title="Edit" class="edit highlight"><i class="fas fa-edit"></i></a>
 {% endif %}
 </span>
+<span style="float: right" class="input"></span>
 </div>
 
 <script src="{{ url_for('static', filename='diff_match_patch.js') }}"></script>
@@ -34,15 +36,17 @@ $(() => {
     var dirty = {{ page.subtree.dirty(path) | lower }};
     var viewonly = {{ viewonly | lower }};
     var version = {{ version | tojson }};
+    var title = "{{ page.title }}";
     var source = $('#content > textarea.source');
     var source_last = source.val();
     var source_timeout = null;
     var dmp = new diff_match_patch();
-    var commit_btn = $('#actionbar .commit');
-    var revert_btn = $('#actionbar .revert');
-    var draft_btn = $('#actionbar .draft');
-    var raw_btn = $('#actionbar .raw');
-    var edit_btn = $('#actionbar .edit');
+    var commit_btn = $('#actionbar a.commit');
+    var revert_btn = $('#actionbar a.revert');
+    var draft_btn = $('#actionbar a.draft');
+    var raw_btn = $('#actionbar a.raw');
+    var edit_btn = $('#actionbar a.edit');
+    var title_btn = $('#actionbar a.title');
 
     function source_save_patch(complete) {
         var source_text = source.val();
@@ -64,12 +68,20 @@ $(() => {
 
     function source_resize() {
         source.height('inherit');
+        var scrollHeight = source.prop('scrollHeight');
         var height = parseInt(source.css('border-top-width'), 10)
                    - parseInt(source.css('padding-top'), 10)
-                   + source.prop('scrollHeight')
+                   + scrollHeight
                    - parseInt(source.css('padding-bottom'), 10)
                    + parseInt(source.css('border-bottom-width'), 10);
+
         source.height(height + 'px');
+
+        if (source.prop('clientWidth') < source.prop('scrollWidth')) {
+            numLines = source.val().split('\n').length;
+            height += scrollHeight / numLines;
+            source.height(height + 'px');
+        }
     }
     source_resize();
 
@@ -133,6 +145,32 @@ $(() => {
         return false;
     });
 
+    title_btn.on('click', () => {
+        var input_span = $('#actionbar span.input');
+        var title_input = $('#actionbar input.title');
+        if (!title_input.length) {
+            input_span.html('<label>Title <input type="text" class="title" placeholder="Title"></label>');
+            title_input = $('#actionbar input.title');
+            title_input.val(title);
+            title_input.on('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    title = title_input.val();
+                    $.post(url, {
+                        action: 'set-title',
+                        title: title,
+                    }, () => {
+                        $('title').text(title + ' - jkent.net');
+                        input_span.html('')
+                    });
+                }
+
+                console.log(event);
+            });
+
+        } else {
+            input_span.html('')
+        }
+    });
 
     draft_btn.on('click', () => {
         var parts = window.location.pathname.slice(1).split('/');        
