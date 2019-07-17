@@ -8,7 +8,7 @@ class Repository:
         self._path = path
         if not os.path.exists(os.path.join(self._path, '.git')):
             os.makedirs(self._path, exist_ok=True)
-            subprocess.check_call(['git', '-C', self._path, 'init'],
+            subprocess.check_call(['/usr/bin/git', '-C', self._path, 'init'],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     @property
@@ -17,8 +17,8 @@ class Repository:
 
     def exists(self, path, version='HEAD'):
         try:
-            subprocess.check_call(['git', '-C', self._path, 'cat-file', '-e',
-                '{}:{}'.format(version, path)], stderr=subprocess.DEVNULL)
+            subprocess.check_call(['/usr/bin/git', '-C', self._path, 'cat-file',
+                '-e', '{}:{}'.format(version, path)], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             return False
         return True
@@ -34,9 +34,9 @@ class Repository:
             return file
         else:
             try:
-                data = subprocess.check_output(['git', '-C', self._path,
-                    'cat-file', '-p', '{}:{}'.format(version, path)],
-                    stderr=subprocess.DEVNULL)
+                data = subprocess.check_output(['/usr/bin/git', '-C',
+                    self._path, 'cat-file', '-p',
+                    '{}:{}'.format(version, path)], stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError:
                 return None
             return BytesIO(data)
@@ -46,16 +46,16 @@ class Repository:
             f.write(data)
 
     def checkout(self, path, version='HEAD'):
-        subprocess.check_call(['git', '-C', self._path, 'checkout', version,
+        subprocess.check_call(['/usr/bin/git', '-C', self._path, 'checkout',
+            version, '--', path])
+        subprocess.check_call(['/usr/bin/git', '-C', self._path, 'clean', '-fd',
             '--', path])
-        subprocess.check_call(['git', '-C', self._path, 'clean', '-fd', '--',
-            path])
 
     def add(self, path='.'):
-        subprocess.check_call(['git', '-C', self._path, 'add', path])
+        subprocess.check_call(['/usr/bin/git', '-C', self._path, 'add', path])
     
     def commit(self, message=''):
-        command = ['git', '-C', self._path, 'commit', '-q',
+        command = ['/usr/bin/git', '-C', self._path, 'commit', '-q',
             '--allow-empty-message', '-m', message]
         subprocess.check_call(command)
 
@@ -64,8 +64,8 @@ class Repository:
             return []
 
         try:
-            result = subprocess.check_output(['git', '-C', self.path, 'log'] +
-                (['-n{}'.format(num)] if num else []) +
+            result = subprocess.check_output(['/usr/bin/git', '-C', self.path,
+                'log'] + (['-n{}'.format(num)] if num else []) +
                 ['--pretty=format:%H %at %ae %s', version, '--', path],
                 stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
@@ -83,9 +83,10 @@ class Repository:
         if version:
             try:
                 prefix = os.path.dirname(path)
-                result = subprocess.check_output(['git', '-C', self.path,
-                    'ls-tree'] + (['-r'] if recursive else []) + ['--name-only',
-                    version, '--', path], stderr=subprocess.DEVNULL)
+                result = subprocess.check_output(['/usr/bin/git', '-C',
+                    self.path, 'ls-tree'] + (['-r'] if recursive else []) +
+                    ['--name-only', version, '--', path],
+                    stderr=subprocess.DEVNULL)
                 paths = result.rstrip().split(b'\n')
             except subprocess.CalledProcessError:
                 paths = []
@@ -111,9 +112,9 @@ class Repository:
     def isdir(self, path, version='HEAD'):
         if version:
             try:
-                result = subprocess.check_output(['git', '-C', self.path,
-                    'ls-tree', '-r', '--name-only', version, '--', path],
-                    stderr=subprocess.DEVNULL)
+                result = subprocess.check_output(['/usr/bin/git', '-C',
+                    self.path, 'ls-tree', '-r', '--name-only', version, '--',
+                    path], stderr=subprocess.DEVNULL)
                 return result.rstrip().split(b'\n')[0].decode('utf8') != path
             except subprocess.CalledProcessError:
                 return False
@@ -124,7 +125,7 @@ class Repository:
 
     def dirty(self, path):
         try:
-            result = subprocess.check_output(['git', '-C', self.path,
+            result = subprocess.check_output(['/usr/bin/git', '-C', self.path,
                 'status', '--porcelain'], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             return False
