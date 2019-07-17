@@ -1,89 +1,31 @@
+@import url("menu.css");
+@import url("actionbar.css");
 body{
 	margin: 0;
 	padding: 0;
-	background-color: black;
 	font-family: Arial, Helvetica, sans-serif;
 }
 a{
 	text-decoration: none;
-	color: white;
+	color: black;
 }
 a:hover{
 	background-color: rgb(253,187,45);
 	color: black;
 }
 #header{
-	background: linear-gradient(0deg, rgb(0,0,0) 0%, rgb(0,0,127) 100%);
-	color: white;
+	background: linear-gradient(0deg, rgb(255,255,255) 0%, rgb(127,127,255) 100%);
+	color: black;
 	height: 55px;
 }
 #header .float{
 	float: right;
 	font-size: 150%;
 }
-#header .menu{
-	display: none;
-}
-#header .menu.visible{
-	display: block;
-	position: absolute;
-	z-index: 100;
-	left: 0px;
-	top: 55px;
-	width: 100%;
-	background-color: rgba(255,255,255,0.85);
-	font-size: 14pt;
-}
-#header .menu.visible ul{
-	display: block;
-	list-style-type:  none;
-	width: 100%;
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
-}
-#header .menu.visible ul li{
-	display: block;
-	width: 100%;
-}
-#header .menu.visible ul ul{
-	display: none;
-	color: black;
-}
-#header .menu.visible a{
-	display: block;
-	width: 100%;
-	color: black;
-	padding: 0.75em 1em;
-}
-#header .menu .auth-picture{
-	display: none;
-	border-radius: 100%;
-}
-#header .menu.visible ul .auth-picture + ul{
-	display: block;
-}
-#header .hamburger{
-	display: block;
-	margin: 0.5em 1em;
-	text-decoration: none;
-}
-#header .hamburger:hover{
-	background-color: transparent;
-	color: white;
-}
-#header h1{
-	margin: 0;
-	padding: 0.5em 0;
-	font-size: 150%;
-}
-#header h1 a {
-	padding: 0.5em;
-}
 #content{
 	max-width: 600px;
 	padding: 2em;
-	color: white;
+	color: black;
 	margin: 0 auto;
 }
 #content p{
@@ -96,7 +38,7 @@ a:hover{
 	border-radius: 2em;
 }
 #content a{
-	color: #777;
+	color: #666;
 }
 #content a:hover{
 	color: rgb(253,187,45);
@@ -125,7 +67,7 @@ a:hover{
 	overflow-y: auto;
 	padding: 0.5em;
 	background-color: black;
-	border: 1px solid #666;
+	border: 1px solid #ccc;
 	counter-reset: line;
 }
 #content .codehilite code{
@@ -136,98 +78,22 @@ a:hover{
 	content: counter(line);
 	display: inline-block;
 	width: 2.4em;
-	border-right: 1px solid #666;
+	border-right: 1px solid #ccc;
 	margin-right: 0.5em;
 }
 #content .codehilite code:nth-child(odd){
 	width: 100%;
 	background-color: #111;
 }
-#actionbar{
-	position: fixed;
-	text-align: right;
-	bottom: 0;
-	right: 0;
-	left: 0;
-	margin: 0.5em;
-	height: 1.4em;
-}
-#actionbar i{
-	padding: 0 0.5em;
-}
-#actionbar input {
-	position: relative;
-	top: -2px;
-}
 #content > textarea.source {
 	border: 1px solid #111;
 	background-color: black;
 	color: white;
-	width: 100%;
-	white-space: pre;
-	outline: none;
-	-webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-	resize: none;
-	padding: 0.5em;
+	font-size: 90%;
 }
 .highlight {
 	color: rgb(253,187,45) !important;
 }
 .hidden {
 	display: none !important;
-}
-
-@media (min-width: 650px){
-	#header .menu{
-		display: block;
-		background-color: transparent;
-		padding: 0.4em 0.5em;
-		margin: 0;
-	}
-	#header .menu a{
-		display: block;
-		color: white;
-		padding: 0.5em;
-		font-size: 12pt;
-	}
-	#header .menu ul{
-		padding: 0;
-		margin: 0;
-		list-style-type: none;
-	}
-	#header .menu ul li{
-		position: relative;
-		display: inline-block;
-	}
-	#header .menu ul ul{
-		display: none;
-		position: absolute;
-		right: 0;
-		background-color: #666;
-		min-width: 160px;
-	}
-	#header .menu ul ul li{
-		display: block;
-		padding: 0.25em;
-	}
-	#header .menu ul li:hover ul{
-		display: block;
-	}
-	#header .menu a:hover{
-		color: black;
-	}
-	#header .menu .auth-picture {
-		display: inline-block;
-		width: 32px;
-		height: 32px;
-		vertical-align: middle;
-	}
-	#header .menu .auth-picture + ul {
-		display: none;
-	}
-	#header .hamburger{
-		display: none;
-	}
 }
