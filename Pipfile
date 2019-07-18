@@ -13,12 +13,10 @@ flask-menu = "*"
 flask-security = {git = "https://github.com/mattupstate/flask-security"}
 flask-sqlalchemy = "*"
 gevent = "*"
-google-auth-oauthlib = "*"
 gunicorn = "*"
 markdown = "*"
 mysqlclient = "*"
 pygments = "*"
-pyjwt = "*"
 python-magic = "*"
 sqlalchemy-utils = "*"
 
