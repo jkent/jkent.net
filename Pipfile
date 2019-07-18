@@ -10,10 +10,12 @@ flask = "*"
 flask_sqlalchemy = "*"
 flask_menu = "*"
 gevent = "*"
+google-auth-oauthlib = "*"
 gunicorn = "*"
 markdown = "*"
 mysqlclient = "*"
 pygments = "*"
+pyjwt = "*"
 python-magic = "*"
 
 [dev-packages]

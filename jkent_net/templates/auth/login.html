@@ -19,6 +19,18 @@
     <a href="/forgot">Forgot Password?</a>
 </div>
 <button type="submit">Login</button>
+<div class="social-login">
+    <div class="social-button">
+        <a href="{{ url_for('auth.login', provider='google') }}">
+            <button type="button"><i class="fab fa-google"></i> Sign in with Google</button>
+        </a>
+    </div>
+    <div class="social-button">
+        <a href="{{ url_for('auth.login', provider='facebook') }}">
+            <button type="button"><i class="fab fa-facebook"></i> Sign in with Facebook</button>
+        </a>
+    </div>
+</div>
 </form>
 
 <script>

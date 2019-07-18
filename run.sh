@@ -7,7 +7,7 @@ fi
 if [[ "$1" == "development" ]]; then
   echo "Starting in development mode"
   export FLASK_ENV=development
-  rm -rf instance
+  rm -rf instance/cache instance/jkent_net.db instance/repository
   mkdir -p instance  
   pipenv run flask init-demo
 else

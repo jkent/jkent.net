@@ -6,12 +6,12 @@ from jkent_net.models import Page, Subtree, User, db
 
 @click.command('add-user')
 @click.argument('email')
-@click.password_option()
+@click.password_option(prompt=False)
 @click.option('--is-admin', is_flag=True)
 @with_appcontext
-def add_user_command(email, password, is_admin):
+def add_user_command(email, password=None, is_admin=False):
     """Adds a new user."""
-    hash = generate_password_hash(password)
+    hash = generate_password_hash(password) if password else None
     user = User(email=email, hash=hash, is_admin=is_admin)
     db.session.add(user)
     db.session.commit()
@@ -45,13 +45,15 @@ def init_db_command():
 def init_demo_command(ctx):
     """Initializes everything for a demo."""
     ctx.invoke(init_db_command)
-    user = ctx.invoke(add_user_command, email='user@example.com', password='password', is_admin=True)
+    ctx.invoke(add_user_command, email='user@example.com', password='password')
+    ctx.invoke(add_user_command, email='admin@example.com', password='password', is_admin=True)
+    user = ctx.invoke(add_user_command, email='jeff@jkent.net', is_admin=True)
 
     subtree = Subtree(user)
     page = Page(subtree, 'about', '.about', 'About')
     db.session.add(subtree)
     db.session.add(page)
-    subtree.write('index.md', b'# About\n\nHi there, I\'m Jeff Kent! I am a digital wizard.  I contribute to a handful of open source projects, design and build things (such as the engine that powers this site!), and just geek out.')
+    subtree.write('index.md', b'# About\n\nHi there, I\'m Jeff Kent! I am a digital wizard.  I contribute to a handful of open\nsource projects, design and build things (such as the engine that powers this site!),\nand just geek out.')
     subtree.commit()
 
     subtree = Subtree(user)
