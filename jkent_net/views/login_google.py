@@ -1,3 +1,4 @@
+from .. import user_datastore
 from ..models import db, OAuth, User
 from flask import flash
 from flask_dance.consumer import oauth_authorized
@@ -8,7 +9,7 @@ from flask_security import current_user, login_user
 __all__ = ['bp']
 
 
-bp = make_google_blueprint(reprompt_select_account=True, scope='email')
+bp = make_google_blueprint(reprompt_select_account=True, scope=('openid', 'profile', 'email'))
 bp.storage = SQLAlchemyStorage(OAuth, db.session, user=current_user)
 
 
@@ -28,16 +29,16 @@ def google_logged_in(blueprint, token):
         flash('Email address has not been verified by Google', category='error')
         return False
 
-    user = User.query.filter_by(email=user_info['email']).first()
+    user = user_datastore.find_user(email=user_info['email'])
     if not user:
-        user = User(
+        user = user_datastore.create_user(
             email = user_info['email'],
-            name = user_info['name'],
+            name = user_info['name']
         )
 
     oauth = OAuth.query.filter_by(
         provider = blueprint.name,
-        user = user,
+        user_id = user.id,
     ).first()
     
     if not oauth:
@@ -47,7 +48,7 @@ def google_logged_in(blueprint, token):
             token = token,
         )
 
-    db.session.add_all([user, oauth])
+    db.session.add_all((user, oauth))
     db.session.commit()
 
     user.init_avatar(user, user_info['picture'] + '?size=64')

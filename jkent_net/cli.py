@@ -40,8 +40,8 @@ def init_demo_command(ctx):
     """Initializes everything for a demo."""
     ctx.invoke(init_db_command)
     ctx.invoke(add_user_command, email='user@example.com', password='password')
-    ctx.invoke(add_user_command, email='admin@example.com', password='password', is_admin=True)
-    user = ctx.invoke(add_user_command, email='jeff@jkent.net', password='password', is_admin=True)
+    user = ctx.invoke(add_user_command, email='admin@example.com', password='password', is_admin=True)
+    #user = ctx.invoke(add_user_command, email='jeff@jkent.net', password='password', is_admin=True)
 
     subtree = Subtree(user)
     page = Page(subtree, 'about', '.about', 'About')

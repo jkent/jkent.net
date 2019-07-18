@@ -14,18 +14,18 @@ def register_menu_items():
     for page in Page.query:
         item = current_menu.submenu(page.menu_path)
         item._endpoint = 'pages.pages'
-        item._endpoint_arguments_constructor = partial(lambda p: {'page': p}, page.path)
+        item._endpoint_arguments_constructor = partial(lambda p: {'name': p}, page.name)
         item._text = page.title
         item._order = page.menu_order
 
-@bp.route('/<string:page>/_<string:version>/<path:path>', methods=('POST', 'GET'))
-@bp.route('/<string:page>/_<string:version>/', methods=('POST', 'GET'))
-@bp.route('/<string:page>/_<string:version>', methods=('POST', 'GET'))
-@bp.route('/<string:page>/<path:path>', methods=('POST', 'GET'))
-@bp.route('/<string:page>/', methods=('POST', 'GET'))
-@bp.route('/<string:page>', methods=('POST', 'GET'))
-def pages(page, path='', version=None):
-    page = Page.query.filter_by(path=page).first()
+@bp.route('/<string:name>/_<string:version>/<path:path>', methods=('POST', 'GET'))
+@bp.route('/<string:name>/_<string:version>/', methods=('POST', 'GET'))
+@bp.route('/<string:name>/_<string:version>', methods=('POST', 'GET'))
+@bp.route('/<string:name>/<path:path>', methods=('POST', 'GET'))
+@bp.route('/<string:name>/', methods=('POST', 'GET'))
+@bp.route('/<string:name>', methods=('POST', 'GET'))
+def pages(name, path='', version=None):
+    page = Page.query.filter_by(name=name).first()
     if not page:
         abort(404)
 

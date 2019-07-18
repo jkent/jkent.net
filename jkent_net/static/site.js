@@ -54,8 +54,8 @@ $(() => {
       return match.groups;
   }
 
-  function build_pathname(page_part, version, path) {
-      var pathname = page_part;
+  function build_pathname(name, version, path) {
+      var pathname = name;
       if (version) {
           pathname += '/_' + version;
       }
@@ -204,13 +204,13 @@ $(() => {
 
   draft_btn.on('click', () => {
       var parts = window.location.pathname.slice(1).split('/');        
-      var page_part = parts.shift();
+      var name = parts.shift();
       var pathname;
       if (page.version == null) {
-          pathname = '/' + page_part + '/_HEAD';
+          pathname = '/' + name + '/_HEAD';
       } else {
           var _ = parts.shift();
-          pathname = '/' + page_part
+          pathname = '/' + name
       }
       if (parts.length > 0 && parts[0] != '') {
           pathname += '/' + parts.join('/');

@@ -1,3 +1,4 @@
+from .. import user_datastore
 from ..models import db, OAuth, User
 from flask import flash
 from flask_dance.consumer import oauth_authorized
@@ -31,7 +32,7 @@ def github_logged_in(blueprint, token):
 
     entries = resp.json()
     entries = sorted(entries, key=lambda e: not e['primary'])
-    entries = filter(lambda e: e['verified'], entries)
+    entries = list(filter(lambda e: e['verified'], entries))
 
     if not entries:
         flash('No email addresses have been verified by GitHub', category='error')
@@ -39,14 +40,14 @@ def github_logged_in(blueprint, token):
 
     user = None
     for entry in entries:
-        user = User.query.filter_by(email=entry['email']).first()
+        user = user_datastore.find_user(email=entry['email'])
         if user:
             break
 
     if not user:
-        user = User(
+        user = user_datastore.create_user(
             email = entries[0]['email'],
-            name = github_info['name'],
+            name = user_info['name']
         )
 
     oauth = OAuth.query.filter_by(

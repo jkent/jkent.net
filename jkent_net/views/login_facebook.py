@@ -1,3 +1,4 @@
+from .. import user_datastore
 from ..models import db, OAuth, User
 from flask import flash, url_for
 from flask_dance.consumer import oauth_authorized
@@ -28,11 +29,11 @@ def facebook_logged_in(blueprint, token):
         flash('No email address provided by Facebook', category='error')
         return False
 
-    user = User.query.filter_by(email=user_info['email']).first()
+    user = user_datastore.find_user(email=user_info['email'])
     if not user:
-        user = User(
+        user = user_datastore.create_user(
             email = user_info['email'],
-            name = user_info['name'],
+            name = user_info['name']
         )
 
     oauth = OAuth.query.filter_by(

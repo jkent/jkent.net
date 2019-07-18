@@ -28,4 +28,5 @@ def init_app(app):
 
     @user_logged_out.connect_via(app)
     def _user_logged_out(sender, user, **extra):
-        session.pop('avatar_url', None)
+        if 'avatar_url' in session:
+            del session['avatar_url']
