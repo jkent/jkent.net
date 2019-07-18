@@ -67,7 +67,7 @@ def patch(page, path):
     page.subtree.write(path, text.encode('utf8'))
 
     return {
-        'dirty': page.subtree.dirty(path),
+        'draft': page.subtree.diff(None, None, 'HEAD'),
     }
 
 def subtree(page, path, version):
@@ -85,8 +85,8 @@ def subtree(page, path, version):
         action = request.form.get('action')
         if action == 'patch':
             return patch(page, path)
-        elif action == 'revert':
-            page.subtree.revert()
+        elif action == 'restore':
+            page.subtree.revert(version)
             return {}
         elif action == 'commit':
             page.subtree.commit()

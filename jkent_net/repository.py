@@ -123,12 +123,19 @@ class Repository:
         else:
             return os.path.isdir(os.path.join(self._path, path))
 
-    def dirty(self, path):
-        try:
-            result = subprocess.check_output(['/usr/bin/git', '-C', self._path,
-                'status', '--porcelain'], stderr=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
+    def diff(self, path, version1=None, version2=None):
+        if version1 == version2:
             return False
-        if result.startswith((b'M', b' M', b'??')):
+        try:
+            if version1 == None:
+                subprocess.check_call(['/usr/bin/git', '-C', self._path, 'diff',
+                    '--exit-code', '--quiet', version2, '--', path])
+            elif version2 == None:
+                subprocess.check_call(['/usr/bin/git', '-C', self._path, 'diff',
+                    '--exit-code', '--quiet', '-R', version1, '--', path])
+            else:
+                subprocess.check_call(['/usr/bin/git', '-C', self._path, 'diff',
+                    '--exit-code', '--quiet', version1, version2, '--', path])
+        except subprocess.CalledProcessError:
             return True
         return False

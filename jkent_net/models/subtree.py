@@ -153,5 +153,7 @@ class Subtree(db.Model):
     def history(self, path, version=None, num=None):
         return current_app.repository.history(os.path.join(self.id, path), version, num)
 
-    def dirty(self, path=''):
-        return current_app.repository.dirty(os.path.join(self.id, path))
+    def diff(self, path='', version1=None, version2=None):
+        if path == None:
+            path = ''
+        return current_app.repository.diff(os.path.join(self.id, path), version1, version2)

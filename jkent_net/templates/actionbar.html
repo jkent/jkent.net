@@ -2,22 +2,19 @@
 <span style="float: left;">
 </span>
 <span style="float: right;">
-{% if mode == 'render' %}
-{% if g.user.is_admin and page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
-<a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% if mode == 'render' or mode == 'raw' %}
 {% if g.user.is_admin %}
-<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
+{% if page.subtree.diff(None, None, version) %}<a href="#" title="Restore" class="restore"><i class="fas fa-history"></i></a>{% endif %}
+{% if page.subtree.diff(None, None, 'HEAD') %}
+{% if not version %}<a href="#" title="Commit" class="commit"><i class="fas fa-save"></i></a>{% endif %}
+<a href="#" title="{% if version == None %}View live{% else %}View draft{% endif %}" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>
 {% endif %}
-{% elif mode == 'raw' %}
-{% if g.user.is_admin and page.subtree.dirty() %}<a href="#" title="Draft" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>{% endif %}
-<a href="#" title="View source" class="raw highlight"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
-{% if g.user.is_admin %}
-<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
 {% endif %}
+<a href="#" title="View source" class="raw{% if mode == 'raw' %} highlight{% endif %}"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
+{% if g.user.is_admin and not version %}<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>{% endif %}
 {% elif  mode == 'edit' %}
 <a href="#" title="Title" class="title"><i class="fas fa-heading"></i></a>
-<a href="#" title="Commit" class="commit hidden"><i class="fas fa-save"></i></a>
-<a href="#" title="Revert" class="revert hidden"><i class="fas fa-history"></i></a>
+<a href="#" title="Commit" class="commit{% if not page.subtree.diff(None, None, 'HEAD') %} hidden{% endif %}"><i class="fas fa-save"></i></a>
 <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
 <a href="#" title="Edit" class="edit highlight"><i class="fas fa-edit"></i></a>
 {% endif %}
@@ -33,7 +30,7 @@ $(() => {
     url.search = '';
 
     var mode = '{{ mode }}';
-    var dirty = {{ page.subtree.dirty(path) | lower }};
+    var draft = {{ page.subtree.diff(None, None, 'HEAD') | lower }};
     var viewonly = {{ viewonly | lower }};
     var version = {{ version | tojson }};
     var title = "{{ page.title }}";
@@ -42,13 +39,38 @@ $(() => {
     var source_timeout = null;
     var dmp = new diff_match_patch();
     var commit_btn = $('#actionbar a.commit');
-    var revert_btn = $('#actionbar a.revert');
+    var restore_btn = $('#actionbar a.restore');
     var draft_btn = $('#actionbar a.draft');
     var raw_btn = $('#actionbar a.raw');
     var edit_btn = $('#actionbar a.edit');
     var title_btn = $('#actionbar a.title');
 
+    function parse_pathname(pathname) {
+        match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
+        console.log(match.groups);
+        return match.groups;
+    }
+
+    function build_pathname(page, version, path) {
+        var pathname = page;
+        if (version) {
+            pathname += '/_' + version;
+        }
+        if (path) {
+            pathname += '/' + path;
+        }
+        return pathname;
+    }
+
     function source_save_patch(complete) {
+        if (mode == 'render' || mode == 'raw') {
+            commit_btn.toggleClass('hidden', !draft);
+            if (typeof complete == 'function') {
+                complete();
+            }
+            return;
+        }
+
         var source_text = source.val();
         var patch = dmp.patch_make(source_last, source_text);
         var patch_text = dmp.patch_toText(patch);
@@ -57,9 +79,8 @@ $(() => {
             patch: patch_text,
         }, (data) => {
             source_last = source_text;
-            dirty = data.dirty;
-            revert_btn.toggleClass('hidden', !dirty);
-            commit_btn.toggleClass('hidden', !dirty);
+            draft = data.draft;
+            commit_btn.toggleClass('hidden', !draft);
             if (typeof complete == 'function') {
                 complete();
             }
@@ -112,8 +133,8 @@ $(() => {
         return false;
     });
 
-    revert_btn.on('click', () => {
-        if (!confirm('Are you sure you want to revert?')) {
+    restore_btn.on('click', () => {
+        if (!confirm('Are you sure you want to restore this version?')) {
             return false;
         }
         if (source_timeout) {
@@ -121,9 +142,15 @@ $(() => {
             source_timeout = null;
         }
         $.post(url, {
-            action: 'revert',
+            action: 'restore',
         }, (data) => {
-            location.reload();
+            var url = new URL(window.location);
+            var parsed = parse_pathname(url.pathname);
+            url.pathname = build_pathname(parsed.page, null, parsed.path);
+            //var search = new URLSearchParams();
+            //search.set('edit', '1');
+            //url.search = search;
+            window.location = url;
         });
         return false;
     });
@@ -192,8 +219,6 @@ $(() => {
         return false;
     });
 
-    revert_btn.toggleClass('hidden', !dirty);
-    commit_btn.toggleClass('hidden', !dirty);
     source.prop('readonly', mode != 'edit');
 });
 </script>
