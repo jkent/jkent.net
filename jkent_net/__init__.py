@@ -1,10 +1,15 @@
-import os
+from .repository import Repository
 from flask import Flask, g, render_template
-from jkent_net.repository import Repository
-from jkent_net.auth import login_required
+from flask_mail import Mail
+from flask_security import Security, SQLAlchemyUserDatastore
+import os
+
+mail = Mail()
 
 
 def create_app():
+    global security, user_datastore
+
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
@@ -13,20 +18,23 @@ def create_app():
         SQLALCHEMY_TRACK_MODIFICATIONS = False,
     )
     app.config.from_pyfile('config.py', silent=True)
-    os.makedirs(app.instance_path, exist_ok=True)
 
     app.repository_path = os.path.join(app.instance_path, 'repository')
     app.repository = Repository(app.repository_path)
 
     app.cache_root = os.path.join(app.instance_path, 'cache')
 
-    import jkent_net.models
+    from . import models
     models.init_app(app)
 
-    import jkent_net.views
+    mail.init_app(app)
+    user_datastore = SQLAlchemyUserDatastore(models.db, models.User, models.Role)
+    security = Security(app, user_datastore)
+
+    from . import views
     views.init_app(app)
 
-    import jkent_net.cli
+    from . import cli
     cli.init_app(app)
 
     return app

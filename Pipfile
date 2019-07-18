@@ -1,14 +1,17 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 name = "pypi"
 verify_ssl = true
 
 [packages]
+bcrypt = "*"
 diff-match-patch = "*"
 flask = "*"
-flask_sqlalchemy = "*"
-flask_menu = "*"
+flask-dance = "*"
+flask-mail = "*"
+flask-menu = "*"
+flask-security = {git = "https://github.com/mattupstate/flask-security"}
+flask-sqlalchemy = "*"
 gevent = "*"
 google-auth-oauthlib = "*"
 gunicorn = "*"
@@ -17,6 +20,7 @@ mysqlclient = "*"
 pygments = "*"
 pyjwt = "*"
 python-magic = "*"
+sqlalchemy-utils = "*"
 
 [dev-packages]
 pylint = "*"

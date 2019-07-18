@@ -29,12 +29,12 @@
  <li>
   <img src="{{ session.auth_picture or url_for('static', filename='user.png') }}" class="auth-picture">
   <ul>
-   {%- if g.user %}
+   {%- if current_user.is_authenticated %}
    <li><a href="/profile">Profile</a></li>
-   <li><a href="/logout">Logout</a></li>
+   <li><a href="{{ url_for('security.logout') }}">Logout</a></li>
    {%- else %}
-   <li><a href="/login">Login</a></li>
-   <li><a href="/regsiter">Register</a></li>
+   <li><a href="{{ url_for('security.login', next=request.path) }}">Login</a></li>
+   <li><a href="{{ url_for('security.register') }}">Register</a></li>
    {%- endif %}
   </ul>
  </li>

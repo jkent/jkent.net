@@ -37,5 +37,7 @@ def init_app(app):
 
 
 from .page import *
+from .role import *
 from .subtree import *
+from .oauth import *
 from .user import *

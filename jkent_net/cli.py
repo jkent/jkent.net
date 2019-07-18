@@ -1,7 +1,7 @@
+from .models import Page, Subtree, User, db
+from . import user_datastore
 import click
 from flask.cli import with_appcontext
-from werkzeug.security import generate_password_hash
-from jkent_net.models import Page, Subtree, User, db
 
 
 @click.command('add-user')
@@ -11,9 +11,7 @@ from jkent_net.models import Page, Subtree, User, db
 @with_appcontext
 def add_user_command(email, password=None, is_admin=False):
     """Adds a new user."""
-    hash = generate_password_hash(password) if password else None
-    user = User(email=email, hash=hash, is_admin=is_admin)
-    db.session.add(user)
+    user = user_datastore.create_user(email=email, password=password)
     db.session.commit()
     return user
 
@@ -23,12 +21,8 @@ def add_user_command(email, password=None, is_admin=False):
 @with_appcontext
 def del_user_command(email):
     """Deletes a user."""
-    user = User.query.filter_by(email=email)
-    if user is None:
-        print('no such user exists!')
-        return
-
-    user.delete()
+    user = user_datastore.find_user(email=email)
+    user_datastore.delete_user(user)
     db.session.commit()
 
 
@@ -47,7 +41,7 @@ def init_demo_command(ctx):
     ctx.invoke(init_db_command)
     ctx.invoke(add_user_command, email='user@example.com', password='password')
     ctx.invoke(add_user_command, email='admin@example.com', password='password', is_admin=True)
-    user = ctx.invoke(add_user_command, email='jeff@jkent.net', is_admin=True)
+    user = ctx.invoke(add_user_command, email='jeff@jkent.net', password='password', is_admin=True)
 
     subtree = Subtree(user)
     page = Page(subtree, 'about', '.about', 'About')
