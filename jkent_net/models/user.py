@@ -1,17 +1,20 @@
 from ..models import db
 from ..models.role import roles_users
 import enum
+from flask import session, url_for
+import hashlib
 from flask_security import UserMixin
+from urllib.parse import urlencode
 
-__all__ = ['User', 'UserImageSource']
+__all__ = ['User', 'UserAvatarSource']
 
 
-class UserImageSource(enum.Enum):
+class UserAvatarSource(enum.Enum):
     disabled = 0
     auto = 1
-    oauth2 = 2
-    gravitar = 3
-    upload = 4
+    upload = 2
+    oauth2 = 3
+    gravitar = 4
 
 
 class User(db.Model, UserMixin):
@@ -21,11 +24,21 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime())
     name = db.Column(db.Unicode(256))
-    image_source = db.Column(db.Enum(UserImageSource),
-                             default=UserImageSource.auto)
+    avatar_source = db.Column(db.Enum(UserAvatarSource),
+                             default=UserAvatarSource.auto)
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
 
-
     def __repr__(self):
         return '<User %r>' % self.email
+
+    def init_avatar(self, user, oauth2_url=None):
+        url = url_for('static', filename='user.png', _external=True)
+        if False and self.avatar_source in (UserAvatarSource.auto, UserAvatarSource.upload):
+            pass # TODO: handle avatar uploads
+        elif oauth2_url and self.avatar_source in (UserAvatarSource.auto, UserAvatarSource.oauth2):
+            url = oauth2_url
+        elif self.avatar_source in (UserAvatarSource.auto, UserAvatarSource.gravitar):
+            hash = hashlib.md5(user.email.lower().encode('utf-8')).hexdigest()
+            url = 'https://www.gravatar.com/avatar/{}?{}'.format(hash, urlencode({'d': url, 's': 64}))
+        session['avatar_url'] = url

@@ -7,8 +7,10 @@ from flask_security import current_user, login_user
 
 __all__ = ['bp']
 
-bp = make_github_blueprint()
+
+bp = make_github_blueprint(scope='user:email')
 bp.storage = SQLAlchemyStorage(OAuth, db.session, user=current_user)
+
 
 @oauth_authorized.connect_via(bp)
 def github_logged_in(blueprint, token):
@@ -19,33 +21,50 @@ def github_logged_in(blueprint, token):
     resp = blueprint.session.get('/user')
     if not resp.ok:
         flash('Failed to fetch user info from GitHub', category='error')
+
+    user_info = resp.json()
+
+    resp = blueprint.session.get('/user/emails')
+    if not resp.ok:
+        flash('Failed to fetch email info from GitHub', category='error')
         return False
 
-    github_info = resp.json()
-    github_user_id = str(github_info['id'])
-    
-    query = OAuth.query.filter_by(
-        provider = blueprint.name,
-        provider_user_id = github_user_id,
-    )
+    entries = resp.json()
+    entries = sorted(entries, key=lambda e: not e['primary'])
+    entries = filter(lambda e: e['verified'], entries)
 
-    oauth = query.first()
+    if not entries:
+        flash('No email addresses have been verified by GitHub', category='error')
+        return False
+
+    user = None
+    for entry in entries:
+        user = User.query.filter_by(email=entry['email']).first()
+        if user:
+            break
+
+    if not user:
+        user = User(
+            email = entries[0]['email'],
+            name = github_info['name'],
+        )
+
+    oauth = OAuth.query.filter_by(
+        provider = blueprint.name,
+        user = user,
+    ).first()
+    
     if not oauth:
         oauth = OAuth(
             provider = blueprint.name,
-            provider_user_id = github_user_id,
+            user = user,
             token = token,
         )
-    
-    if oauth.user:
-        login_user(oauth.user)
-    else:
-        user = User(
-            email = github_info['email'],
-            name = github_info['name'],
-        )
-        oauth.user = user
-        db.session.add_all((user, oauth))
-        db.session.commit()
 
-        login_user(user)
+    db.session.add_all([user, oauth])
+    db.session.commit()
+
+    user.init_avatar(user, user_info['avatar_url'] + '&s=64')
+
+    login_user(user)
+    return False

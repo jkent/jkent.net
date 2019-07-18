@@ -20,7 +20,6 @@ def render(page, path, version):
         'title': page.title,
         'content': Markup(html.decode('utf8')),
         'version': version,
-        'viewonly': True,
         'mimetype': page.subtree._mimetype_from_path(path) or mimetype,
     })
 
@@ -36,7 +35,6 @@ def raw(page, path, version):
         'title': page.title,
         'content': file.read().decode('utf8'),
         'version': version,
-        'viewonly': not (g.user and g.user.is_admin),
         'mimetype': mimetype,
     })
 
@@ -52,7 +50,6 @@ def edit(page, path, version):
         'title': page.title,
         'content': file.read().decode('utf8'),
         'version': version,
-        'viewonly': not (g.user and g.user.is_admin),
         'mimetype': mimetype,
     })
 

@@ -27,7 +27,7 @@
 {%- endif %}
 {%- endfor %}
  <li>
-  <img src="{{ session.auth_picture or url_for('static', filename='user.png') }}" class="auth-picture">
+  <img src="{{ session.avatar_url or url_for('static', filename='user.png') }}" class="auth-picture">
   <ul>
    {%- if current_user.is_authenticated %}
    <li><a href="/profile">Profile</a></li>
@@ -49,6 +49,6 @@
 {%- block content %}This is a template{% endblock -%}
 </div>
 
-<script src="{{ url_for('static', filename='menu.js') }}"></script>
+<script src="{{ url_for('static', filename='site.js') }}"></script>
 </body>
 </html>

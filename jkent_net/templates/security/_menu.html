@@ -1,0 +1,18 @@
+{% if security.registerable or security.recoverable or security.confirmable %}
+<h2>{{ _('Menu') }}</h2>
+<ul>
+  <li><a href="{{ url_for_security('login') }}{% if 'next' in request.args %}?next={{ request.args.next|urlencode }}{% endif %}">{{ _('Login') }}</a></li>
+  <li><a href="{{ url_for('facebook.login') }}">{{ _('Login with Facebook') }}</a><br/></li>
+  <li><a href="{{ url_for('github.login') }}">{{ _('Login with GitHub') }}</a><br/></li>
+  <li><a href="{{ url_for('google.login') }}">{{ _('Login with Google') }}</a><br/></li>
+  {% if security.registerable %}
+  <li><a href="{{ url_for_security('register') }}{% if 'next' in request.args %}?next={{ request.args.next|urlencode }}{% endif %}">{{ _('Register') }}</a><br/></li>
+  {% endif %}
+  {% if security.recoverable %}
+  <li><a href="{{ url_for_security('forgot_password') }}">{{ _('Forgot password') }}</a><br/></li>
+  {% endif %}
+  {% if security.confirmable %}
+  <li><a href="{{ url_for_security('send_confirmation') }}">{{ _('Confirm account') }}</a></li>
+  {% endif %}
+</ul>
+{% endif %}
