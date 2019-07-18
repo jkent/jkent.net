@@ -1,7 +1,7 @@
 from jkent_net.models import db
 from diff_match_patch import diff_match_patch
 from flask import Markup, abort, g, redirect, render_template, request, send_file, url_for
-
+from flask_security.core import current_user
 
 def render(page, path, version):
     file, mimetype, fragment = page.subtree.open(path, version)
@@ -69,7 +69,7 @@ def patch(page, path):
 
 def subtree(page, path, version):
     request_version = version
-    if version == None and not (g.user and g.user.is_admin):
+    if version == None and not (current_user.has_role('admin') or current_user.has_role('editor')):
         version = 'HEAD'
 
     if page.subtree.isdir(path, version):
@@ -78,7 +78,7 @@ def subtree(page, path, version):
             abort(404)
         path = index
 
-    if request.method == 'POST' and g.user and g.user.is_admin:
+    if request.method == 'POST' and (current_user.has_role('admin') or current_user.has_role('editor')):
         action = request.form.get('action')
         if action == 'patch':
             return patch(page, path)

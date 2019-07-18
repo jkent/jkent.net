@@ -42,3 +42,15 @@ class User(db.Model, UserMixin):
             hash = hashlib.md5(user.email.lower().encode('utf-8')).hexdigest()
             url = 'https://www.gravatar.com/avatar/{}?{}'.format(hash, urlencode({'d': url, 's': 64}))
         session['avatar_url'] = url
+
+    def roles_required(self, *roles):
+        for role in roles:
+            if not self.has_role(role):
+                return False
+        return True
+
+    def roles_accepted(self, *roles):
+        for role in roles:
+            if self.has_role(role):
+                return True
+        return False

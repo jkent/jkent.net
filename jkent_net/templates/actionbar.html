@@ -3,7 +3,7 @@
 </span>
 <span style="float: right;">
 {% if mode == 'render' or mode == 'raw' %}
-{% if g.user.is_admin %}
+{% if current_user.has_role('admin') or current_user.has_role('editor') %}
 {% if page.subtree.diff(None, None, version) %}<a href="#" title="Restore" class="restore"><i class="fas fa-history"></i></a>{% endif %}
 {% if page.subtree.diff(None, None, 'HEAD') %}
 {% if not version %}<a href="#" title="Commit" class="commit"><i class="fas fa-save"></i></a>{% endif %}
@@ -11,8 +11,8 @@
 {% endif %}
 {% endif %}
 <a href="#" title="View source" class="raw{% if mode == 'raw' %} highlight{% endif %}"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
-{% if g.user.is_admin and not version %}<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>{% endif %}
-{% elif  mode == 'edit' %}
+{% if (current_user.has_role('admin') or current_user.has_role('editor')) and not version %}<a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>{% endif %}
+{% elif mode == 'edit' %}
 <a href="#" title="Title" class="title"><i class="fas fa-heading"></i></a>
 <a href="#" title="Commit" class="commit{% if not page.subtree.diff(None, None, 'HEAD') %} hidden{% endif %}"><i class="fas fa-save"></i></a>
 <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
