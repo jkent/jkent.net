@@ -69,7 +69,7 @@ def patch(page, path):
 
 def subtree(page, path, version):
     request_version = version
-    if version == None and not (current_user.has_role('admin') or current_user.has_role('editor')):
+    if version == None and not current_user.any_role('admin', 'editor'):
         version = 'HEAD'
 
     if page.subtree.isdir(path, version):
@@ -78,7 +78,7 @@ def subtree(page, path, version):
             abort(404)
         path = index
 
-    if request.method == 'POST' and (current_user.has_role('admin') or current_user.has_role('editor')):
+    if request.method == 'POST' and current_user.any_role('admin', 'editor'):
         action = request.form.get('action')
         if action == 'patch':
             return patch(page, path)

@@ -1,9 +1,9 @@
 from ..models import db
 from ..models.role import roles_users
 import enum
-from flask import session, url_for
 import hashlib
-from flask_security import UserMixin
+from flask import session, url_for
+from flask_security import AnonymousUser, UserMixin 
 from urllib.parse import urlencode
 
 __all__ = ['User', 'UserAvatarSource']
@@ -43,14 +43,17 @@ class User(db.Model, UserMixin):
             url = 'https://www.gravatar.com/avatar/{}?{}'.format(hash, urlencode({'d': url, 's': 64}))
         session['avatar_url'] = url
 
-    def roles_required(self, *roles):
+    def any_role(self, *roles):
+        for role in roles:
+            if self.has_role(role):
+                return True
+        return False
+
+    def all_roles(self, *roles):
         for role in roles:
             if not self.has_role(role):
                 return False
         return True
 
-    def roles_accepted(self, *roles):
-        for role in roles:
-            if self.has_role(role):
-                return True
-        return False
+AnonymousUser.any_role = lambda self, *roles: False
+AnonymousUser.all_roles = lambda self, *roles: False
