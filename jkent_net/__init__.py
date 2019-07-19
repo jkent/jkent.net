@@ -12,8 +12,9 @@ def create_app():
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    if os.environ.get('FLASK_ENV') == 'development':
+        app.config['SECRET_KEY'] = 'development'
     app.config.from_mapping(
-        SECRET_KEY = 'dev',
         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'jkent_net.db'),
         SQLALCHEMY_TRACK_MODIFICATIONS = False,
     )
