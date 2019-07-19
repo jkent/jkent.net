@@ -9,7 +9,11 @@ from flask_security import current_user, login_user
 __all__ = ['bp']
 
 
-bp = make_google_blueprint(reprompt_select_account=True, scope=('openid', 'profile', 'email'))
+bp = make_google_blueprint(reprompt_select_account=True, scope=(
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+))
 bp.storage = SQLAlchemyStorage(OAuth, db.session, user=current_user)
 
 
