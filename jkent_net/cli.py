@@ -51,6 +51,15 @@ def add_role_command(email, name):
     user_datastore.add_role_to_user(email, name)
     db.session.commit()
 
+@click.command('remove-role')
+@click.argument('email')
+@click.argument('name')
+@with_appcontext
+def remove_role_command(email, name):
+    """Remove a role from a user."""
+    user_datastore.remove_role_from_user(email, name)
+    db.session.commit()
+
 @click.command('init-demo')
 @click.pass_context
 @with_appcontext
