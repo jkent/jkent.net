@@ -1,3 +1,24 @@
+body{
+	margin: 0;
+	padding: 0;
+}
+#header{
+	height: 55px;
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+}
+#header h1{
+	margin: 0;
+	padding: 0.5em 0;
+}
+#header h1 a{
+	padding: 0.5em;
+}
+#header .float{
+	float: right;
+}
 #header .menu{
 	display: none;
 }
@@ -8,12 +29,9 @@
 	left: 0px;
 	top: 55px;
 	width: 100%;
-	background-color: rgba(255,255,255,0.85);
-	font-size: 14pt;
 }
 #header .menu.visible ul{
 	display: block;
-	list-style-type:  none;
 	width: 100%;
 	box-sizing: border-box;
 	margin: 0;
@@ -25,17 +43,14 @@
 }
 #header .menu.visible ul ul{
 	display: none;
-	color: black;
 }
 #header .menu.visible a{
 	display: block;
 	width: 100%;
-	color: black;
 	padding: 0.75em 1em;
 }
 #header .menu .auth-picture{
 	display: none;
-	border-radius: 100%;
 }
 #header .menu.visible ul .auth-picture + ul{
 	display: block;
@@ -43,29 +58,20 @@
 #header .hamburger{
 	display: block;
 	margin: 0.5em 1em;
-	text-decoration: none;
-}
-#header .hamburger:hover{
-	background-color: transparent;
-	color: black;
 }
 @media (min-width: 650px){
 	#header .menu{
 		display: block;
-		background-color: transparent;
 		padding: 0.4em 0.5em;
 		margin: 0;
 	}
 	#header .menu a{
 		display: block;
-		color: black;
 		padding: 0.5em;
-		font-size: 12pt;
 	}
 	#header .menu ul{
 		padding: 0;
 		margin: 0;
-		list-style-type: none;
 	}
 	#header .menu ul li{
 		position: relative;
@@ -75,7 +81,6 @@
 		display: none;
 		position: absolute;
 		right: 0;
-		background-color: #ccc;
 		min-width: 160px;
 	}
 	#header .menu ul ul li{
@@ -85,14 +90,10 @@
 	#header .menu ul li:hover ul{
 		display: block;
 	}
-	#header .menu a:hover{
-		color: black;
-	}
 	#header .menu .auth-picture {
 		display: inline-block;
 		width: 32px;
 		height: 32px;
-		vertical-align: middle;
 	}
 	#header .menu .auth-picture + ul {
 		display: none;
@@ -100,4 +101,73 @@
 	#header .hamburger{
 		display: none;
 	}
+}
+#content{
+	max-width: 600px;
+	padding: 2em;
+	margin: 0 auto;
+	margin-top: 55px;
+}
+#content p{
+	margin-top: 0;
+}
+#content img{
+	float: left;
+	margin: 0.5em 1.5em 0.5em 0;
+}
+#content textarea.source{
+	width: 100%;
+	padding: 0.5em;
+}
+#content > h1{
+	display: inline-block;
+	margin: 0 0 0.5em 0;
+}
+#content > h1.editable{
+	padding: 0.2em;
+}
+#content .leftbar{
+	float: left;
+	width: 140px;
+}
+#content .leftbar ul{
+	padding: 0;
+	margin: 0;
+}
+#content .body{
+	margin-left: 170px;
+}
+#content .codehilite pre{
+	max-height: 250px;
+	padding: 0.5em;
+}
+#content .codehilite code{
+	display: block;
+}
+#content .codehilite code:before{
+	display: inline-block;
+	width: 2.4em;
+	margin-right: 0.5em;
+}
+#content .codehilite code:nth-child(odd){
+	width: 100%;
+}
+#actionbar{
+	position: fixed;
+	text-align: right;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	margin: 0.5em;
+	height: 1.4em;
+}
+#actionbar i{
+	margin: 0em 0.25em;
+}
+#actionbar input{
+	position: relative;
+	top: -2px;
+}
+#actionbar .hidden{
+	display: none;
 }

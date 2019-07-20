@@ -1,0 +1,137 @@
+body{
+	font-family: Helvetica, Arial, sans-serif;
+}
+a{
+	text-decoration: none;
+	color: black;
+}
+a:hover{
+	background-color: rgb(253,187,45);
+	color: black;
+}
+#header{
+	background: linear-gradient(0deg, rgb(255,255,255) 0%, rgb(127,127,255) 100%);
+	color: black;
+}
+#header h1{
+	font-size: 150%;
+}
+#header .float{
+	font-size: 150%;
+}
+.highlight{
+	color: rgb(253,187,45) !important;
+}
+.hidden{
+	display: none !important;
+}
+#header .menu.visible{
+	background-color: rgba(255,255,255,0.85);
+	font-size: 14pt;
+}
+#header .menu.visible ul{
+	list-style-type:  none;
+}
+#header .menu.visible ul ul{
+	color: black;
+}
+#header .menu.visible a{
+	color: black;
+}
+#header .menu .auth-picture{
+	border-radius: 100%;
+}
+#header .hamburger{
+	text-decoration: none;
+}
+#header .hamburger:hover{
+	background-color: transparent;
+	color: black;
+}
+@media (min-width: 650px){
+	#header .menu{
+		background-color: transparent;
+	}
+	#header .menu a{
+		font-size: 12pt;
+	}
+	#header .menu ul{
+		list-style-type: none;
+	}
+	#header .menu ul ul{
+		background-color: #ccc;
+	}
+	#header .menu a:hover{
+		color: black;
+	}
+	#header .menu .auth-picture {
+		vertical-align: middle;
+	}
+}
+#content img{
+	float: left;
+	border-radius: 2em;
+}
+#content a{
+	color: #666;
+}
+#content a:hover{
+	color: rgb(253,187,45);
+	background-color: transparent;
+}
+#content textarea.source{
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	font-size: 90%;
+	white-space: pre;
+	outline: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	resize: none;
+}
+#content > h1.editable{
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	outline: none;
+}
+#content > h1 + span{
+	font-size: 75%;
+}
+#content > h1 + span:before{
+	content: " ";
+}
+#content .leftbar{
+	background-color: #ccc;
+}
+#content .leftbar ul{
+	list-style: none;
+}
+#content .codehilite pre{
+	overflow-x: auto;
+	overflow-y: auto;
+	background-color: black;
+	border: 1px solid #ccc;
+	counter-reset: line;
+}
+#content .codehilite code{
+	counter-increment: line;
+}
+#content .codehilite code:before{
+	content: counter(line);
+	display: inline-block;
+	border-right: 1px solid #ccc;
+}
+#content .codehilite code:nth-child(odd){
+	background-color: #111;
+}
+#actionbar a{
+	color: #666;
+}
+#actionbar a:hover{
+	color: rgb(253,187,45);
+	background-color: transparent;
+}
+#actionbar .highlight{
+	color: rgb(253,187,45);
+}

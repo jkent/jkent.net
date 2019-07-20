@@ -1,0 +1,13 @@
+{%- extends 'base.html' %}
+
+{% block main %}
+<h1>{{ title }}</h1>
+<div>
+<div class="leftbar">
+    <ul>
+        <li><a href="{{ url_for('admin.pages') }}">Pages</a></li>
+    </ul>
+</div>
+<div class="body">{% block body %}{% endblock %}</div>
+</div>
+{% endblock %}

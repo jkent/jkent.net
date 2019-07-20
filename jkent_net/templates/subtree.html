@@ -1,14 +1,12 @@
 {%- extends 'base.html' %}
 
 {% block main %}
-<div id="content">
-<h1>{{ title or '(Untitled)' }}</h1><span>{% if mode == 'raw' %}(Source){% elif mode == 'edit' %}(Editing){% endif %}</span>
+<h1>{{ title or 'Untitled' }}</h1><span>{% if mode == 'raw' %}(Source){% elif mode == 'edit' %}(Editing){% endif %}</span>
 {%- if mode == 'render' %}
 {{ content }}
 {%- elif mode == 'raw' or mode == 'edit' %}
 <textarea class="source">{{ content }}</textarea>
 {%- endif %}
-</div>
 <script>
 var subtree = {
     type: 'page',
