@@ -1,6 +1,7 @@
 from .models import Page
 from flask import request, url_for
 from flask_menu import current_menu
+from flask_security.core import current_user
 from functools import partial
 from werkzeug.urls import url_join, url_parse
 
@@ -28,8 +29,6 @@ def remove_menu(menu):
 
 def update_menus():
     for page in Page.query:
-        item = current_menu.submenu(page.menu_path)
-        item._endpoint = 'pages.pages'
-        item._endpoint_arguments_constructor = partial(lambda p: {'name': p}, page.name)
-        item._text = page.title
-        item._order = page.menu_order
+        current_menu.submenu(page.menu_path).register(
+            'pages.pages', page.title, order=page.menu_order,
+            endpoint_arguments_constructor=partial(lambda p: {'name': p}, page.name))
