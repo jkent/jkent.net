@@ -1,12 +1,15 @@
-{%- extends 'base.html' %}
+{% extends 'base.html' %}
+{% set title='Admin' %}
 
 {% block main %}
 <h1>{{ title }}</h1>
 <div>
 <div class="leftbar">
-    <ul>
-        <li><a href="{{ url_for('admin.pages') }}">Pages</a></li>
-    </ul>
+ <ul>
+ {%- for item in current_menu.submenu('.admin').children %}
+  {% if item.visible %}<li><a href="{{ item.url }}"{% if item.active %} class="active"{% endif %}>{{ item.text }}</a></li>{% endif %}
+ {%- endfor %}
+ </ul>
 </div>
 <div class="body">{% block body %}{% endblock %}</div>
 </div>

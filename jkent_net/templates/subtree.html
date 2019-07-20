@@ -1,4 +1,4 @@
-{%- extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block main %}
 <h1>{{ title or 'Untitled' }}</h1><span>{% if mode == 'raw' %}(Source){% elif mode == 'edit' %}(Editing){% endif %}</span>

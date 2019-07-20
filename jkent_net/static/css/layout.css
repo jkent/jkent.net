@@ -134,7 +134,17 @@ body{
 	padding: 0;
 	margin: 0;
 }
+#content .leftbar a{
+	display: inline-block;
+	box-sizing: border-box;
+	padding: 5px;
+	width: 100%;
+}
+#content .leftbar a.active{
+	padding: 4px;
+}
 #content .body{
+	padding: 5px;
 	margin-left: 170px;
 }
 #content .codehilite pre{
