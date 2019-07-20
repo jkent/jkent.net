@@ -118,7 +118,7 @@ $(() => {
 	}
 
 	/* Code for edit mode only */
-	var title_h1 = $('#content .title h1');
+	var title_h1 = $('#content > h1');
 	var restore_btn = $('#actionbar a.restore');
 	var source_last = source_textarea.val();
 	var timeout = null;

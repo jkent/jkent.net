@@ -33,21 +33,20 @@
 	resize: none;
 	padding: 0.5em;
 }
-#content .title{
-	margin-bottom: 1em;
+#content > h1{
+	display: inline-block;
+	margin: 0 0 0.5em 0;
 }
-#content .title h1{
-	display: inline;
-}
-#content .title h1.editable{
+#content > h1.editable{
 	border: 1px solid #ccc;
 	border-radius: 8px;
 	outline: none;
+	padding: 0.2em;
 }
-#content .title h1 + span{
+#content > h1 + span{
 	font-size: 75%;
 }
-#content .title h1 + span:before{
+#content > h1 + span:before{
 	content: " ";
 }
 #content .codehilite pre{
