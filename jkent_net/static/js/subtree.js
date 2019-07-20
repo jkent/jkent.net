@@ -1,188 +1,195 @@
 $(() => {
+	/* Code for all modes */
 	var url = new URL(window.location);
 	url.search = '';
 	
-	var source = $('#content > textarea.source');
-	var source_last = source.val();
-	var source_timeout = null;
-	var dmp = new diff_match_patch();
-	var commit_btn = $('#actionbar a.commit');
-	var restore_btn = $('#actionbar a.restore');
 	var draft_btn = $('#actionbar a.draft');
 	var raw_btn = $('#actionbar a.raw');
 	var edit_btn = $('#actionbar a.edit');
-	var title_btn = $('#actionbar a.title');
 
 	function parse_pathname(pathname) {
-			match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
-			console.log(match.groups);
-			return match.groups;
+		match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
+		console.log(match.groups);
+		return match.groups;
 	}
 
 	function build_pathname(name, version, path) {
-			var pathname = name;
-			if (version) {
-					pathname += '/_' + version;
-			}
-			if (path) {
-					pathname += '/' + path;
-			}
-			return pathname;
+		var pathname = name;
+		if (version) {
+			pathname += '/_' + version;
+		}
+		if (path) {
+			pathname += '/' + path;
+		}
+		return pathname;
 	}
-
-	function source_save_patch(complete) {
-			if (page.mode == 'render' || page.mode == 'raw') {
-					commit_btn.toggleClass('hidden', !page.draft);
-					if (typeof complete == 'function') {
-							complete();
-					}
-					return;
-			}
-
-			var source_text = source.val();
-			var patch = dmp.patch_make(source_last, source_text);
-			var patch_text = dmp.patch_toText(patch);
-			$.post(url, {
-					action: 'patch',
-					patch: patch_text,
-			}, (data) => {
-					source_last = source_text;
-					page.draft = data.draft;
-					commit_btn.toggleClass('hidden', !page.draft);
-					if (typeof complete == 'function') {
-							complete();
-					}
-			});
-	}
-
-	function source_resize() {
-			source.height('inherit');
-			var scrollHeight = source.prop('scrollHeight');
-			var height = parseInt(source.css('border-top-width'), 10)
-									- parseInt(source.css('padding-top'), 10)
-									+ scrollHeight
-									- parseInt(source.css('padding-bottom'), 10)
-									+ parseInt(source.css('border-bottom-width'), 10);
-
-			source.height(height + 'px');
-
-			if (source.prop('clientWidth') < source.prop('scrollWidth')) {
-					numLines = source.val().split('\n').length;
-					height += scrollHeight / numLines;
-					source.height(height + 'px');
-			}
-	}
-	source_resize();
-
-	source.on('input', (event) => {
-			source_resize();
-			if (source_timeout) {
-					clearTimeout(source_timeout);
-					source_timeout = null;
-			}
-			source_timeout = setTimeout(() => {
-					source_save_patch();
-					source_timeout = null;
-			}, 1000);
-	});
-	
-	commit_btn.on('click', () => {
-			if (source_timeout) {
-					clearTimeout(source_timeout);
-					source_timeout = null;
-			}
-			source_save_patch(() => {
-					$.post(url, {
-							action: 'commit',
-					}, (data) => {
-							window.location = url;
-					});
-			});
-			return false;
-	});
-
-	restore_btn.on('click', () => {
-			if (!confirm('Are you sure you want to restore this version?')) {
-					return false;
-			}
-			if (source_timeout) {
-					clearTimeout(source_timeout);
-					source_timeout = null;
-			}
-			$.post(url, {
-					action: 'restore',
-			}, (data) => {
-					var url = new URL(window.location);
-					var parsed = parse_pathname(url.pathname);
-					url.pathname = build_pathname(parsed.page, null, parsed.path);
-					window.location = url;
-			});
-			return false;
-	});
 
 	raw_btn.on('click', () => {
-			var search = new URLSearchParams();
-			if (page.mode != 'raw' || page.mode == 'edit') {
-					search.set('raw', '1');
-			}
-			url.search = search;
-			window.location = url;
-			return false;
+		var search = new URLSearchParams();
+		if (subtree.mode != 'raw' || subtree.mode == 'edit') {
+			search.set('raw', '1');
+		}
+		url.search = search.toString();
+		window.location = url;
+		return false;
 	});
 
 	edit_btn.on('click', () => {
-			var search = new URLSearchParams();
-			if (page.mode != 'edit' || page.mode == 'raw') {
-					search.set('edit', '1');
-			}
-			url.search = search;
-			window.location = url;
-			return false;
-	});
-
-	title_btn.on('click', () => {
-			var input_span = $('#actionbar span.input');
-			var title_input = $('#actionbar input.title');
-			if (!title_input.length) {
-					input_span.html('<label>Title <input type="text" class="title" placeholder="Title"></label>');
-					title_input = $('#actionbar input.title');
-					title_input.val(title);
-					title_btn.toggleClass('highlight', true);
-					title_input.on('keydown', (event) => {
-							if (event.key === 'Enter') {
-									page.title = title_input.val();
-									$.post(url, {
-											action: 'set-title',
-											title: page.title,
-									}, () => {
-											$('title').text(page.title + ' - jkent.net');
-											input_span.html('');
-											title_btn.toggleClass('highlight', false);
-									});
-							}
-					});
-			} else {
-					input_span.html('')
-					title_btn.toggleClass('highlight', false);
-			}
+		var search = new URLSearchParams();
+		if (subtree.mode != 'edit' || subtree.mode == 'raw') {
+			search.set('edit', '1');
+		}
+		url.search = search;
+		window.location = url;
+		return false;
 	});
 
 	draft_btn.on('click', () => {
-			var parts = window.location.pathname.slice(1).split('/');        
-			var name = parts.shift();
-			var pathname;
-			if (page.version == null) {
-					pathname = '/' + name + '/_HEAD';
-			} else {
-					var _ = parts.shift();
-					pathname = '/' + name
-			}
-			if (parts.length > 0 && parts[0] != '') {
-					pathname += '/' + parts.join('/');
-			}
-			window.location.pathname = pathname;
-			return false;
+		var parsed = parse_pathname(url.pathname);
+		var version = null;
+		if (parsed.version == null) {
+			version = 'HEAD';
+		}
+		url.pathname = build_pathname(parsed.page, version, parsed.path);
+		window.location = url;
+		return false;
 	});
 
-	source.prop('readonly', page.mode != 'edit');
+	if (subtree.mode == 'render') {
+		return;
+	}
+
+	/* Code for raw and edit modes */
+	var source_textarea = $('#content > textarea.source');
+	var commit_btn = $('#actionbar a.commit');
+
+	if (subtree.mode == 'raw') {
+		source_textarea.prop('readonly', true);
+
+		commit_btn.on('click', () => {
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = null;
+			}
+			$.post(url, {
+				action: 'commit',
+			}, (data) => {
+				window.location = url;
+			});
+			return false;
+		});
+	}
+
+	function source_resize() {
+		source_textarea.height('inherit');
+		var scrollHeight = source_textarea.prop('scrollHeight');
+		var height = parseInt(source_textarea.css('border-top-width'), 10)
+					- parseInt(source_textarea.css('padding-top'), 10)
+					+ scrollHeight
+					- parseInt(source_textarea.css('padding-bottom'), 10)
+					+ parseInt(source_textarea.css('border-bottom-width'), 10);
+
+		source_textarea.height(height + 'px');
+
+		if (source_textarea.prop('clientWidth') < source_textarea.prop('scrollWidth')) {
+			numLines = source_textarea.val().split('\n').length;
+			height += scrollHeight / numLines;
+			source_textarea.height(height + 'px');
+		}
+	}
+	source_resize();
+
+	if (subtree.mode == 'raw') {
+		return;
+	}
+
+	/* Code for edit mode only */
+	var title_h1 = $('#content .title h1');
+	var restore_btn = $('#actionbar a.restore');
+
+	var last_source = source_textarea.val();
+	var timeout = null;
+	var dmp = new diff_match_patch();
+
+	function source_save_patch(complete) {
+		var source_text = source_textarea.val();
+		var patch = dmp.patch_make(last_source, source_text);
+		var patch_text = dmp.patch_toText(patch);
+
+		var post_data = {
+			action: 'patch',
+			patch: patch_text,
+		};
+		if (subtree.title != title_h1.text()) {
+			subtree.title = title_h1.text();
+			if (subtree.title == '') {
+				subtree.title = 'Untitled';
+				title_h1.text(subtree.title);
+			}
+			post_data.title = subtree.title;
+			$('title').text(subtree.title + ' - jkent.net');
+		}
+		$.post(url, post_data, (data) => {
+			last_source = source_text;
+			subtree.draft = data.draft;
+			commit_btn.toggleClass('hidden', !subtree.draft);
+			if (typeof complete == 'function') {
+				complete();
+			}
+		});
+	}
+
+	source_textarea.on('input', (event) => {
+		source_resize();
+		if (timeout) {
+			clearTimeout(timeout);
+			timeout = null;
+		}
+		timeout = setTimeout(() => {
+			source_save_patch();
+			timeout = null;
+		}, 1000);
+	});
+
+	title_h1.prop('contentEditable', true);
+	title_h1.on('paste', (e) => {
+		setTimeout(() => {
+			title_h1.html(title_h1.text());
+			source_save_patch();
+		}, 0);
+	}).on('keypress', (e) => {
+		if (e.which == 13) {
+			title_h1.blur();
+			source_save_patch();
+			return false;
+		}
+		if (timeout) {
+			clearTimeout(timeout);
+			timeout = null;
+		}
+		timeout = setTimeout(() => {
+			source_save_patch();
+			timeout = null;
+		}, 1000);
+		return true;
+	});
+
+	restore_btn.on('click', () => {
+		if (!confirm('Are you sure you want to restore this version?')) {
+			return false;
+		}
+		if (timeout) {
+			clearTimeout(timeout);
+			timeout = null;
+		}
+		$.post(url, {
+				action: 'restore',
+		}, (data) => {
+			var url = new URL(window.location);
+			var parsed = parse_pathname(url.pathname);
+			url.pathname = build_pathname(parsed.page, null, parsed.path);
+			window.location = url;
+		});
+		return false;
+	});
 });

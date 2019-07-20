@@ -1,5 +1,6 @@
 <div id="actionbar">
 <span style="float: left;">
+<!-- unused -->
 </span>
 <span style="float: right;">
 {%- if mode == 'render' or mode == 'raw' %}
@@ -19,7 +20,6 @@
  <a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
 {%- endif %}
 {%- elif mode == 'edit' %}
- <a href="#" title="Title" class="title"><i class="fas fa-heading"></i></a>
  <a href="#" title="Commit" class="commit{% if not page.subtree.diff(None, None, 'HEAD') %} hidden{% endif %}"><i class="fas fa-save"></i></a>
  <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
  <a href="#" title="Edit" class="edit highlight"><i class="fas fa-edit"></i></a>
@@ -27,14 +27,3 @@
 </span>
 <span style="float: right" class="input"></span>
 </div>
-
-<script>
-var page = {
-    mode: {{ mode | tojson }},
-    draft: {{ page.subtree.diff(None, None, 'HEAD') | tojson }},
-    version: {{ version | tojson }},
-    title: {{ page.title | tojson }},
-};
-</script>
-<script src="{{ url_for('static', filename='js/diff_match_patch.js') }}"></script>
-<script src="{{ url_for('static', filename='js/subtree.js') }}"></script>

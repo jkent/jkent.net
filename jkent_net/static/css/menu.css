@@ -49,14 +49,6 @@
 	background-color: transparent;
 	color: black;
 }
-#header h1{
-	margin: 0;
-	padding: 0.5em 0;
-	font-size: 150%;
-}
-#header h1 a {
-	padding: 0.5em;
-}
 @media (min-width: 650px){
 	#header .menu{
 		display: block;

@@ -9,7 +9,6 @@ def init_db_command():
     """Creates and initializes a database."""
     db.create_all()
 
-
 @click.command('create-user')
 @click.argument('email')
 @click.password_option(prompt=False)

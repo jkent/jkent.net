@@ -19,9 +19,29 @@ a:hover{
 	color: black;
 	height: 55px;
 }
+#header h1{
+	margin: 0;
+	padding: 0.5em 0;
+	font-size: 150%;
+}
+#header h1 a{
+	padding: 0.5em;
+}
 #header .float{
 	float: right;
 	font-size: 150%;
+}
+#content .title{
+	margin-bottom: 1em;
+}
+#content .title h1{
+	display: inline;
+}
+#content .title h1:after{
+	content: " ";
+}
+#content .title h1 + span{
+	font-size: 75%;
 }
 .highlight {
 	color: rgb(253,187,45) !important;
