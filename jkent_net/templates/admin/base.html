@@ -7,7 +7,9 @@
 <div class="leftbar">
  <ul>
  {%- for item in current_menu.submenu('.admin').children %}
-  {% if item.visible %}<li><a href="{{ item.url }}"{% if item.active %} class="active"{% endif %}>{{ item.text }}</a></li>{% endif %}
+ {%- if item.visible %}
+  <li><a href="{{ item.url }}"{% if item.active %} class="active"{% endif %}>{{ item.text }}</a></li>
+ {%- endif %}
  {%- endfor %}
  </ul>
 </div>

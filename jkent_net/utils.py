@@ -32,3 +32,51 @@ def update_menus():
         current_menu.submenu(page.menu_path).register(
             'pages.pages', page.title, order=page.menu_order,
             endpoint_arguments_constructor=partial(lambda p: {'name': p}, page.name))
+
+class Pager(object):
+    def __init__(self, items_per_page, item_count):
+        self._items_per_page = items_per_page
+        self._item_count = item_count
+        self._page = 1
+
+    @property
+    def items_per_page(self):
+        return self._items_per_page
+
+    @property
+    def count(self):
+        return (self._item_count + self._items_per_page - 1) // self._items_per_page
+
+    @property
+    def first(self):
+        return 1
+
+    @property
+    def last(self):
+        return self.count
+
+    @property
+    def next(self):
+        return min(self._page + 1, self.count)
+
+    @property
+    def prev(self):
+        return max(self._page - 1, 1)
+
+    @property
+    def offset(self):
+        return (self._page - 1) * self._items_per_page
+
+    @property
+    def page(self):
+        return self._page
+    
+    @page.setter
+    def page(self, value):
+        if value > 0 and value <= self.count:
+            self._page = value
+
+    def range(self, num_links):
+        lb = max(min(self.count, self.page + num_links//2) - num_links, 0) + 1
+        ub = min(max(0, self.page - num_links//2) + num_links, self.count) + 1
+        return range(lb, ub)

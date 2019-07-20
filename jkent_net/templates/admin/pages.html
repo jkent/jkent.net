@@ -1,5 +1,10 @@
 {% extends 'admin/base.html' %}
 
 {% block body %}
-Pages!
+{% include '_pager.html' %}
+{%- for page in pages %}
+<div class="paged-entry"><span><a><i class="fas fa-trash"></i></a></span><a href="{{ url_for('admin.pages', id=page.id) }}">
+{{ page.title }}</a></div>
+{%- endfor %}
+{% include '_pager.html' %}
 {% endblock %}

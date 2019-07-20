@@ -17,7 +17,9 @@
  <li><img src="{{ session.avatar_url or url_for('static', filename='user.png') }}" class="auth-picture">
   <ul>
   {%- for item in current_menu.submenu('.user').children %}
-   {% if item.visible %}<li><a href="{{ item.url }}"{% if item.active %} class="active"{% endif %}>{{ item.text }}</a></li>{% endif %}
+  {%- if item.visible %}
+   <li><a href="{{ item.url }}">{{ item.text }}</a></li>
+  {%- endif %}
   {%- endfor %}
   </ul>
  </li>

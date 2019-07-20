@@ -114,6 +114,17 @@ a:hover{
 #content .leftbar a.active{
 	border: 1px solid rgb(253,187,45);
 }
+#content .pager a {
+	text-align: center;
+	border-radius: 8px;
+}
+#content .pager a.active{
+	border: 1px solid rgb(253,187,45);
+}
+#content .pager a:hover{
+	background-color: rgb(253,187,45);
+	color: black;
+}
 #content .codehilite pre{
 	overflow-x: auto;
 	overflow-y: auto;
@@ -141,4 +152,8 @@ a:hover{
 }
 #actionbar .highlight{
 	color: rgb(253,187,45);
+}
+#content .paged-entry > span + a:hover{
+	color: black;
+	background-color: rgb(253,187,45);
 }

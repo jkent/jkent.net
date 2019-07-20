@@ -162,6 +162,14 @@ body{
 #content .codehilite code:nth-child(odd){
 	width: 100%;
 }
+#content .pager {
+	margin: 1em 0;
+}
+#content .pager a{
+	display: inline-block;
+	width: 1.25em;
+	padding: 0.1em;
+}
 #actionbar{
 	position: fixed;
 	text-align: right;
@@ -180,4 +188,16 @@ body{
 }
 #actionbar .hidden{
 	display: none;
+}
+#content .paged-entry{
+	display: block;
+}
+#content .paged-entry > span{
+	float: right;
+	padding: 5px;
+}
+#content .paged-entry > span + a{
+	display: block;
+	box-sizing: border-box;
+	padding: 5px;
 }
