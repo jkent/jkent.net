@@ -2,53 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>{% block title %}{% endblock %} - jkent.net</title>
+<title>{{ title }} - jkent.net</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='codehilite.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/site.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/codehilite.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/all.min.css') }}">
-<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
 </head>
 <body>
+{%- include 'header.html' %}
 
-<div id="header">
-<div class="float">
-<div class="menu">
-<ul>
-{%- for item in current_menu.children recursive %}
-{%- if loop.depth <= 2 %}
- <li>
-  <a href="{{ item.url }}">{{ item.text }}</a>
-  {%- if item.children and loop.depth <= 1 %}
-  <ul>{{ loop(item.children) }}
-  </ul>
-  {%- endif %}
- </li>
-{%- endif %}
-{%- endfor %}
- <li>
-  <img src="{{ session.avatar_url or url_for('static', filename='user.png') }}" class="auth-picture">
-  <ul>
-   {%- if current_user.is_authenticated %}
-   <li><a href="/profile">Profile</a></li>
-   <li><a href="{{ url_for('security.logout') }}">Logout</a></li>
-   {%- else %}
-   <li><a href="{{ url_for('security.login', next=request.path) }}">Login</a></li>
-   <li><a href="{{ url_for('security.register') }}">Register</a></li>
-   {%- endif %}
-  </ul>
- </li>
-</ul>
-</div>
-<a href="#" class="hamburger"><i class="fas fa-bars"></i></a>
-</div>
-<h1><a href="/">jkent.net</a></h1>
-</div>
-
-<div id="content">
-{%- block content %}This is a template{% endblock -%}
-</div>
-
-<script src="{{ url_for('static', filename='site.js') }}"></script>
+{%- block main %}{% endblock -%}
+<script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
 </html>

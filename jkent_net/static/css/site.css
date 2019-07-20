@@ -1,0 +1,31 @@
+@import url('menu.css');
+@import url('content.css');
+@import url('actionbar.css');
+body{
+	margin: 0;
+	padding: 0;
+	font-family: Arial, Helvetica, sans-serif;
+}
+a{
+	text-decoration: none;
+	color: black;
+}
+a:hover{
+	background-color: rgb(253,187,45);
+	color: black;
+}
+#header{
+	background: linear-gradient(0deg, rgb(255,255,255) 0%, rgb(127,127,255) 100%);
+	color: black;
+	height: 55px;
+}
+#header .float{
+	float: right;
+	font-size: 150%;
+}
+.highlight {
+	color: rgb(253,187,45) !important;
+}
+.hidden {
+	display: none !important;
+}

@@ -1,3 +1,4 @@
+from .admin import *
 from .login_facebook import *
 from .login_github import *
 from .login_google import *
@@ -12,6 +13,7 @@ menu = Menu()
 
 def init_app(app):
     menu.init_app(app)
+    app.register_blueprint(admin.bp, url_prefix='/admin')
     app.register_blueprint(login_facebook.bp, url_prefix='/login')
     app.register_blueprint(login_github.bp, url_prefix='/login')
     app.register_blueprint(login_google.bp, url_prefix='/login')
