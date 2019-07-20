@@ -20,22 +20,35 @@
 	color: rgb(253,187,45);
 	background-color: transparent;
 }
-.login-box{
-	width: 400px;
-	margin: 0 auto;
-	text-align: center;
+#content textarea.source{
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	font-size: 90%;
+	width: 100%;
+	white-space: pre;
+	outline: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	resize: none;
+	padding: 0.5em;
 }
-.login-box h4 {
-	color: red;
+#content .title{
+	margin-bottom: 1em;
 }
-.login-box div{
-	margin: 0.75em 0;
+#content .title h1{
+	display: inline;
 }
-.login-box div label{
-	text-align: right;
-	display: inline-block;
-	width: 150px;
-	margin-right: 0.5em;
+#content .title h1.editable{
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	outline: none;
+}
+#content .title h1 + span{
+	font-size: 75%;
+}
+#content .title h1 + span:before{
+	content: " ";
 }
 #content .codehilite pre{
 	max-height: 250px;
@@ -60,18 +73,4 @@
 #content .codehilite code:nth-child(odd){
 	width: 100%;
 	background-color: #111;
-}
-#content > textarea.source{
-	border: 1px solid #111;
-	background-color: black;
-	color: white;
-	font-size: 90%;
-	width: 100%;
-	white-space: pre;
-	outline: none;
-	-webkit-box-shadow: none;
-	-moz-box-shadow: none;
-	box-shadow: none;
-	resize: none;
-	padding: 0.5em;
 }

@@ -31,21 +31,26 @@ a:hover{
 	float: right;
 	font-size: 150%;
 }
-#content .title{
-	margin-bottom: 1em;
-}
-#content .title h1{
-	display: inline;
-}
-#content .title h1:after{
-	content: " ";
-}
-#content .title h1 + span{
-	font-size: 75%;
-}
-.highlight {
+.highlight{
 	color: rgb(253,187,45) !important;
 }
-.hidden {
+.hidden{
 	display: none !important;
+}
+.login-box{
+	width: 400px;
+	margin: 0 auto;
+	text-align: center;
+}
+.login-box h4 {
+	color: red;
+}
+.login-box div{
+	margin: 0.75em 0;
+}
+.login-box div label{
+	text-align: right;
+	display: inline-block;
+	width: 150px;
+	margin-right: 0.5em;
 }

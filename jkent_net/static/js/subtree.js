@@ -9,7 +9,6 @@ $(() => {
 
 	function parse_pathname(pathname) {
 		match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
-		console.log(match.groups);
 		return match.groups;
 	}
 
@@ -24,34 +23,49 @@ $(() => {
 		return pathname;
 	}
 
-	raw_btn.on('click', () => {
-		var search = new URLSearchParams();
-		if (subtree.mode != 'raw' || subtree.mode == 'edit') {
-			search.set('raw', '1');
+	/* dummy save function */
+	if (subtree.mode == 'render' || subtree.mode == 'raw') {
+		function source_save_patch(complete) {
+			if (typeof complete == 'function') {
+				complete();
+			}
 		}
-		url.search = search.toString();
-		window.location = url;
+	}
+
+	raw_btn.on('click', () => {
+		source_save_patch(() => {
+			var search = new URLSearchParams();
+			if (subtree.mode != 'raw' || subtree.mode == 'edit') {
+				search.set('raw', '1');
+			}
+			url.search = search.toString();
+			window.location = url;
+		});
 		return false;
 	});
 
 	edit_btn.on('click', () => {
-		var search = new URLSearchParams();
-		if (subtree.mode != 'edit' || subtree.mode == 'raw') {
-			search.set('edit', '1');
-		}
-		url.search = search;
-		window.location = url;
+		source_save_patch(() => {
+			var search = new URLSearchParams();
+			if (subtree.mode != 'edit' || subtree.mode == 'raw') {
+				search.set('edit', '1');
+			}
+			url.search = search;
+			window.location = url;
+		});
 		return false;
 	});
 
 	draft_btn.on('click', () => {
-		var parsed = parse_pathname(url.pathname);
-		var version = null;
-		if (parsed.version == null) {
-			version = 'HEAD';
-		}
-		url.pathname = build_pathname(parsed.page, version, parsed.path);
-		window.location = url;
+		source_save_patch(() => {
+			var parsed = parse_pathname(url.pathname);
+			var version = null;
+			if (parsed.version == null) {
+				version = 'HEAD';
+			}
+			url.pathname = build_pathname(parsed.page, version, parsed.path);
+			window.location = url;
+		});
 		return false;
 	});
 
@@ -106,22 +120,29 @@ $(() => {
 	/* Code for edit mode only */
 	var title_h1 = $('#content .title h1');
 	var restore_btn = $('#actionbar a.restore');
-
-	var last_source = source_textarea.val();
+	var source_last = source_textarea.val();
 	var timeout = null;
 	var dmp = new diff_match_patch();
 
 	function source_save_patch(complete) {
 		var source_text = source_textarea.val();
-		var patch = dmp.patch_make(last_source, source_text);
-		var patch_text = dmp.patch_toText(patch);
+		var title_text = title_h1.text();
 
+		if (source_text == source_last && subtree.title == title_text) {
+			if (typeof complete == 'function') {
+				complete();
+			}
+			return;
+		}
+
+		var patch = dmp.patch_make(source_last, source_text);
+		var patch_text = dmp.patch_toText(patch);
 		var post_data = {
 			action: 'patch',
 			patch: patch_text,
 		};
-		if (subtree.title != title_h1.text()) {
-			subtree.title = title_h1.text();
+		if (subtree.title != title_text) {
+			subtree.title = title_text;
 			if (subtree.title == '') {
 				subtree.title = 'Untitled';
 				title_h1.text(subtree.title);
@@ -130,7 +151,7 @@ $(() => {
 			$('title').text(subtree.title + ' - jkent.net');
 		}
 		$.post(url, post_data, (data) => {
-			last_source = source_text;
+			source_last = source_text;
 			subtree.draft = data.draft;
 			commit_btn.toggleClass('hidden', !subtree.draft);
 			if (typeof complete == 'function') {
@@ -152,6 +173,7 @@ $(() => {
 	});
 
 	title_h1.prop('contentEditable', true);
+	title_h1.addClass('editable');
 	title_h1.on('paste', (e) => {
 		setTimeout(() => {
 			title_h1.html(title_h1.text());
@@ -183,7 +205,7 @@ $(() => {
 			timeout = null;
 		}
 		$.post(url, {
-				action: 'restore',
+			action: 'restore',
 		}, (data) => {
 			var url = new URL(window.location);
 			var parsed = parse_pathname(url.pathname);

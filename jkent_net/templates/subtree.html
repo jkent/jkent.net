@@ -3,13 +3,12 @@
 {% block main %}
 <div id="content">
 <div class="title"><h1>{{ title or '(Untitled)' }}</h1><span>{% if mode == 'raw' %}(Source){% elif mode == 'edit' %}(Editing){% endif %}</span></div>
-{% if mode == 'render' %}
+{%- if mode == 'render' %}
 {{ content }}
-{% elif mode == 'raw' or mode == 'edit' %}
+{%- elif mode == 'raw' or mode == 'edit' %}
 <textarea class="source">{{ content }}</textarea>
-{% endif %}
+{%- endif %}
 </div>
-
 <script>
 var subtree = {
     type: 'page',
