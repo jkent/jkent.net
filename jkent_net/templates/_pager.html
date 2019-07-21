@@ -1,3 +1,4 @@
+{% if pager.count > 1 %}
 <div class="pager">
 <a href="{{ url_for(request.endpoint, page=pager.first) }}">&laquo;</a>
 <a href="{{ url_for(request.endpoint, page=pager.prev) }}">&lt;</a>
@@ -7,3 +8,4 @@
 <a href="{{ url_for(request.endpoint, page=pager.next) }}">&gt;</a>
 <a href="{{ url_for(request.endpoint, page=pager.last) }}">&raquo;</a>
 </div>
+{% endif %}

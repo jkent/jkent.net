@@ -145,34 +145,37 @@ p a{
 	width: 100%;
 }
 #content .leftbar a.active{
-	padding: 4px;
+	padding: 3px;
 }
 #content .body{
 	padding: 5px;
 	margin-left: 170px;
 }
-#content .codehilite pre{
+.codehilite pre{
 	max-height: 250px;
 	padding: 0.5em;
 }
-#content .codehilite code{
+.codehilite code{
 	display: block;
 }
-#content .codehilite code:before{
+.codehilite code:before{
 	display: inline-block;
 	width: 2.4em;
 	margin-right: 0.5em;
 }
-#content .codehilite code:nth-child(odd){
+.codehilite code:nth-child(odd){
 	width: 100%;
 }
-#content .pager{
+.pager{
 	margin: 1em 0;
 }
-#content .pager a{
+.pager a.active{
+	padding: 2px;
+}
+.pager a{
 	display: inline-block;
 	width: 1.25em;
-	padding: 0.1em;
+	padding: 4px;
 }
 #actionbar{
 	position: fixed;

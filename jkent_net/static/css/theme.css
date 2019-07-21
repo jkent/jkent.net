@@ -4,6 +4,7 @@ body{
 a{
 	text-decoration: none;
 	color: black;
+	transition: all 0.2s;
 }
 a:hover{
 	background-color: rgb(253,187,45);
@@ -94,41 +95,44 @@ p a{
 #content > h1 + span:before{
 	content: " ";
 }
-#content .leftbar ul{
+.leftbar ul{
 	list-style: none;
 }
-#content .leftbar a:hover{
+.leftbar a:hover{
 	background-color: rgb(253,187,45);
 }
-#content .leftbar a.active{
-	border: 1px solid rgb(253,187,45);
+.leftbar a.active{
+	border: 2px solid rgb(253,187,45);
 }
-#content .pager a{
+.pager {
 	text-align: center;
+	font-size: 90%;
+}
+.pager a{
 	border-radius: 8px;
 }
-#content .pager a.active{
-	border: 1px solid rgb(253,187,45);
+.pager a.active{
+	border: 2px solid rgb(253,187,45);
 }
-#content .pager a:hover{
+.pager a:hover{
 	background-color: rgb(253,187,45);
 }
-#content .codehilite pre{
+.codehilite pre{
 	overflow-x: auto;
 	overflow-y: auto;
 	background-color: black;
 	border: 1px solid #ccc;
 	counter-reset: line;
 }
-#content .codehilite code{
+.codehilite code{
 	counter-increment: line;
 }
-#content .codehilite code:before{
+.codehilite code:before{
 	content: counter(line);
 	display: inline-block;
 	border-right: 1px solid #ccc;
 }
-#content .codehilite code:nth-child(odd){
+.codehilite code:nth-child(odd){
 	background-color: #111;
 }
 #actionbar a{
@@ -141,6 +145,6 @@ p a{
 #actionbar .highlight{
 	color: rgb(253,187,45);
 }
-#content .paged-entry > span + a:hover{
+.paged-entry > span + a:hover{
 	background-color: rgb(253,187,45);
 }
