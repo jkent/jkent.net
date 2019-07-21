@@ -9,6 +9,9 @@ a:hover{
 	background-color: rgb(253,187,45);
 	color: black;
 }
+p a{
+	color: #666;
+}
 #header{
 	background: linear-gradient(0deg, rgb(255,255,255) 0%, rgb(127,127,255) 100%);
 	color: black;
@@ -61,9 +64,6 @@ a:hover{
 	#header .menu ul ul{
 		background-color: #ccc;
 	}
-	#header .menu a:hover{
-		color: black;
-	}
 	#header .menu .auth-picture{
 		vertical-align: middle;
 	}
@@ -71,13 +71,6 @@ a:hover{
 #content img{
 	float: left;
 	border-radius: 2em;
-}
-#content a{
-	color: #666;
-}
-#content a:hover{
-	color: rgb(253,187,45);
-	background-color: transparent;
 }
 #content textarea.source{
 	border: 1px solid #ccc;
@@ -104,10 +97,6 @@ a:hover{
 #content .leftbar ul{
 	list-style: none;
 }
-#content .leftbar a
-{
-	color: black;
-}
 #content .leftbar a:hover{
 	background-color: rgb(253,187,45);
 }
@@ -117,14 +106,12 @@ a:hover{
 #content .pager a{
 	text-align: center;
 	border-radius: 8px;
-	color: black;
 }
 #content .pager a.active{
 	border: 1px solid rgb(253,187,45);
 }
 #content .pager a:hover{
 	background-color: rgb(253,187,45);
-	color: black;
 }
 #content .codehilite pre{
 	overflow-x: auto;
@@ -153,9 +140,6 @@ a:hover{
 }
 #actionbar .highlight{
 	color: rgb(253,187,45);
-}
-#content .paged-entry > span + a{
-	color: black;
 }
 #content .paged-entry > span + a:hover{
 	background-color: rgb(253,187,45);
