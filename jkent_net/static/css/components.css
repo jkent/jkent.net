@@ -1,14 +1,14 @@
-.field {
+.field{
 	display: flex;
 	flex-flow: column-reverse;
 	padding: 5px;
 }
-.field label, .field input {
+.field label, .field input{
 	transition: all 0.2s;
 	touch-action: manipulation;
 	color: #999;
 }
-.field input {
+.field input{
 	font-size: inherit;
 	border: 0;
 	border-bottom: 1px solid #ccc;
@@ -18,19 +18,19 @@
 	padding: 0;
 	margin-bottom: 1px;
 	cursor: text;
-	color: #666;
+	color: black;
 }
-.field input:focus {
+.field input:focus{
 	outline: 0;
 	border-bottom: 2px solid #666;
 	margin-bottom: 0;
 }
-.field label {
+.field label{
 	font-size: 0.75em;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 }
-.field input:placeholder-shown + label {
+.field input:placeholder-shown + label{
 	cursor: text;
 	max-width: 66.66%;
 	white-space: nowrap;
@@ -39,15 +39,15 @@
 	transform-origin: left bottom;
 	transform: translate(0, 1.125rem) scale(1.5);
 }
-::-webkit-input-placeholder {
+::-webkit-input-placeholder{
 	opacity: 0;
 	transition: inherit;
 }
-.field input:focus::-webkit-input-placeholder {
+.field input:focus::-webkit-input-placeholder{
 	opacity: 1;
 }
 .field input:not(:placeholder-shown) + label,
-.field input:focus + label {
+.field input:focus + label{
   transform: translate(0, 0) scale(1);
   color: #999;
 }

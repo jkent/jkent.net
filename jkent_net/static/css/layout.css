@@ -90,12 +90,12 @@ body{
 	#header .menu ul li:hover ul{
 		display: block;
 	}
-	#header .menu .auth-picture {
+	#header .menu .auth-picture{
 		display: inline-block;
 		width: 32px;
 		height: 32px;
 	}
-	#header .menu .auth-picture + ul {
+	#header .menu .auth-picture + ul{
 		display: none;
 	}
 	#header .hamburger{
@@ -162,7 +162,7 @@ body{
 #content .codehilite code:nth-child(odd){
 	width: 100%;
 }
-#content .pager {
+#content .pager{
 	margin: 1em 0;
 }
 #content .pager a{

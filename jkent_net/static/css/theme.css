@@ -64,7 +64,7 @@ a:hover{
 	#header .menu a:hover{
 		color: black;
 	}
-	#header .menu .auth-picture {
+	#header .menu .auth-picture{
 		vertical-align: middle;
 	}
 }
@@ -114,9 +114,10 @@ a:hover{
 #content .leftbar a.active{
 	border: 1px solid rgb(253,187,45);
 }
-#content .pager a {
+#content .pager a{
 	text-align: center;
 	border-radius: 8px;
+	color: black;
 }
 #content .pager a.active{
 	border: 1px solid rgb(253,187,45);
@@ -153,7 +154,9 @@ a:hover{
 #actionbar .highlight{
 	color: rgb(253,187,45);
 }
-#content .paged-entry > span + a:hover{
+#content .paged-entry > span + a{
 	color: black;
+}
+#content .paged-entry > span + a:hover{
 	background-color: rgb(253,187,45);
 }
