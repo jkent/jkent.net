@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+
+{% block body %}
+<div class="field">
+ <input type="text" name="filter" id="filter_field" placeholder=" ">
+ <label for="filter_field">Filter</label>
+</div>
+{%- for page in pages %}
+<div class="paged-entry"><span><a><i class="fas fa-trash"></i></a></span><a href="{{ url_for('admin.pages_edit', id=page.id) }}">{{ page.title }}</a></div>
+{%- endfor %}
+<div class="field">
+ <input type="text" name="title" id="title_field" placeholder=" ">
+ <label for="title_field">New name</label>
+</div>
+{% include '_pager.html' %}
+{% endblock %}

@@ -182,21 +182,17 @@ body{
 #actionbar i{
 	margin: 0em 0.25em;
 }
-#actionbar input{
-	position: relative;
-	top: -2px;
-}
 #actionbar .hidden{
 	display: none;
 }
-#content .paged-entry{
+.paged-entry{
 	display: block;
 }
-#content .paged-entry > span{
+.paged-entry > span{
 	float: right;
 	padding: 5px;
 }
-#content .paged-entry > span + a{
+.paged-entry > span + a{
 	display: block;
 	box-sizing: border-box;
 	padding: 5px;
