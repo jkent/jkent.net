@@ -34,10 +34,18 @@ def update_menus():
             endpoint_arguments_constructor=partial(lambda p: {'name': p}, page.name))
 
 class Pager(object):
-    def __init__(self, items_per_page, item_count):
+    def __init__(self, items_per_page):
         self._items_per_page = items_per_page
-        self._item_count = item_count
+        self._item_count = 0
         self._page = 1
+
+    @property
+    def items(self):
+        return self._item_count
+
+    @items.setter
+    def items(self, item_count):
+        self._item_count = item_count
 
     @property
     def items_per_page(self):
@@ -73,8 +81,7 @@ class Pager(object):
     
     @page.setter
     def page(self, value):
-        if value > 0 and value <= self.count:
-            self._page = value
+        self._page = value
 
     def range(self, num_links):
         lb = max(min(self.count, self.page + num_links//2) - num_links, 0) + 1

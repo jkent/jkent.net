@@ -5,12 +5,94 @@
  <input type="text" name="filter" id="filter_field" placeholder=" ">
  <label for="filter_field">Filter</label>
 </div>
-{%- for user in users %}
-<div class="paged-entry"><span><a><i class="fas fa-trash"></i></a></span><a href="{{ url_for('admin.users_edit', id=user.id) }}">{% if user.name %}{{ user.name }} {% endif %}&lt;{{ user.email }}&gt;</a></div>
-{%- endfor %}
+<div class="userlist"></div>
 <div class="field">
  <input type="text" name="email" id="email_field" placeholder=" ">
  <label for="email_field">New email</label>
 </div>
-{% include '_pager.html' %}
+<div class="pager"></div>
+<script>
+var typing_timeout = null;
+var typing = false;
+
+$(window).on('load', load_data);
+$(window).on('hashchange', load_data);
+var pager = new Pager('.pager', 10, () => {
+    load_data();
+    typing = false;
+});
+
+var filter = $('#filter_field');
+filter.on('keyup', () => {
+    if (typing_timeout) {
+        clearTimeout(typing_timeout);
+        typing_timeout = null;
+    }
+    typing_timeout = setTimeout(() => {
+        var hash = new URLSearchParams(window.location.hash.substr(1));
+        var q = filter.val().trim();
+        hash.set('q', filter.val());
+        var url = new URL(window.location);
+        url.hash = '#' + hash;
+        if (typing) {
+            window.location.replace(url);
+        } else {
+            typing = true;
+            window.location.assign(url);
+        }
+    }, 250);
+});
+
+function load_data() {
+    var hash = new URLSearchParams(window.location.hash.substr(1));
+    var page_num = hash.has('page') ? hash.get('page') : 1;
+
+    filter.val(hash.has('q') ? hash.get('q') : '');
+
+    var json_url = new URL(window.location);
+    json_url.pathname = '/admin/users/json';
+    var search = json_url.searchParams;
+    search.set('page', page_num);
+    if (hash.has('q')) {
+        search.set('q', hash.get('q'))
+    }
+
+    var userlist = $('.userlist');
+    $.get(json_url, (data) => {
+        userlist.empty();
+        pager.set_pages(data.pages)
+        for (let user of data.users) {
+            var html = '<div class="paged-entry">';
+            html += '<span><i class="fas fa-trash"></i></span>';
+            html += '<a href="#"></a>';
+            html += '</div>';
+            html = $(html);
+
+            var url = new URL(window.location);
+            url.pathname = '/admin/users/' + user.id;
+            url.search = '';
+
+            var a = html.find('a');
+            a.text((user.name ? user.name + ' ' : '') + '<' + user.email + '>');
+            a.on('click', () => {
+                window.location.href = url;
+                return false;
+            });
+
+            var trash = html.find('.fa-trash');
+            trash.on('click', () => {
+                if (confirm('Delete ' + user.email + '?')) {
+                    $.post(url, {'delete': true}, (data) => {
+                        load(pager.page_num);
+                    }, "json");
+                    return false;
+                }
+            });
+
+            userlist.append(html);
+        } 
+        pager.goto(page_num);
+    });
+}
+</script>
 {% endblock %}

@@ -3,7 +3,7 @@ from ..models.role import roles_users
 import enum
 import hashlib
 from flask import session, url_for
-from flask_security import AnonymousUser, UserMixin 
+from flask_security import AnonymousUser, UserMixin
 from urllib.parse import urlencode
 
 __all__ = ['User', 'UserAvatarSource']
@@ -19,15 +19,16 @@ class UserAvatarSource(enum.Enum):
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.Unicode(2555), unique=True)
+    email = db.Column(db.Unicode(2555), nullable=False, unique=True)
     password = db.Column(db.String(255))
     active = db.Column(db.Boolean())
     confirmed_at = db.Column(db.DateTime())
-    name = db.Column(db.Unicode(256))
+    name = db.Column(db.Unicode(256), nullable=False, default='')
     avatar_source = db.Column(db.Enum(UserAvatarSource),
                              default=UserAvatarSource.auto)
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
+    searchable = db.column_property(name + ' <' + email + '>')
 
     def __repr__(self):
         return '<User %r>' % self.email

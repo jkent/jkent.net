@@ -7,12 +7,12 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/site.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/all.min.css') }}">
 <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </head>
 <body>
 {%- include 'header.html' %}
 <div id="content">
 {%- block main %}{% endblock -%}
 </div>
-<script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </body>
 </html>
