@@ -1,4 +1,4 @@
-from ..models import Page, Role, User
+from ..models import db, Page, Role, User
 from ..utils import Pager
 from flask import Blueprint, render_template, request
 from flask_menu import current_menu, register_menu
@@ -9,6 +9,8 @@ from sqlalchemy.sql.functions import concat
 __all__ = ['bp']
 
 bp = Blueprint('admin', __name__)
+
+RESULTS_PER_PAGE = 20
 
 
 @bp.route('settings')
@@ -86,8 +88,28 @@ def users_json():
         'pages': pager.count,
     }
 
-@bp.route('users/<int:id>')
+@bp.route('users/<int:id>', methods=('GET', 'POST'))
 @roles_accepted('admin')
-@register_menu(bp, '.admin.users.edit', 'Edit')
-def users_edit(id):
-    return render_template('admin/users_edit.html')
+def users_edit(id, ignore_post=False):
+    if not ignore_post and request.method == 'POST':
+        if request.form.get('delete'):
+            db.session.delete(User.query.get(id))
+            db.session.commit()
+        return {}
+
+    subquery = db.session.query(User.id,db.func.ROW_NUMBER() \
+        .over(order_by=(User.name,User.email)).label('n')).subquery()
+    query = db.session.query(User, (subquery.c.n - 1)) \
+        .join(User, User.id==subquery.c.id).filter(subquery.c.id==id)
+    user, rownum = query.first()
+    pagenum = rownum // RESULTS_PER_PAGE
+    return render_template('admin/users_edit.html', user=user, pagenum=pagenum)
+
+@bp.route('users/new', methods=('POST',))
+@roles_accepted('admin')
+def users_new():
+    email = request.form.get('email')
+    user = User(email=email)
+    db.session.add(user)
+    db.session.commit()
+    return users_edit(user.id, True)

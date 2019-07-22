@@ -98,6 +98,9 @@ p a{
 .leftbar ul{
 	list-style: none;
 }
+.leftbar a{
+	border-radius: 8px;
+}
 .leftbar a:hover{
 	background-color: rgb(253,187,45);
 }
@@ -144,6 +147,9 @@ p a{
 }
 #actionbar .highlight{
 	color: rgb(253,187,45);
+}
+.paged-entry > span + a{
+	border-radius: 8px;	
 }
 .paged-entry > span + a:hover{
 	background-color: rgb(253,187,45);

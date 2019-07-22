@@ -23,7 +23,10 @@ var pager = new Pager('.pager', 10, () => {
 });
 
 var filter = $('#filter_field');
-filter.on('keyup', () => {
+filter.on('keyup', (e) => {
+    if (e.keyCode == 27) {
+        filter.val('');
+    }
     if (typing_timeout) {
         clearTimeout(typing_timeout);
         typing_timeout = null;
@@ -41,6 +44,28 @@ filter.on('keyup', () => {
             window.location.assign(url);
         }
     }, 250);
+});
+
+var email = $('#email_field');
+email.on('keyup', (e) => {
+    if (e.keyCode == 13) {
+        if (!email.val().match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
+            alert('Invalid email address!');
+            return; 
+        }
+        var form = $('<form>').attr({
+            method: 'POST',
+            action: '/admin/users/new',
+            style: 'display: none;'
+        });
+        form.append($('<input>').attr({
+            type: 'hidden',
+            name: 'email',
+            value: email.val(),
+        }));
+        $('body').append(form);
+        form.submit();
+    }
 });
 
 function load_data() {
@@ -68,22 +93,23 @@ function load_data() {
             html += '</div>';
             html = $(html);
 
-            var url = new URL(window.location);
+            let url = new URL(window.location);
             url.pathname = '/admin/users/' + user.id;
             url.search = '';
 
             var a = html.find('a');
             a.text((user.name ? user.name + ' ' : '') + '<' + user.email + '>');
             a.on('click', () => {
-                window.location.href = url;
+                window.location.assign(url);
                 return false;
             });
 
             var trash = html.find('.fa-trash');
             trash.on('click', () => {
                 if (confirm('Delete ' + user.email + '?')) {
+                    console.log(url);
                     $.post(url, {'delete': true}, (data) => {
-                        load(pager.page_num);
+                        load_data();
                     }, "json");
                     return false;
                 }
