@@ -99,10 +99,10 @@ def users_edit(id, ignore_post=False):
 
     subquery = db.session.query(User.id,db.func.ROW_NUMBER() \
         .over(order_by=(User.name,User.email)).label('n')).subquery()
-    query = db.session.query(User, (subquery.c.n - 1)) \
+    query = db.session.query(User, (subquery.c.n-1)) \
         .join(User, User.id==subquery.c.id).filter(subquery.c.id==id)
     user, rownum = query.first()
-    pagenum = rownum // RESULTS_PER_PAGE
+    pagenum = (rownum // RESULTS_PER_PAGE) + 1
     return render_template('admin/users_edit.html', user=user, pagenum=pagenum)
 
 @bp.route('users/new', methods=('POST',))

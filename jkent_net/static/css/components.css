@@ -3,12 +3,12 @@
 	flex-flow: column-reverse;
 	padding: 5px;
 }
-.field label, .field input{
+.field label, .field input, .field .taglist{
 	transition: all 0.2s;
 	touch-action: manipulation;
 	color: #999;
 }
-.field input{
+.field input, .field .taglist{
 	font-size: inherit;
 	border: 0;
 	border-bottom: 1px solid #ccc;
@@ -20,7 +20,7 @@
 	cursor: text;
 	color: black;
 }
-.field input:focus{
+.field input:focus, .field .taglist.focus{
 	outline: 0;
 	border-bottom: 2px solid #666;
 	margin-bottom: 0;
@@ -30,7 +30,8 @@
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 }
-.field input:placeholder-shown + label{
+.field input:placeholder-shown + label,
+.field .taglist:not(.focus).empty + label{
 	cursor: text;
 	max-width: 66.66%;
 	white-space: nowrap;
@@ -47,7 +48,37 @@
 	opacity: 1;
 }
 .field input:not(:placeholder-shown) + label,
-.field input:focus + label{
+.field input:focus + label,
+.field .taglist.focus + label{
   transform: translate(0, 0) scale(1);
   color: #999;
+}
+.field .taglist {
+	min-height: 1.5em;
+	padding: 0;
+}
+.field .taglist .input{
+	outline: 0;
+}
+.field label {
+	box-shadow: 0 0 1px black;
+}
+.field .taglist + label {
+	float: right;
+	width: 100%;
+}
+.field .taglist .tag {
+	display: inline-block;
+	font-size: 75%;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 2px 4px;
+	margin: 1px 2px;
+}
+.field .taglist .tag i {
+	position: relative;
+	left: 4px;
+	border-left: 1px solid #ccc;
+	padding: 2px 4px;
+	cursor: pointer;
 }

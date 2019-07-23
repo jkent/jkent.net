@@ -96,6 +96,7 @@ function load_data() {
             let url = new URL(window.location);
             url.pathname = '/admin/users/' + user.id;
             url.search = '';
+            url.hash = '';
 
             var a = html.find('a');
             a.text((user.name ? user.name + ' ' : '') + '<' + user.email + '>');
