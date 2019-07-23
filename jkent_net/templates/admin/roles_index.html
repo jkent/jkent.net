@@ -6,11 +6,11 @@
  <label for="filter_field">Filter</label>
 </div>
 {%- for role in roles %}
-<div class="paged-entry"><span><a><i class="fas fa-trash"></i></a></span><a href="{{ url_for('admin.roles_edit', id=role.id) }}">{{ role.description }}</a></div>
+<div class="paged-entry"><span><i class="fas fa-trash"></i></span><a href="{{ url_for('admin.roles_edit', id=role.id) }}">{{ role.name }} ({{role.description}})</a></div>
 {%- endfor %}
 <div class="field">
- <input type="text" name="description" id="description_field" placeholder=" ">
- <label for="description_field">New description</label>
+ <input type="text" name="name" id="name_field" placeholder=" ">
+ <label for="name_field">New name</label>
 </div>
 {% include '_pager.html' %}
 {% endblock %}

@@ -121,3 +121,86 @@ class Pager {
 		return Math.max(this.num_pages, 1);
 	}
 }
+
+class Taglist {
+    constructor(selector, tags, validate) {
+		this._taglist = $(selector);
+        this._input = this._taglist.find('.input');
+        this._tags = new Set(tags);
+        this._validate = validate;
+
+		this._taglist.on('click', () => {
+            this._input.focus();
+        }).parent().find('label').on('click', () => {
+            this._input.focus();
+        });
+
+        this._taglist.addClass('empty');
+        this._input.prop({
+            contenteditable: true,
+            spellcheck: false,
+        }).on('focus', () => {
+            this._taglist.addClass('focus');
+            document.execCommand('selectAll', false, null);
+        }).on('blur', () => {
+            this._taglist.toggleClass('empty', this._tags.size == 0 && this._input.text().length == 0);
+            this._taglist.removeClass('focus');
+            this.add_tag(this._input.text());
+            this._input.text('');
+        }).on('keypress', (e) => {
+            if (e.keyCode == 13) {
+                return false;
+            } else if (e.keyCode == 27) {
+                this._input.text('');
+            } else if (e.keyCode == 13 || e.keyCode == 32) {
+                this.add_tag(this._input.text());
+                this._input.text('');
+                return false;
+            }
+        }).on('keydown', (e) => {
+            if (e.keyCode == 8) {
+                var text = this._input.text();
+                if (text == '') {
+                    this.remove_tag(this.tags().pop());
+                }
+            }
+        }).on('paste', (e) => {
+            let paste = (event.clipboardData || window.clipboardData).getData('text');
+            paste = paste.toLowerCase();
+            for (let tag of paste.split(' ')) {
+                this.add_tag(tag);
+            }
+            e.preventDefault();
+        });
+        this._update();
+    }
+    _update() {
+		this._taglist.toggleClass('empty', this._tags.size == 0 && this._input.text().length == 0);
+        this._taglist.find('.tag').remove();
+        for (let tag of this.tags().reverse()) {
+            var span = $('<span/>');
+            span = span.addClass('tag').text(tag);
+            span = span.append('<i class="fas fa-times"></i>');
+            span.prependTo(this._taglist).find('i').on('click', () => {
+                this.remove_tag(tag);
+                span.remove();
+            });
+        }
+    }
+    add_tag(tag, force) {
+        tag = tag.trim();
+        if (tag == '' || (!force && typeof this._validate == 'function' && !this._validate(tag))) {
+            return;
+        }
+        this._tags.add(tag.toLowerCase());
+        this._update();
+    }
+    remove_tag(tag) {
+        tag = tag.trim();
+        this._tags.delete(tag.toLowerCase());
+        this._update();
+    }
+    tags() {
+        return Array.from(this._tags).sort();
+    }
+}

@@ -31,7 +31,8 @@
 	letter-spacing: 0.05em;
 }
 .field input:placeholder-shown + label,
-.field .taglist:not(.focus).empty + label{
+.field .taglist.empty:not(.focus) + label
+{
 	cursor: text;
 	max-width: 66.66%;
 	white-space: nowrap;
@@ -59,13 +60,6 @@
 }
 .field .taglist .input{
 	outline: 0;
-}
-.field label {
-	box-shadow: 0 0 1px black;
-}
-.field .taglist + label {
-	float: right;
-	width: 100%;
 }
 .field .taglist .tag {
 	display: inline-block;

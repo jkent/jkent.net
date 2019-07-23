@@ -1,4 +1,4 @@
-from ..models import db
+from ..models import db, RoleCollection
 from ..models.role import roles_users
 import enum
 import hashlib
@@ -27,7 +27,8 @@ class User(db.Model, UserMixin):
     avatar_source = db.Column(db.Enum(UserAvatarSource),
                              default=UserAvatarSource.auto)
     roles = db.relationship('Role', secondary=roles_users,
-                            backref=db.backref('users', lazy='dynamic'))
+                            backref=db.backref('users', lazy='dynamic'),
+                            collection_class=RoleCollection)
     searchable = db.column_property(name + ' <' + email + '>')
 
     def __repr__(self):

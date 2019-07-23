@@ -21,82 +21,22 @@
 <div style="text-align: right;"><button>Cancel</button> <button>Save</button></div>
 
 <script>
-
-class Taglist {
-    constructor(selector, tags) {
-		this._taglist = $(selector);
-        this._input = this._taglist.find('.input');
-		this._tags = new Set(tags);
-    
-        this._taglist.on('click', () => {
-            this._input.focus();
-        }).parent().find('label').on('click', () => {
-            this._input.focus();
-        });
-
-        this._taglist.addClass('empty');
-        this._input.prop({
-            contenteditable: true,
-            spellcheck: false,
-        }).on('focus', () => {
-            this._taglist.addClass('focus');
-            document.execCommand('selectAll', false, null);
-        }).on('blur', () => {
-            this._taglist.toggleClass('empty', this._tags.size == 0 && this._input.text().length == 0);
-            this._taglist.removeClass('focus');
-            this.add_tag(this._input.text());
-            this._input.text('');
-        }).on('keypress', (e) => {
-            if (e.keyCode == 13) {
-                return false;
-            } else if (e.keyCode == 27) {
-                this._input.text('');
-            } else if (e.keyCode == 32) {
-                this.add_tag(this._input.text());
-                this._input.text('');
-                return false;
-            }
-        }).on('keydown', (e) => {
-            if (e.keyCode == 8) {
-                var text = this._input.text();
-                if (text == '') {
-                    this.remove_tag(this.tags().pop());
-                }
-            }
-        });
-        this._update();
-    }
-    _update() {
-        this._taglist.find('.tag').remove();
-        for (let tag of this.tags().reverse()) {
-            var span = $('<span/>');
-            span = span.addClass('tag').text(tag);
-            span = span.append('<i class="fas fa-times"></i>');
-            span.prependTo(this._taglist).find('i').on('click', () => {
-                this.remove_tag(tag);
-                span.remove();
+let taglist = new Taglist('#roles_field', {{ user.roles.json | safe }}, (tag) => {
+    $.post('/admin/roles/validate', {
+        name: tag,
+    }, (data) => {
+        if (data.exists) {
+            taglist.add_tag(tag, true);
+        } else if (confirm('Role ' + tag + ' is not defined.  Create it?')) {
+            $.post('/admin/roles/new', {
+                name: tag,
+            }, (data) => {
+                taglist.add_tag(tag, true);
             });
         }
-    }
-    add_tag(tag) {
-        if (tag.trim() == '') {
-            return;
-        }
-        this._tags.add(tag.toLowerCase());
-        this._update();
-    }
-    remove_tag(tag) {
-        this._tags.delete(tag.toLowerCase());
-        this._update();
-    }
-    tags() {
-        return Array.from(this._tags).sort();
-    }
-
-}
-
-var taglist = new Taglist('#roles_field', []);
-
+    });
+    return false;
+});
 </script>
 
 {% endblock %}

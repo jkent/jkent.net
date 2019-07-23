@@ -36,6 +36,7 @@ def pages_index():
 def pages_edit(id):
     return render_template('admin/pages_edit.html')
 
+
 @bp.route('roles')
 @roles_accepted('admin')
 @register_menu(bp, '.admin.roles', 'Roles',
@@ -44,14 +45,36 @@ def pages_edit(id):
 def roles_index():
     pager = Pager(20)
     pager.page = int(request.args.get('page', pager.first))
-    roles = Role.query.order_by(Role.description).offset(pager.offset).limit(pager.items_per_page).all()
+    roles = Role.query.order_by(Role.name, Role.description).offset(pager.offset).limit(pager.items_per_page).all()
     return render_template('admin/roles_index.html', pager=pager, roles=roles)
+
+@bp.route('roles/validate', methods=('POST',))
+@roles_accepted('admin')
+def roles_validate():
+    role = Role.query.filter_by(name=request.form.get('name')).first()
+    return {'exists': role != None}
 
 @bp.route('roles/<int:id>')
 @roles_accepted('admin')
 @register_menu(bp, '.admin.roles.edit', 'Edit')
-def roles_edit(id):
+def roles_edit(id, ignore_post=False):
     return render_template('admin/roles_edit.html')
+
+@bp.route('roles/<int:id>/delete', methods=('POST',))
+@roles_accepted('admin')
+def roles_delete(id):
+    role = Roles.query.get(id)
+    db.session.remove(role)
+    db.session.commit()
+
+@bp.route('roles/new', methods=('POST',))
+@roles_accepted('admin')
+def roles_new():
+    name = request.form.get('name')
+    role = Role(name=name)
+    db.session.add(role)
+    db.session.commit()
+    return roles_edit(role, True)
 
 @bp.route('users')
 @roles_accepted('admin')
