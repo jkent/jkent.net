@@ -204,3 +204,7 @@ p a{
 	box-sizing: border-box;
 	padding: 5px;
 }
+.buttons button {
+	float: right;
+	margin: 0 0.25em;
+}

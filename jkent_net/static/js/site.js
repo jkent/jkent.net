@@ -123,43 +123,52 @@ class Pager {
 }
 
 class Taglist {
-    constructor(selector, tags, validate) {
+    constructor(selector, input, validate) {
 		this._taglist = $(selector);
-        this._input = this._taglist.find('.input');
-        this._tags = new Set(tags);
-        this._validate = validate;
+		this._input = $(input);
+        this._entry = this._taglist.find('.input');
+		this._validate = validate;
+		this._submit = false;
 
 		this._taglist.on('click', () => {
-            this._input.focus();
+            this._entry.focus();
         }).parent().find('label').on('click', () => {
-            this._input.focus();
+            this._entry.focus();
         });
 
         this._taglist.addClass('empty');
-        this._input.prop({
+        this._entry.prop({
             contenteditable: true,
             spellcheck: false,
         }).on('focus', () => {
             this._taglist.addClass('focus');
             document.execCommand('selectAll', false, null);
         }).on('blur', () => {
-            this._taglist.toggleClass('empty', this._tags.size == 0 && this._input.text().length == 0);
+            this._taglist.toggleClass('empty', this.tags().length == 0 && this._entry.text().length == 0);
             this._taglist.removeClass('focus');
-            this.add_tag(this._input.text());
-            this._input.text('');
+            this.add_tag(this._entry.text());
+            this._entry.text('');
         }).on('keypress', (e) => {
             if (e.keyCode == 13) {
-                return false;
-            } else if (e.keyCode == 27) {
-                this._input.text('');
-            } else if (e.keyCode == 13 || e.keyCode == 32) {
-                this.add_tag(this._input.text());
-                this._input.text('');
+				this._submit = true;
+				var text = this._entry.text().trim();
+				if (text == '') {
+					this._taglist.closest('form').submit();
+				} else {
+					this.add_tag(text);
+				}
+				this._entry.text('');
+				return false;
+			} else if (e.keyCode == 27) {
+                this._entry.text('');
+            } else if (e.keyCode == 32) {
+                this.add_tag(this._entry.text());
+                this._entry.text('');
                 return false;
             }
         }).on('keydown', (e) => {
             if (e.keyCode == 8) {
-                var text = this._input.text();
+                var text = this._entry.text();
                 if (text == '') {
                     this.remove_tag(this.tags().pop());
                 }
@@ -175,9 +184,10 @@ class Taglist {
         this._update();
     }
     _update() {
-		this._taglist.toggleClass('empty', this._tags.size == 0 && this._input.text().length == 0);
-        this._taglist.find('.tag').remove();
-        for (let tag of this.tags().reverse()) {
+		var tags = this.tags();
+		this._taglist.toggleClass('empty', tags.length == 0 && this._entry.text().length == 0);
+		this._taglist.find('.tag').remove();
+		for (let tag of tags.reverse()) {
             var span = $('<span/>');
             span = span.addClass('tag').text(tag);
             span = span.append('<i class="fas fa-times"></i>');
@@ -187,20 +197,31 @@ class Taglist {
             });
         }
     }
-    add_tag(tag, force) {
-        tag = tag.trim();
+    add_tag(tag, force, submit) {
+		tag = tag.trim();
         if (tag == '' || (!force && typeof this._validate == 'function' && !this._validate(tag))) {
-            return;
-        }
-        this._tags.add(tag.toLowerCase());
-        this._update();
+			this._submit = false;
+			return;
+		}
+		var tags = this.tags();
+		tags.push(tag.toLowerCase());
+		tags = [...new Set(tags.sort())];
+		this._input.val(tags.join(','));
+		this._update();
+		if (this._submit) {
+			this._taglist.closest('form').submit();
+		}
     }
     remove_tag(tag) {
-        tag = tag.trim();
-        this._tags.delete(tag.toLowerCase());
-        this._update();
+		tag = tag.trim().toLowerCase();
+		var tags = this.tags();
+		tags.splice(tags.indexOf(tag), 1);
+		tags = [...new Set(tags)].sort();
+		this._input.val(tags.join(','));
+		this._update();
     }
     tags() {
-        return Array.from(this._tags).sort();
+		var tags = this._input.val().split(',').filter(word => /\w/.test(word));
+		return [...new Set(tags)].sort();
     }
 }

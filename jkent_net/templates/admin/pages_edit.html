@@ -1,5 +1,20 @@
 {% extends 'admin/base.html' %}
 
 {% block body %}
-<div><a href="{{ url_for('admin.pages_index', page=1) }}"><i class="fas fa-arrow-left"></i> Back</a></div>
+<form method="POST">
+<div class="field">
+ <input type="text" name="title" id="title_field" placeholder=" " value="{{ page.title }}">
+ <label for="name_field">Name</label>
+</div>
+<div class="buttons"><button class="save">Save</button><button class="cancel">Cancel</button></div>
+<input type="hidden" name="action" value="save">
+</form>
+
+<script>
+var form = $('form');
+$('button.cancel').on('click', () => {
+form.find('input[name="action"]').prop('value', 'cancel');
+form.submit();
+});
+</script>
 {% endblock %}

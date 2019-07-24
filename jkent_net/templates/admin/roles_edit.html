@@ -1,5 +1,23 @@
 {% extends 'admin/base.html' %}
 
 {% block body %}
-<div><a href="{{ url_for('admin.roles_index', page=1) }}"><i class="fas fa-arrow-left"></i> Back</a></div>
+<form method="POST">
+<div class="field">
+ <input type="text" name="name" id="name_field" placeholder=" " value="{{ role.name }}">
+ <label for="name_field">Name</label>
+</div>
+<div class="field">
+ <input type="text" name="description" id="description_field" placeholder=" " value="{{ role.description or '' }}">
+ <label for="description_field">Description</label>
+</div>
+<div class="buttons"><button class="save">Save</button><button class="cancel">Cancel</button></div>
+<input type="hidden" name="action" value="save">
+</form>
+<script>
+var form = $('form');
+$('button.cancel').on('click', () => {
+    form.find('input[name="action"]').prop('value', 'cancel');
+    form.submit();
+});
+</script>
 {% endblock %}

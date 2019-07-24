@@ -10,10 +10,17 @@ roles_users = db.Table('roles_users',
 
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    description = db.Column(db.String(255), default='', nullable=False)
+    searchable = db.column_property(name + ' (' + description + ')')
+
+    def __init__(self, **kwargs):
+        if 'name' in kwargs:
+            kwargs['name'] = kwargs['name'].strip()
+            assert(kwargs)
+        super().__init__(**kwargs)
 
 class RoleCollection(list):
     @property
-    def json(self):
-        return json.dumps([role.name for role in self])
+    def list(self):
+        return ','.join([role.name for role in self])

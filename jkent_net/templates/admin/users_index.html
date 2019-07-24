@@ -8,7 +8,7 @@
 <div class="userlist"></div>
 <div class="field">
  <input type="text" name="email" id="email_field" placeholder=" ">
- <label for="email_field">New email</label>
+ <label for="email_field">New User</label>
 </div>
 <div class="pager"></div>
 <script>
@@ -46,10 +46,10 @@ filter.on('keyup', (e) => {
     }, 250);
 });
 
-var email = $('#email_field');
-email.on('keyup', (e) => {
+var email_field = $('#email_field');
+email_field.on('keyup', (e) => {
     if (e.keyCode == 13) {
-        if (!email.val().match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
+        if (!email_field.val().match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
             alert('Invalid email address!');
             return; 
         }
@@ -61,7 +61,7 @@ email.on('keyup', (e) => {
         form.append($('<input>').attr({
             type: 'hidden',
             name: 'email',
-            value: email.val(),
+            value: email_field.val(),
         }));
         $('body').append(form);
         form.submit();
@@ -70,14 +70,14 @@ email.on('keyup', (e) => {
 
 function load_data() {
     var hash = new URLSearchParams(window.location.hash.substr(1));
-    var page_num = hash.has('page') ? hash.get('page') : 1;
+    var page_num = hash.has('pg') ? hash.get('pg') : 1;
 
     filter.val(hash.has('q') ? hash.get('q') : '');
 
     var json_url = new URL(window.location);
     json_url.pathname = '/admin/users/json';
     var search = json_url.searchParams;
-    search.set('page', page_num);
+    search.set('pg', page_num);
     if (hash.has('q')) {
         search.set('q', hash.get('q'))
     }
@@ -85,7 +85,7 @@ function load_data() {
     var userlist = $('.userlist');
     $.get(json_url, (data) => {
         userlist.empty();
-        pager.set_pages(data.pages)
+        pager.set_pages(data.num_pages)
         for (let user of data.users) {
             var html = '<div class="paged-entry">';
             html += '<span><i class="fas fa-trash"></i></span>';
@@ -108,10 +108,9 @@ function load_data() {
             var trash = html.find('.fa-trash');
             trash.on('click', () => {
                 if (confirm('Delete ' + user.email + '?')) {
-                    console.log(url);
-                    $.post(url, {'delete': true}, (data) => {
+                    $.post(url, {'action': 'delete'}, (data) => {
                         load_data();
-                    }, "json");
+                    });
                     return false;
                 }
             });

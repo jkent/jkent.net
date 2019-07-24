@@ -5,12 +5,119 @@
  <input type="text" name="filter" id="filter_field" placeholder=" ">
  <label for="filter_field">Filter</label>
 </div>
-{%- for role in roles %}
-<div class="paged-entry"><span><i class="fas fa-trash"></i></span><a href="{{ url_for('admin.roles_edit', id=role.id) }}">{{ role.name }} ({{role.description}})</a></div>
-{%- endfor %}
+<div class="rolelist"></div>
 <div class="field">
  <input type="text" name="name" id="name_field" placeholder=" ">
- <label for="name_field">New name</label>
+ <label for="name_field">New Role</label>
 </div>
-{% include '_pager.html' %}
+<script>
+var typing_timeout = null;
+var typing = false;
+
+$(window).on('load', load_data);
+$(window).on('hashchange', load_data);
+var pager = new Pager('.pager', 10, () => {
+    load_data();
+    typing = false;
+});
+
+var filter = $('#filter_field');
+filter.on('keyup', (e) => {
+    if (e.keyCode == 27) {
+        filter.val('');
+    }
+    if (typing_timeout) {
+        clearTimeout(typing_timeout);
+        typing_timeout = null;
+    }
+    typing_timeout = setTimeout(() => {
+        var hash = new URLSearchParams(window.location.hash.substr(1));
+        var q = filter.val().trim();
+        hash.set('q', filter.val());
+        var url = new URL(window.location);
+        url.hash = '#' + hash;
+        if (typing) {
+            window.location.replace(url);
+        } else {
+            typing = true;
+            window.location.assign(url);
+        }
+    }, 250);
+});
+
+var name_field = $('#name_field');
+name_field.on('keyup', (e) => {
+    if (e.keyCode == 13) {
+        if (name_field.val().match(/\s/)) {
+            alert('Invalid name!');
+            return; 
+        }
+        var form = $('<form>').attr({
+            method: 'POST',
+            action: '/admin/roles/new',
+            style: 'display: none;'
+        });
+        form.append($('<input>').attr({
+            type: 'hidden',
+            name: 'name',
+            value: name_field.val(),
+        }));
+        $('body').append(form);
+        form.submit();
+    }
+});
+
+function load_data() {
+    var hash = new URLSearchParams(window.location.hash.substr(1));
+    var page_num = hash.has('pg') ? hash.get('pg') : 1;
+
+    filter.val(hash.has('q') ? hash.get('q') : '');
+
+    var json_url = new URL(window.location);
+    json_url.pathname = '/admin/roles/json';
+    var search = json_url.searchParams;
+    search.set('pg', page_num);
+    if (hash.has('q')) {
+        search.set('q', hash.get('q'))
+    }
+
+    var rolelist = $('.rolelist');
+    $.get(json_url, (data) => {
+        rolelist.empty();
+        pager.set_pages(data.num_pages)
+        for (let role of data.roles) {
+            var html = '<div class="paged-entry">';
+            html += '<span><i class="fas fa-trash"></i></span>';
+            html += '<a href="#"></a>';
+            html += '</div>';
+            html = $(html);
+
+            let url = new URL(window.location);
+            url.pathname = '/admin/roles/' + role.id;
+            url.search = '';
+            url.hash = '';
+
+            var a = html.find('a');
+            a.text(role.name + (role.description ? ' (' + role.description + ')' : ''));
+            a.on('click', () => {
+                window.location.assign(url);
+                return false;
+            });
+
+            var trash = html.find('.fa-trash');
+            trash.on('click', () => {
+                if (confirm('Delete ' + role.name + '?')) {
+                    $.post(url, {'action': 'delete'}, (data) => {
+                        load_data();
+                    });
+                    return false;
+                }
+            });
+
+            rolelist.append(html);
+        } 
+        pager.goto(page_num);
+    });
+}
+</script>
 {% endblock %}
