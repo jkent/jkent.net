@@ -54,13 +54,13 @@ class Pager {
 		var fragment = $('<div/>');
 		fragment.append($('<a href="#">&laquo;</a>').on('click', () => {
 			var hash = new URLSearchParams(window.location.hash.substr(1));
-			hash.set('page', t.first());
+			hash.set('pg', t.first());
 			window.location.hash = '#' + hash;
 			return false;
 		}));
 		fragment.append($('<a href="#">&lt;</a>').on('click', () => {
 			var hash = new URLSearchParams(window.location.hash.substr(1));
-			hash.set('page', t.prev());
+			hash.set('pg', t.prev());
 			window.location.hash = '#' + hash;
 			return false;
 		}));
@@ -69,20 +69,20 @@ class Pager {
 			link.toggleClass('active', i == this.page_num);
 			fragment.append(link.on('click', () => {
 				var hash = new URLSearchParams(window.location.hash.substr(1));
-				hash.set('page', i);
+				hash.set('pg', i);
 				window.location.hash = '#' + hash;
 				return false;
 			}));
 		}
 		fragment.append($('<a href="#">&gt;</a>').on('click', () => {
 			var hash = new URLSearchParams(window.location.hash.substr(1));
-			hash.set('page', t.next());
+			hash.set('pg', t.next());
 			window.location.hash = '#' + hash;
 			return false;
 		}));
 		fragment.append($('<a href="#">&raquo;</a>').on('click', () => {
 			var hash = new URLSearchParams(window.location.hash.substr(1));
-			hash.set('page', t.last());
+			hash.set('pg', t.last());
 			window.location.hash = '#' + hash;
 			return false;
 		}));
@@ -224,4 +224,99 @@ class Taglist {
 		var tags = this._input.val().split(',').filter(word => /\w/.test(word));
 		return [...new Set(tags)].sort();
     }
+}
+
+function index_init(endpoint, validator, text_fn) {
+	var index_filter = $('#index_filter');
+	var index_new = $('#index_new');
+	var typing_timeout = null;
+	var typing = false;
+
+	$(window).on('load', load_data);
+	$(window).on('hashchange', load_data);
+	var pager = new Pager('#index_pager', 10, () => {
+		load_data();
+		typing = false;
+	});
+
+	index_filter.on('keyup', (e) => {
+		if (e.keyCode == 27) {
+			index_filter.val('');
+		}
+		if (typing_timeout) {
+			clearTimeout(typing_timeout);
+			typing_timeout = null;
+		}
+		typing_timeout = setTimeout(() => {
+			var hash = new URLSearchParams(window.location.hash.substr(1));
+			hash.delete('pg');
+			hash.set('q', index_filter.val());
+			var url = new URL(window.location);
+			url.hash = '#' + hash;
+			if (typing) {
+				window.location.replace(url);
+			} else {
+				typing = true;
+				window.location.assign(url);
+			}
+		}, 250);
+	});
+
+	index_new.closest('form').on('submit', (e) => {
+		if (!validator(index_new)) {
+			return false;
+		}
+	});
+
+	function load_data() {
+		var hash = new URLSearchParams(window.location.hash.substr(1));
+		var page_num = hash.get('pg') || 1;
+		var query = hash.get('q') || '';
+
+		index_filter.val(query);
+
+		var json_url = new URL(window.location);
+		json_url.pathname = endpoint + '/json';
+		var search = json_url.searchParams;
+		search.set('pg', page_num);
+		search.set('q', query)
+	
+		var index_data = $('.index_data');
+		$.get(json_url, (data) => {
+			index_data.empty();
+			pager.set_pages(data.num_pages)
+			for (let entry of data.entries) {
+				var html = '<div class="paged-entry">';
+				html += '<span><i class="fas fa-trash"></i></span>';
+				html += '<a href="#"></a>';
+				html += '</div>';
+				html = $(html);
+
+				let url = new URL(window.location);
+				url.pathname = endpoint + '/' + entry.id;
+				url.search = '';
+				url.hash = '';
+
+				var a = html.find('a');
+				a.text(text_fn(entry));
+				a.on('click', () => {
+					window.location.assign(url);
+					return false;
+				});
+
+				var trash = html.find('.fa-trash');
+				trash.on('click', () => {
+					if (confirm('Delete ' + text_fn(entry) + '?')) {
+						$.post(url, {'action': 'delete'}, (data) => {
+							load_data();
+						});
+						return false;
+					}
+				});
+
+				index_data.append(html);
+			}
+			pager.goto(page_num);
+		});
+	}
 }

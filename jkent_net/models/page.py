@@ -11,6 +11,7 @@ class Page(db.Model):
     title = db.Column(db.Unicode(64))
     menu_path = db.Column(db.String(128))
     menu_order = db.Column(db.Integer)
+    searchable = db.column_property(name + ' ' + title)
 
     def __init__(self, subtree, name, menu_path, title, menu_order=0):
         self.subtree = subtree

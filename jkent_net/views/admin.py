@@ -76,14 +76,14 @@ def pages_json():
     query = query.order_by(Page.title)
     query = query.offset(pager.offset).limit(pager.items_per_page)
     pages = query.all()
-    page_list = []
+    entries = []
     for page in pages:
-        page_list.append({
+        entries.append({
             'id': page.id,
             'title': page.title,
         })
     return {
-        'pages': page_list,
+        'entries': entries,
         'items_per_page': pager.items_per_page,
         'num_pages': pager.count,
     }
@@ -111,15 +111,15 @@ def roles_json():
     query = query.order_by(Role.name, Role.description)
     query = query.offset(pager.offset).limit(pager.items_per_page)
     roles = query.all()
-    role_list = []
+    entries = []
     for role in roles:
-        role_list.append({
+        entries.append({
             'id': role.id,
             'name': role.name,
             'description': role.description,
         })
     return {
-        'roles': role_list,
+        'entries': entries,
         'items_per_page': pager.items_per_page,
         'num_pages': pager.count,
     }
@@ -188,15 +188,15 @@ def users_json():
     query = query.order_by(User.name, User.email)
     query = query.offset(pager.offset).limit(pager.items_per_page)
     users = query.all()
-    user_list = []
+    entries = []
     for user in users:
-        user_list.append({
+        entries.append({
             'id': user.id,
             'name': user.name,
             'email': user.email,
         })
     return {
-        'users': user_list,
+        'entries': entries,
         'items_per_page': pager.items_per_page,
         'num_pages': pager.count,
     }

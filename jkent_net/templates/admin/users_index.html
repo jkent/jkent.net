@@ -2,123 +2,25 @@
 
 {% block body %}
 <div class="field">
- <input type="text" name="filter" id="filter_field" placeholder=" ">
- <label for="filter_field">Filter</label>
+ <input type="text" name="filter" id="index_filter" placeholder=" " autocomplete="off">
+ <label for="index_filter">Filter</label>
 </div>
-<div class="userlist"></div>
+<div class="index_data"></div>
+<form action="{{ url_for('admin.users_new') }}" method="POST">
 <div class="field">
- <input type="text" name="email" id="email_field" placeholder=" ">
- <label for="email_field">New User</label>
+ <input type="text" name="email" id="index_new" placeholder=" ">
+ <label for="index_new">New User</label>
 </div>
-<div class="pager"></div>
+</form>
+<div id="index_pager"></div>
+
 <script>
-var typing_timeout = null;
-var typing = false;
-
-$(window).on('load', load_data);
-$(window).on('hashchange', load_data);
-var pager = new Pager('.pager', 10, () => {
-    load_data();
-    typing = false;
-});
-
-var filter = $('#filter_field');
-filter.on('keyup', (e) => {
-    if (e.keyCode == 27) {
-        filter.val('');
+index_init('/admin/users', (field) => {
+    if (!field.val().match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
+	    alert('Invalid email!');
+        return false;
     }
-    if (typing_timeout) {
-        clearTimeout(typing_timeout);
-        typing_timeout = null;
-    }
-    typing_timeout = setTimeout(() => {
-        var hash = new URLSearchParams(window.location.hash.substr(1));
-        var q = filter.val().trim();
-        hash.set('q', filter.val());
-        var url = new URL(window.location);
-        url.hash = '#' + hash;
-        if (typing) {
-            window.location.replace(url);
-        } else {
-            typing = true;
-            window.location.assign(url);
-        }
-    }, 250);
-});
-
-var email_field = $('#email_field');
-email_field.on('keyup', (e) => {
-    if (e.keyCode == 13) {
-        if (!email_field.val().match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/)) {
-            alert('Invalid email address!');
-            return; 
-        }
-        var form = $('<form>').attr({
-            method: 'POST',
-            action: '/admin/users/new',
-            style: 'display: none;'
-        });
-        form.append($('<input>').attr({
-            type: 'hidden',
-            name: 'email',
-            value: email_field.val(),
-        }));
-        $('body').append(form);
-        form.submit();
-    }
-});
-
-function load_data() {
-    var hash = new URLSearchParams(window.location.hash.substr(1));
-    var page_num = hash.has('pg') ? hash.get('pg') : 1;
-
-    filter.val(hash.has('q') ? hash.get('q') : '');
-
-    var json_url = new URL(window.location);
-    json_url.pathname = '/admin/users/json';
-    var search = json_url.searchParams;
-    search.set('pg', page_num);
-    if (hash.has('q')) {
-        search.set('q', hash.get('q'))
-    }
-
-    var userlist = $('.userlist');
-    $.get(json_url, (data) => {
-        userlist.empty();
-        pager.set_pages(data.num_pages)
-        for (let user of data.users) {
-            var html = '<div class="paged-entry">';
-            html += '<span><i class="fas fa-trash"></i></span>';
-            html += '<a href="#"></a>';
-            html += '</div>';
-            html = $(html);
-
-            let url = new URL(window.location);
-            url.pathname = '/admin/users/' + user.id;
-            url.search = '';
-            url.hash = '';
-
-            var a = html.find('a');
-            a.text((user.name ? user.name + ' ' : '') + '<' + user.email + '>');
-            a.on('click', () => {
-                window.location.assign(url);
-                return false;
-            });
-
-            var trash = html.find('.fa-trash');
-            trash.on('click', () => {
-                if (confirm('Delete ' + user.email + '?')) {
-                    $.post(url, {'action': 'delete'}, (data) => {
-                        load_data();
-                    });
-                    return false;
-                }
-            });
-
-            userlist.append(html);
-        } 
-        pager.goto(page_num);
-    });
-}
+    return true;
+}, (entry) => (entry.name ? entry.name + ' ' : '') + '<' + entry.email + '>');
 </script>
 {% endblock %}
