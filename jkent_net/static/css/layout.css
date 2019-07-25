@@ -150,6 +150,7 @@ p a{
 #content .body{
 	padding: 5px;
 	margin-left: 170px;
+	min-width: 420px;
 }
 .codehilite pre{
 	max-height: 250px;
