@@ -34,8 +34,9 @@ $(() => {
 });
 
 class Pager {
-	constructor(selector, num_links, change) {
-		this.selector = selector;
+	constructor(container, num_links, change) {
+		this.container = container;
+		this.container.addClass('pager');
 		this.num_links = num_links;
 		this.num_pages = 1;
 		this.page_num = 1;
@@ -89,13 +90,12 @@ class Pager {
 		return fragment;
 	}
 	_update() {
-		var target = $(this.selector);
 		if (this.num_pages <= 1) {
-			target.empty();
+			this.container.empty();
 			return;
 		}
 		var range = this._range();
-		target.html(this._emit_fragment(range));
+		this.container.html(this._emit_fragment(range));
 	}
 	set_pages(num_pages) {
 		this.num_pages = num_pages;
@@ -234,7 +234,7 @@ function index_init(endpoint, validator, text_fn) {
 
 	$(window).on('load', load_data);
 	$(window).on('hashchange', load_data);
-	var pager = new Pager('#index_pager', 10, () => {
+	var pager = new Pager($('#index_pager'), 10, () => {
 		load_data();
 		typing = false;
 	});
