@@ -141,11 +141,11 @@ p a{
 #content .leftbar a{
 	display: inline-block;
 	box-sizing: border-box;
-	padding: 5px;
+	padding: 4px 8px;
 	width: 100%;
 }
 #content .leftbar a.active{
-	padding: 3px;
+	padding: 2px 6px;
 }
 #content .body{
 	padding: 5px;
@@ -197,12 +197,12 @@ p a{
 }
 .paged-entry > span{
 	float: right;
-	padding: 5px;
+	padding: 4px 8px;
 }
 .paged-entry > span + a{
 	display: block;
 	box-sizing: border-box;
-	padding: 5px;
+	padding: 4px 8px;
 }
 .buttons button {
 	float: right;
