@@ -36,7 +36,6 @@ $(() => {
 class Pager {
 	constructor(container, num_links, change) {
 		this.container = container;
-		this.container.addClass('pager');
 		this.num_links = num_links;
 		this.num_pages = 1;
 		this.page_num = 1;
@@ -234,7 +233,7 @@ function index_init(endpoint, validator, text_fn) {
 
 	$(window).on('load', load_data);
 	$(window).on('hashchange', load_data);
-	var pager = new Pager($('#index_pager'), 10, () => {
+	var pager = new Pager($('.pager'), 10, () => {
 		load_data();
 		typing = false;
 	});
