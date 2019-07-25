@@ -21,8 +21,8 @@ def convert_to_html(file, mimetype):
     elif mimetype == 'text/markdown':
         out.write(b'<div class="rendered markdown">\n')
         markdownFromFile(input=file, output=out, encoding='utf8', extensions=[
-            'jkent_net.markdown.codehilite:CodeHiliteExtension',
-            'jkent_net.markdown.fenced_code:FencedCodeExtension',
+            'jkent_net.ext.markdown.codehilite:CodeHiliteExtension',
+            'jkent_net.ext.markdown.fenced_code:FencedCodeExtension',
             'tables'
         ])
 

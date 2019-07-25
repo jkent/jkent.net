@@ -1,4 +1,5 @@
 from .repository import Repository
+from .ext.security import ExtendedRegisterForm
 from flask import Flask, g, render_template
 from flask_mail import Mail
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -30,7 +31,7 @@ def create_app():
 
     mail.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(models.db, models.User, models.Role)
-    security = Security(app, user_datastore)
+    security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
 
     from . import views
     views.init_app(app)
