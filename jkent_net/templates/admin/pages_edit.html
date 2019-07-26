@@ -3,8 +3,20 @@
 {% block body %}
 <form method="POST">
 <div class="field">
- <input type="text" name="title" id="title_field" placeholder=" " value="{{ page.title }}">
+ <input type="text" name="title" id="title_field" placeholder=" " value="{{ page.title }}" autocomplete="off">
+ <label for="title_field">Title</label>
+</div>
+<div class="field">
+ <input type="text" name="name" id="name_field" placeholder=" " value="{{ page.name }}" autocomplete="off">
  <label for="name_field">Name</label>
+</div>
+<div class="field">
+ <input type="text" name="menu_path" id="menu_path_field" placeholder=" " value="{{ page.menu_path }}" autocomplete="off">
+ <label for="menu_path_field">Menu Path</label>
+</div>
+<div class="field">
+ <input type="text" name="menu_order" id="menu_order_field" placeholder=" " value="{{ page.menu_order }}" autocomplete="off">
+ <label for="menu_order_field">Menu Path</label>
 </div>
 <div class="buttons"><button class="save">Save</button><button class="cancel">Cancel</button></div>
 <input type="hidden" name="action" value="save">

@@ -22,10 +22,9 @@ def get_redirect_target(endpoint, **values):
 
 def remove_menu(menu):
     if type(menu) is str:
-        current_menu.pop(menu)
-    else:
-        current_menu._child_entries = \
-            {k:v for k, v in current_menu._child_entries.items() if v != menu}
+        menu = current_menu.submenu(menu)
+    current_menu._child_entries = \
+        {k:v for k, v in current_menu._child_entries.items() if v != menu}
 
 def update_menus():
     for page in Page.query:

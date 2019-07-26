@@ -8,19 +8,13 @@
 <div class="index_data"></div>
 <form action="{{ url_for('admin.pages_new') }}" method="POST">
 <div class="field">
- <input type="text" name="title" id="index_new" placeholder=" ">
+ <input type="text" name="title" id="index_new" placeholder=" " autocomplete="off">
  <label for="index_new">New Page</label>
 </div>
 </form>
 <div class="pager"></div>
 
 <script>
-index_init('/admin/pages', (field) => {
-    if (field.val().match(/\s/)) {
-	    alert('Invalid name!');
-        return false;
-    }
-    return true;
-}, (entry) => entry.title);
+index_init('/admin/pages', (field) => true, (entry) => entry.title);
 </script>
 {% endblock %}

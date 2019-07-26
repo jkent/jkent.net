@@ -13,9 +13,9 @@ class Page(db.Model):
     menu_order = db.Column(db.Integer)
     searchable = db.column_property(name + ' ' + title)
 
-    def __init__(self, subtree, name, menu_path, title, menu_order=0):
+    def __init__(self, subtree, title, name, menu_path, menu_order=0):
         self.subtree = subtree
+        self.title = title
         self.name = name
         self.menu_path = menu_path
-        self.title = title
         self.menu_order = menu_order

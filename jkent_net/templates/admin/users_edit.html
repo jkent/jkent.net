@@ -3,11 +3,11 @@
 {% block body %}
 <form method="POST">
 <div class="field">
- <input type="text" name="name" id="name_field" placeholder=" " value="{{ user.name }}">
+ <input type="text" name="name" id="name_field" placeholder=" " value="{{ user.name }}" autocomplete="off">
  <label for="name_field">Name</label>
 </div>
 <div class="field">
- <input type="text" name="email" id="email_field" placeholder=" " value="{{ user.email }}">
+ <input type="text" name="email" id="email_field" placeholder=" " value="{{ user.email }}" autocomplete="off">
  <label for="email_field">Email</label>
 </div>
 <div class="field">

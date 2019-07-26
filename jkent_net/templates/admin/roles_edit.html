@@ -3,11 +3,11 @@
 {% block body %}
 <form method="POST">
 <div class="field">
- <input type="text" name="name" id="name_field" placeholder=" " value="{{ role.name }}">
+ <input type="text" name="name" id="name_field" placeholder=" " value="{{ role.name }}" autocomplete="off">
  <label for="name_field">Name</label>
 </div>
 <div class="field">
- <input type="text" name="description" id="description_field" placeholder=" " value="{{ role.description or '' }}">
+ <input type="text" name="description" id="description_field" placeholder=" " value="{{ role.description or '' }}"  autocomplete="off">
  <label for="description_field">Description</label>
 </div>
 <div class="buttons"><button class="save">Save</button><button class="cancel">Cancel</button></div>

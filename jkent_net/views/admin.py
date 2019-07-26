@@ -1,5 +1,5 @@
-from ..models import db, Page, Role, User
-from ..utils import Pager
+from ..models import db, Page, Role, Subtree, User
+from ..utils import Pager, remove_menu, update_menus
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_menu import current_menu, register_menu
 from flask_security import roles_accepted
@@ -37,12 +37,17 @@ def pages_edit(id):
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'delete':
+            remove_menu(page.menu_path)
             db.session.delete(page)
             db.session.commit()
         elif action == 'save':
             page.title = request.form['title'].strip()
+            page.name = request.form['name'].strip()
+            page.menu_path = request.form['menu_path'].strip()
+            page.menu_order = int(request.form['menu_order'].strip())
             db.session.add(page)
             db.session.commit()
+            update_menus()
 
         subquery = db.session.query(Page.id,db.func.ROW_NUMBER() \
             .over(order_by=Page.title).label('n')).subquery()
@@ -57,10 +62,14 @@ def pages_edit(id):
 @bp.route('pages/new', methods=('POST',))
 @roles_accepted('admin')
 def pages_new():
-    name = request.form.get('name')
-    page = Page(name=name)
+    subtree = Subtree(current_user)
+    title = request.form.get('title').strip()
+    name = title.lower().replace(' ', '_')
+    menu_path = '.' + name
+    page = Page(subtree, title, name, menu_path)
     db.session.add(page)
     db.session.commit()
+    update_menus()
     return redirect(url_for('admin.pages_edit', id=page.id))
 
 @bp.route('pages/json')
