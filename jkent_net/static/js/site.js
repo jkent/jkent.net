@@ -319,3 +319,209 @@ function index_init(endpoint, validator, text_fn) {
 		});
 	}
 }
+
+class Subtree {
+	constructor(type, mode, is_draft, version, title) {
+		this.type = type;
+		this.mode = mode;
+		this.is_draft = is_draft;
+		this.version = version;
+		this.title = title;
+
+		this.url = new URL(window.location);
+		this.url.search = '';
+
+		this.title_h1 = $('#content > h1');
+		this.source_textarea = $('textarea.source');
+		this.draft_btn = $('#actionbar a.draft');
+		this.raw_btn = $('#actionbar a.raw');
+		this.edit_btn = $('#actionbar a.edit');
+		this.commit_btn = $('#actionbar a.commit');
+		this.restore_btn = $('#actionbar a.restore');
+		this.create_btn = $('.subtree .create');
+		this.type_sel = $('.subtree .type');
+
+		if (this.mode == 'edit') {
+			this.source_last = this.source_textarea.val();
+			this.dmp = new diff_match_patch();
+			this.title_h1.prop('contentEditable', true);
+			this.title_h1.addClass('editable');
+		}
+
+		this.raw_btn.on('click', () => {
+			this.save(() => {
+				var search = new URLSearchParams();
+				if (this.mode != 'raw') {
+					search.set('raw', '1');
+				}
+				this.url.search = search;
+				window.location = this.url;
+			});
+			return false;
+		});
+
+		this.edit_btn.on('click', () => {
+			this.save(() => {
+				var search = new URLSearchParams();
+				if (this.mode != 'edit') {
+					search.set('edit', '1');
+				}
+				this.url.search = search;
+				window.location = this.url;
+			});
+			return false;
+		});
+
+		this.draft_btn.on('click', () => {
+			this.save(() => {
+				var parsed = this.parse_pathname(this.url.pathname);
+				var version = null;
+				if (parsed.version == null) {
+					version = 'HEAD';
+				}
+				this.url.pathname = this.build_pathname(parsed.page, version, parsed.path);
+				window.location = this.url;
+			});
+			return false;
+		});
+	
+		if (this.mode == 'raw') {
+			this.source_textarea.prop('readonly', true);
+		}
+		
+		this.commit_btn.on('click', () => {
+			$.post(this.url, {
+				action: 'commit',
+			}, (data) => {
+				window.location.reload();
+			});
+			return false;
+		});
+
+		if (this.mode == 'raw' || this.mode == 'edit') {
+			this.source_resize();
+		}
+		this.source_textarea.on('input', (event) => {
+			this.source_resize();
+			this.delayed_save();
+		});
+
+		this.title_h1.on('paste', () => {
+			this.delayed_save()
+		}).on('keypress', (e) => {
+			if (e.which == 13) {
+				this.title_h1.blur();
+				this.save();
+				return false;
+			}
+			this.delayed_save();
+			return true;
+		});
+
+		this.restore_btn.on('click', () => {
+			if (!confirm('Are you sure you want to restore this version?')) {
+				return false;
+			}
+	
+			$.post(this.url, {
+				action: 'restore',
+			}, (data) => {
+				var parsed = this.parse_pathname(this.url.pathname);
+				this.url.pathname = this.build_pathname(parsed.page, null, parsed.path);
+				window.location = this.url;
+			});
+
+			return false;
+		});
+
+		this.create_btn.on('click', () => {
+			console.log(this.url);
+
+			$.post(this.url, {
+				action: 'create',
+				type: this.type_sel.val(),
+			}, () => {
+				window.location.reload();
+			});
+		});
+	}
+	parse_pathname(pathname) {
+		var match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
+		return match.groups;
+	}
+	build_pathname(name, version, path) {
+		var pathname = name;
+		if (version) {
+			pathname += '/_' + version;
+		}
+		if (path) {
+			pathname += '/' + path;
+		}
+		return pathname;
+	}
+	save(complete) {
+		clearTimeout(this.save_timeout);
+		this.save_timeout = null;
+
+		if (this.mode != 'edit') {
+			if (typeof complete == 'function') {
+				complete();
+			}
+			return;
+		}
+
+		var source_text = this.source_textarea.val();
+		var title_text = this.title_h1.text();
+
+		if (source_text == this.source_last && this.title == title_text) {
+			if (typeof complete == 'function') {
+				complete();
+			}
+			return;
+		}
+
+		var patch = this.dmp.patch_make(this.source_last, source_text);
+		var patch_text = this.dmp.patch_toText(patch);
+		var post_data = {
+			action: 'patch',
+			patch: patch_text,
+		};
+		if (this.title != title_text) {
+			this.title = title_text;
+			if (this.title == '') {
+				this.title = 'Untitled';
+				this.title_h1.text(this.title);
+			}
+			post_data.title = this.title;
+			$('title').text(this.title + ' - jkent.net');
+		}
+		$.post(this.url, post_data, (data) => {
+			this.source_last = source_text;
+			this.is_draft = data.is_draft;
+			this.commit_btn.toggleClass('hidden', !this.is_draft);
+			if (typeof complete == 'function') {
+				complete();
+			}
+		});
+	}
+	source_resize() {
+		this.source_textarea.height('inherit');
+		var scroll_height = this.source_textarea.prop('scrollHeight');
+		var height = parseInt(this.source_textarea.css('border-top-width'), 10)
+				   - parseInt(this.source_textarea.css('padding-top'), 10)
+				   + scroll_height
+				   - parseInt(this.source_textarea.css('padding-bottom'), 10)
+				   + parseInt(this.source_textarea.css('border-bottom-width'), 10);
+		this.source_textarea.height(height + 'px');
+
+		if (this.source_textarea.prop('clientWidth') < this.source_textarea.prop('scrollWidth')) {
+			var num_lines = this.source_textarea.val().split('\n').length;
+			height += scroll_height / num_lines;
+			this.source_textarea.height(height + 'px');
+		}
+	}
+	delayed_save() {
+		clearTimeout(this.save_timeout);
+		this.save_timeout = setTimeout(() => this.save(), 500);
+	}
+}

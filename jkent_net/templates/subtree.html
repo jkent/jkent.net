@@ -2,21 +2,26 @@
 
 {% block main %}
 <h1>{{ title or 'Untitled' }}</h1><span>{% if mode == 'raw' %}(Source){% elif mode == 'edit' %}(Editing){% endif %}</span>
+<div class="subtree">
 {%- if mode == 'render' %}
 {{ content }}
 {%- elif mode == 'raw' or mode == 'edit' %}
 <textarea class="source">{{ content }}</textarea>
+{%- elif mode == 'missing_index' %}
+<select class="type">
+<option value="html">HTML</option>
+<option value="markdown" selected>Markdown</option>
+<option value="text">Text</option>
+</select>
+<button class="create">Create Document</button>
 {%- endif %}
-<script>
-var subtree = {
-    type: 'page',
-    mode: {{ mode | tojson }},
-    draft: {{ page.subtree.diff(None, None, 'HEAD') | tojson }},
-    version: {{ version | tojson }},
-    title: {{ page.title | tojson }},
-};
-</script>
-<script src="{{ url_for('static', filename='js/diff_match_patch.js') }}"></script>
-<script src="{{ url_for('static', filename='js/subtree.js') }}"></script>
+</div>
 {% include 'actionbar.html' %}
+<script src="{{ url_for('static', filename='js/diff_match_patch.js') }}"></script>
+<script>
+var subtree = new Subtree('page', {{ mode | tojson }},
+    {{ page.subtree.diff(None, None, 'HEAD') | tojson }},
+    {{ version | tojson }},
+    {{ page.title | tojson }});
+</script>
 {% endblock %}

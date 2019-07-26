@@ -3,6 +3,7 @@ from .utils import update_menus
 from diff_match_patch import diff_match_patch
 from flask import Markup, abort, g, redirect, render_template, request, send_file, url_for
 from flask_security.core import current_user
+import os
 
 def render(page, path, version):
     file, mimetype, fragment = page.subtree.open(path, version)
@@ -65,7 +66,7 @@ def patch(page, path):
     page.subtree.write(path, text.encode('utf8'))
 
     return {
-        'draft': page.subtree.diff(None, None, 'HEAD'),
+        'is_draft': page.subtree.diff(None, None, 'HEAD'),
     }
 
 def subtree(page, path, version):
@@ -74,14 +75,34 @@ def subtree(page, path, version):
         version = 'HEAD'
 
     if page.subtree.isdir(path, version):
-        index = page.subtree.find_index(path)
-        if not index:
+        index = page.subtree.find_index(path, version)
+        if index:
+            path = index
+        elif request.method == 'GET':
+            if current_user.any_role('admin', 'editor'):
+                return render_template('subtree.html', **{
+                    'mode': 'missing_index', 
+                    'page': page,
+                    'path': path,
+                    'title': page.title,
+                    'version': version,
+                })
             abort(404)
-        path = index
 
     if request.method == 'POST' and current_user.any_role('admin', 'editor'):
         action = request.form.get('action')
-        if action == 'patch':
+        if action == 'create':
+            type_ = request.form.get('type')
+            if type_ == 'html':
+                filename = 'index.html'
+            elif type_ == 'markdown':
+                filename = 'index.md'
+            else:
+                filename = 'index.txt'
+            if not page.subtree.exists(path, filename):
+                page.subtree.write(os.path.join(path, filename), b'')
+            return {}
+        elif action == 'patch':
             title = request.form.get('title')
             if title is not None:
                 if not title.strip():

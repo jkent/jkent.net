@@ -63,7 +63,6 @@ def pages_edit(id):
 @roles_accepted('admin')
 def pages_new():
     subtree = Subtree(current_user)
-    subtree.write('index.md', b'')
     title = request.form.get('title').strip()
     name = title.lower().replace(' ', '_')
     menu_path = '.' + name

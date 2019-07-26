@@ -43,6 +43,9 @@ class Subtree(db.Model):
         return id
 
     def exists(self, path, version='HEAD'):
+        if not path:
+            path = ''
+
         if version:
             return current_app.repository.exists(os.path.join(self.id, path), version)
 
@@ -156,4 +159,6 @@ class Subtree(db.Model):
     def diff(self, path='', version1=None, version2=None):
         if path == None:
             path = ''
+        if self.exists(path, version1) != self.exists(path, version2):
+            return True
         return current_app.repository.diff(os.path.join(self.id, path), version1, version2)

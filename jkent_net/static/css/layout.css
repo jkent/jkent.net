@@ -209,3 +209,9 @@ p a{
 	float: right;
 	margin: 0 0.25em;
 }
+#content .subtree {
+	text-align: center;
+}
+#content .subtree .rendered {
+	text-align: initial;
+}
