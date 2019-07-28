@@ -435,13 +435,14 @@ class Subtree {
 		});
 
 		this.create_btn.on('click', () => {
-			console.log(this.url);
-
 			$.post(this.url, {
 				action: 'create',
 				type: this.type_sel.val(),
 			}, () => {
-				window.location.reload();
+				var search = new URLSearchParams();
+				search.set('edit', '1');
+				this.url.search = search;
+				window.location = this.url;
 			});
 		});
 	}

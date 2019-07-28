@@ -102,6 +102,10 @@ def subtree(page, path, version):
             if not page.subtree.exists(path, filename):
                 page.subtree.write(os.path.join(path, filename), b'')
             return {}
+        elif action == 'delete':
+            page.subtree.delete()
+            db.session.delete(page)
+            db.session.commit()
         elif action == 'patch':
             title = request.form.get('title')
             if title is not None:

@@ -38,9 +38,11 @@ def pages_edit(id):
         action = request.form.get('action')
         if action == 'delete':
             remove_menu(page.menu_path)
+            page.subtree.delete()
             db.session.delete(page)
             db.session.commit()
         elif action == 'save':
+            remove_menu(page.menu_path)
             page.title = request.form['title'].strip()
             page.name = request.form['name'].strip()
             page.menu_path = request.form['menu_path'].strip()

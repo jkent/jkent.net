@@ -6,6 +6,7 @@ import magic
 import os
 import random
 import re
+import shutil
 import string
 from sqlalchemy.orm import validates
 
@@ -162,3 +163,8 @@ class Subtree(db.Model):
         if self.exists(path, version1) != self.exists(path, version2):
             return True
         return current_app.repository.diff(os.path.join(self.id, path), version1, version2)
+
+    def delete(self):
+        shutil.rmtree(os.path.join(current_app.repository.path, self.id), ignore_errors=True)
+        self.commit()
+        db.session.delete(self)
