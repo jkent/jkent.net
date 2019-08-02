@@ -9,7 +9,7 @@ args="-b 0.0.0.0:18080 -k gevent"
 if [[ "$1" =~ ^dev.* ]]; then
   echo "Starting in development mode"
   export FLASK_ENV=development
-  rm -rf instance/cache instance/jkent_net.db instance/repo
+  rm -rf instance/cache instance/jkent_net.db
   mkdir -p instance  
   pipenv run flask init-db
   pipenv run flask create-role admin Administrator
