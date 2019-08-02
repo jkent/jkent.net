@@ -532,8 +532,9 @@ class Treeview {
         var defaults = {
             collapsed: false,
             folders_only: false,
-            parent: null,
-        }
+			parent: null,
+			single_select: false,
+        };
         this.options = $.extend({}, defaults, options);
     }
     build(data) {
@@ -583,7 +584,7 @@ class Treeview {
                 $label.on('click', (e) => {
 					var $li = $(e.target).closest('li');
 					var $parent = $li.parent();
-					if (e.shiftKey) {
+					if (!t.options.single_select && e.shiftKey) {
 						t.clear_selection();
 						var $children = $parent.children();
 						var last = null, current;
@@ -607,7 +608,7 @@ class Treeview {
 							$children.slice(current, last + 1)
 									.addClass('selected');
 						}
-					} else if (e.ctrlKey) {
+					} else if (!t.options.single_select && e.ctrlKey) {
 						if (t.$last_selected &&
 								!t.$last_selected.closest('ul').is($parent)) {
 							t.clear_selection();
