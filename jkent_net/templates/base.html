@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <title>{{ title }} - jkent.net</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bower_components/fontawesome/css/all.min.css') }}">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/site.css') }}">
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fontawesome/css/all.min.css') }}">
-<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/jquery-ui/jquery-ui.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bower_components/nestedSortable/jquery.mjs.nestedSortable.js') }}"></script>
 <script src="{{ url_for('static', filename='js/site.js') }}"></script>
 </head>
 <body>

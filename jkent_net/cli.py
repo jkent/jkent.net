@@ -1,6 +1,8 @@
-from .models import Page, Subtree, User, db
+from .models import User, db
+from .tree import Tree
 from . import user_datastore
 import click
+from flask import current_app
 from flask.cli import with_appcontext
 
 @click.command('init-db')
@@ -59,38 +61,16 @@ def remove_role_command(email, name):
     user_datastore.remove_role_from_user(email, name)
     db.session.commit()
 
-@click.command('init-demo')
-@click.pass_context
+@click.command('create-tree')
 @with_appcontext
-def init_demo_command(ctx):
-    """Initializes everything for a demo."""
-    ctx.invoke(init_db_command)
-    ctx.invoke(create_role_command, name='admin', description='Administrator')
-    ctx.invoke(create_user_command, email='user@example.com', password='password')
-    ctx.invoke(create_user_command, email='admin@example.com', password='password', is_admin=True)
-    user = ctx.invoke(create_user_command, email='jeff@jkent.net', is_admin=True)
-
-    subtree = Subtree(user)
-    page = Page(subtree, 'About', 'about', '.about')
-    db.session.add(subtree)
-    db.session.add(page)
-    subtree.write('index.md', b'Hi there, I\'m Jeff Kent! I am a digital wizard.  I contribute to a handful of open\nsource projects, design and build things (such as the engine that powers this site!),\nand just geek out.')
-    subtree.commit()
-
-    subtree = Subtree(user)
-    page = Page(subtree, 'Connect', 'connect', '.connect')
-    db.session.add(subtree)
-    db.session.add(page)
-    subtree.write('index.md', b'Want to connect with me?  Here is a non-exhaustive list of the ways you can!\n\n[<i class="fas fa-at"></i> E-mail](mailto:jeff@jkent.net)<br>\n[<i class="fab fa-facebook"></i> Facebook](https://www.facebook.com/jeff.kent.9638)<br>\n[<i class="fab fa-github"></i> GitHub](https://github.com/jkent)<br>\n[<i class="fas fa-comment-dots"></i> IRC](https://kiwiirc.com/nextclient/#irc://irc.jkent.net:+6697/#UnderGND)<br>\n[<i class="fab fa-reddit"></i> Reddit](https://reddit.com/user/jakent)<br>\n[<i class="fab fa-twitter"></i> Twitter](https://twitter.com/jkent_net)<br>')
-    subtree.commit()
- 
-    db.session.commit()
-
+def create_tree_command():
+    """Create a tree."""
+    tree = Tree.create(current_app.repo)
 
 def init_app(app):
+    app.cli.add_command(init_db_command)
     app.cli.add_command(create_user_command)
     app.cli.add_command(delete_user_command)
     app.cli.add_command(create_role_command)
     app.cli.add_command(add_role_command)
-    app.cli.add_command(init_db_command)
-    app.cli.add_command(init_demo_command)
+    app.cli.add_command(create_tree_command)

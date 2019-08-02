@@ -21,9 +21,7 @@ def create_app():
     )
     app.config.from_pyfile('config.py', silent=True)
 
-    app.repository_path = os.path.join(app.instance_path, 'repository')
-    app.repository = Repository(app.repository_path)
-
+    app.repo = Repository(os.path.join(app.instance_path, 'repo'))
     app.cache_root = os.path.join(app.instance_path, 'cache')
 
     from . import models

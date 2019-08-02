@@ -1,0 +1,22 @@
+{
+  "name": "jkent_net",
+  "homepage": "https://github.com/jkent/jkent.net",
+  "authors": [
+    "Jeff Kent <jeff@jkent.net>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "fontawesome": "^5.10.0"
+  }
+}

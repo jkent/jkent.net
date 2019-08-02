@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block main %}
+
+
+<div class="filebrowser hidden"></div>
+
+{% include 'actionbar.html' %}
+<script>
+var filebrowser = $('.filebrowser');
+var browse_btn = $('#actionbar a[title="Browse"]');
+
+function toggle_filebrowser() {
+    var show = filebrowser.is('.hidden');
+
+    browse_btn.toggleClass('highlight', show)
+        .find('i').toggleClass('fa-folder', !show)
+        .toggleClass('fa-folder-open', show);
+
+    filebrowser.toggleClass('hidden', !show);
+
+    if (show) {
+        filebrowser.empty();
+        var url = new URL(window.location);
+        var search = new URLSearchParams();
+        search.set('action', 'list');
+        url.search = search;
+        $.get(url, (data) => {
+            var tv = new Treeview({
+                collapsed: true,
+                parent: 'Test',
+            });
+            filebrowser.append(tv.build(data.list));
+        });
+    }
+}
+
+browse_btn.on('click', () => {
+    toggle_filebrowser();
+});
+
+toggle_filebrowser();
+
+</script>
+{% endblock %}

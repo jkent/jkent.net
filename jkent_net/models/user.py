@@ -46,10 +46,10 @@ class User(db.Model, UserMixin):
         session['avatar_url'] = url
 
     def any_role(self, *roles):
-        return any(x in roles for x in self.roles)
+        return any(x in roles for x in self.roles + ['everyone'])
 
     def all_roles(self, *roles):
         return all(x in roles for x in self.roles)
 
-AnonymousUser.any_role = lambda self, *roles: False
+AnonymousUser.any_role = lambda self, *roles: 'everyone' in roles
 AnonymousUser.all_roles = lambda self, *roles: False

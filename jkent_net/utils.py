@@ -1,4 +1,3 @@
-from .models import Page
 from flask import request, url_for
 from flask_menu import current_menu
 from flask_security.core import current_user
@@ -25,12 +24,6 @@ def remove_menu(menu):
         menu = current_menu.submenu(menu)
     current_menu._child_entries = \
         {k:v for k, v in current_menu._child_entries.items() if v != menu}
-
-def update_menus():
-    for page in Page.query:
-        current_menu.submenu(page.menu_path).register(
-            'pages.pages', page.title, order=page.menu_order,
-            endpoint_arguments_constructor=partial(lambda p: {'name': p}, page.name))
 
 class Pager(object):
     def __init__(self, items_per_page):

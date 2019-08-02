@@ -1,5 +1,5 @@
-from ..models import db, Page, Role, Subtree, User
-from ..utils import Pager, remove_menu, update_menus
+from ..models import db, Role, User
+from ..utils import Pager
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_menu import current_menu, register_menu
 from flask_security import roles_accepted
@@ -18,86 +18,6 @@ RESULTS_PER_PAGE = 20
 @register_menu(bp, '.admin.settings', 'Settings', visible_when=lambda: current_user.any_role('admin'))
 def settings():
     return render_template('admin/settings.html')
-
-
-
-@bp.route('pages')
-@roles_accepted('admin', 'editor')
-@register_menu(bp, '.admin.pages', 'Pages',
-    visible_when=lambda: current_user.any_role('admin', 'editor'),
-    active_when=lambda: request.endpoint.startswith('admin.pages_'))
-def pages_index():
-    return render_template('admin/pages_index.html')
-
-@bp.route('pages/<string:id>', methods=('GET', 'POST'))
-@roles_accepted('admin', 'editor')
-@register_menu(bp, '.admin.pages.edit', 'Edit')
-def pages_edit(id):
-    page = Page.query.get(id)
-    if request.method == 'POST':
-        action = request.form.get('action')
-        if action == 'delete':
-            remove_menu(page.menu_path)
-            page.subtree.delete()
-            db.session.delete(page)
-            db.session.commit()
-        elif action == 'save':
-            remove_menu(page.menu_path)
-            page.title = request.form['title'].strip()
-            page.name = request.form['name'].strip()
-            page.menu_path = request.form['menu_path'].strip()
-            page.menu_order = int(request.form['menu_order'].strip())
-            db.session.add(page)
-            db.session.commit()
-            update_menus()
-
-        subquery = db.session.query(Page.id,db.func.ROW_NUMBER() \
-            .over(order_by=Page.title).label('n')).subquery()
-        query = db.session.query((subquery.c.n-1)) \
-            .join(Page, Page.id==subquery.c.id).filter(subquery.c.id==id)
-        results = query.first()
-        pagenum = (results[0] // RESULTS_PER_PAGE) + 1 if results else 1
-        return redirect(url_for('admin.pages_index') + '#pg={}'.format(pagenum))
-
-    return render_template('admin/pages_edit.html', page=page)
-
-@bp.route('pages/new', methods=('POST',))
-@roles_accepted('admin')
-def pages_new():
-    subtree = Subtree(current_user)
-    title = request.form.get('title').strip()
-    name = title.lower().replace(' ', '_')
-    menu_path = '.' + name
-    page = Page(subtree, title, name, menu_path)
-    db.session.add(page)
-    db.session.commit()
-    update_menus()
-    return redirect(url_for('admin.pages_edit', id=page.id))
-
-@bp.route('pages/json')
-@roles_accepted('admin')
-def pages_json():
-    pager = Pager(20)
-    pager.page = int(request.args.get('pg', pager.first))
-    query = Page.query
-    q = request.args.get('q', None)
-    if q:
-        query = query.filter(Page.searchable.contains(q))
-    pager.items = query.count()
-    query = query.order_by(Page.title)
-    query = query.offset(pager.offset).limit(pager.items_per_page)
-    pages = query.all()
-    entries = []
-    for page in pages:
-        entries.append({
-            'id': page.id,
-            'title': page.title,
-        })
-    return {
-        'entries': entries,
-        'items_per_page': pager.items_per_page,
-        'num_pages': pager.count,
-    }
 
 
 

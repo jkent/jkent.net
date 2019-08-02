@@ -215,3 +215,15 @@ p a{
 #content .subtree .rendered {
 	text-align: initial;
 }
+
+#content .filebrowser .fa-ul {
+	margin: 0 0 0 1.6em;
+}
+#content .filebrowser span {
+	display: inline-block;
+	padding: 1px;
+}
+#content .filebrowser li.selected > span {
+	background-color: blue;
+	color: white;
+}

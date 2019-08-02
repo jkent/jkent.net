@@ -526,3 +526,146 @@ class Subtree {
 		this.save_timeout = setTimeout(() => this.save(), 500);
 	}
 }
+
+class Treeview {
+    constructor(options) {
+        var defaults = {
+            collapsed: false,
+            folders_only: false,
+            parent: null,
+        }
+        this.options = $.extend({}, defaults, options);
+    }
+    build(data) {
+        var t = this;
+        function _build(data, parent, depth) {
+            var $ul = $('<ul class="fa-ul">');
+            if (t.options.collapsed && depth > 0) {
+                $ul.css('display', 'none');
+			}
+
+            $.each(data, (i, branch) => {
+                var $li = $('<li>');
+                var $icon = $('<i class="fa-li fas">');
+				var $label = $('<span>').text(branch.name);
+
+				var min_depth = t.options.parent ? 1 : 0;
+				if (depth >= min_depth) {
+					branch.path = depth > min_depth ? (parent.path ? parent.path
+						: parent.name) + '/' + branch.name : branch.name;
+				}
+                if (branch.children) {
+                    $li.addClass('directory');
+                    $icon.toggleClass('fa-folder', t.options.collapsed);
+                    $icon.toggleClass('fa-folder-open', !t.options.collapsed);
+                    $li.append($icon, $label);
+                    $icon.on('click', (e) => {
+                        var $child_ul = $li.find('>ul');
+                        var visible = $child_ul.is(':visible');
+                        $icon.toggleClass('fa-folder', visible)
+							.toggleClass('fa-folder-open', !visible);
+                        if (visible) {
+                            $child_ul.slideUp(200);
+                        } else {
+							$child_ul.slideDown(200);
+						}
+                    });
+                    $li.append(_build(branch.children, branch, depth + 1));
+                } else if (!t.options.folders_only) {
+                    $li.addClass('file');
+                    $icon.addClass('fa-file')
+                    $li.append($icon, $label);
+                }
+				branch.$li = $li;
+				branch.selected = false;
+                $label.on('click', (e) => {
+					var $li = $(e.target).closest('li');
+					var $parent = $li.parent();
+					if (e.shiftKey) {
+						t.clear_selection();
+						var $children = $parent.children();
+						var last = null, current;
+						$.each($children, (i, $child) => {
+							if (t.$last_selected &&
+									t.$last_selected.is($child)) {
+								last = i;
+							}
+							if ($li.is($child)) {
+								current = i;
+							}
+						});
+						if (last == null) {
+							last = current;
+							t.$last_selected = $li;
+						}
+						if (last < current) {
+							for (var i = last; i < current; i++) {
+								data[i].selected = true;
+							}
+							$children.slice(last, current + 1)
+									.addClass('selected');
+						} else {
+							for (var i = current; i < last; i++) {
+								data[i].selected = true;
+							}
+							$children.slice(current, last + 1)
+									.addClass('selected');
+						}
+					} else if (e.ctrlKey) {
+						if (t.$last_selected &&
+								!t.$last_selected.closest('ul').is($parent)) {
+							t.clear_selection();
+						}					
+						branch.selected = !branch.selected;
+						$li.toggleClass('selected', branch.selected);
+						t.$last_selected = branch.selected ? $li : null;
+					} else {
+						t.clear_selection();
+						branch.selected = true; 
+						$li.toggleClass('selected', branch.selected);
+						t.$last_selected = branch.selected ? $li : null;
+					}
+				});
+                $ul.append($li);
+            });
+            return $ul;
+        }
+
+        var $treeview = $('<div class="treeview">');
+        $treeview.css('user-select', 'none');
+
+		/* deep copy */
+		t.data = JSON.parse(JSON.stringify(data))
+		if (t.options.parent) {
+			var data = [{}];
+			data[0]['name'] = t.options.parent;
+			data[0]['children'] = t.data;
+			t.data = data;
+		}
+		$treeview.append(_build(t.data, null, 0));
+	
+		$(document).click((e) => {
+			if (!$(e.target).closest($treeview.find('span, i')).length) {
+				t.clear_selection();
+				t.$last_selected = null;
+			}
+		});
+
+		console.log(t.data);
+
+        return $treeview;
+	}
+	clear_selection() {
+		function _clear_selection(data) {
+			for (var i = 0; i < data.length; i++) {
+				var branch = data[i];
+				branch.selected = false;
+				branch.$li.removeClass('selected');
+				if (branch.children) {
+					_clear_selection(branch.children);
+				}
+			}
+		}
+		_clear_selection(this.data);
+	}
+}
