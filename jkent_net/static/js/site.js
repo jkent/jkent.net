@@ -447,8 +447,12 @@ class Subtree {
 		});
 	}
 	parse_pathname(pathname) {
-		var match = pathname.match(/^\/(?<page>\w+)(?:\/_(?<version>\w+))?(?:\/(?<path>\w+))?/);
-		return match.groups;
+		var match = pathname.match(/^\/(\w+)(?:\/_(\w+))?(?:\/(\w+))?/);
+		return {
+			page: match[0],
+			version: match[1],
+			path: match[2],
+		};
 	}
 	build_pathname(name, version, path) {
 		var pathname = name;
