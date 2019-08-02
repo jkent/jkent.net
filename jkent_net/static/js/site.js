@@ -651,8 +651,6 @@ class Treeview {
 			}
 		});
 
-		console.log(t.data);
-
         return $treeview;
 	}
 	clear_selection() {

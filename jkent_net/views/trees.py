@@ -14,11 +14,17 @@ mimetypes.add_type('text/markdown', '.md')
 
 def get_list(tree, path):
     if not tree.isdir(path):
-        raise ValueError
+        abort(404)
 
     root = []
     stack = []
-    paths = tree.list(path, recursive=True)
+    try:
+        paths = tree.list(path, recursive=True)
+    except FileNotFoundError:
+        abort(404)
+    except PermissionError:
+        abort(403)
+
     for path in tree.list(path, recursive=True):
         depth = 0
         for name in re.findall('[^/]+/?', path):
@@ -76,6 +82,8 @@ def tree(tree_id, tree_path=''):
             tree_path = tree.find_index(tree_path)
         except FileNotFoundError:
             abort(404)
+        except PermissionError:
+            abort(403)
 
     if action == 'raw':
         try:

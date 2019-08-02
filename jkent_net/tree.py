@@ -5,6 +5,7 @@ import re
 import string
 import yaml
 
+
 class Tree:
     @classmethod
     def create(cls, repo):
@@ -94,6 +95,8 @@ class Tree:
         return self._repo.exists(path, self._version)
 
     def isdir(self, path):
+        if re.match('^\.|/\.', path):
+            return False
         path = os.path.join(self.path, path)
         return self._repo.isdir(path, self._version)
 

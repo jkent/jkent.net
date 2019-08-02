@@ -221,9 +221,9 @@ p a{
 }
 #content .filebrowser span {
 	display: inline-block;
-	padding: 1px;
+	padding: 1px 2px;
 }
-#content .filebrowser li.selected > span {
+#content .filebrowser .selected > span {
 	background-color: blue;
 	color: white;
 }
