@@ -544,12 +544,15 @@ class Treeview {
                 $ul.css('display', 'none');
 			}
 
-            $.each(data, (i, branch) => {
+            $.each(data, (_, branch) => {
                 var $li = $('<li>');
                 var $icon = $('<i class="fa-li fas">');
 				var $label = $('<span>').text(branch.name);
 
 				var min_depth = t.options.parent ? 1 : 0;
+				if (t.options.parent && depth == 0) {
+					branch.path = '';
+				}
 				if (depth >= min_depth) {
 					branch.path = depth > min_depth ? (parent.path ? parent.path
 						: parent.name) + '/' + branch.name : branch.name;
@@ -577,7 +580,6 @@ class Treeview {
                     $li.append($icon, $label);
                 }
 				branch.$li = $li;
-				branch.selected = false;
                 $label.on('click', (e) => {
 					var $li = $(e.target).closest('li');
 					var $parent = $li.parent();
@@ -599,15 +601,9 @@ class Treeview {
 							t.$last_selected = $li;
 						}
 						if (last < current) {
-							for (var i = last; i < current; i++) {
-								data[i].selected = true;
-							}
 							$children.slice(last, current + 1)
 									.addClass('selected');
 						} else {
-							for (var i = current; i < last; i++) {
-								data[i].selected = true;
-							}
 							$children.slice(current, last + 1)
 									.addClass('selected');
 						}
@@ -616,14 +612,13 @@ class Treeview {
 								!t.$last_selected.closest('ul').is($parent)) {
 							t.clear_selection();
 						}					
-						branch.selected = !branch.selected;
-						$li.toggleClass('selected', branch.selected);
-						t.$last_selected = branch.selected ? $li : null;
+						var selected = branch.$li.is('.selected');
+						$li.toggleClass('selected', !selected);
+						t.$last_selected = !selected ? $li : null;
 					} else {
 						t.clear_selection();
-						branch.selected = true; 
-						$li.toggleClass('selected', branch.selected);
-						t.$last_selected = branch.selected ? $li : null;
+						$li.addClass('selected');
+						t.$last_selected = $li;
 					}
 				});
                 $ul.append($li);
@@ -644,26 +639,47 @@ class Treeview {
 		}
 		$treeview.append(_build(t.data, null, 0));
 	
-		$(document).click((e) => {
+		function document_click(e) {
+			if (e.ctrlKey) {
+				return;
+			}
 			if (!$(e.target).closest($treeview.find('span, i')).length) {
 				t.clear_selection();
 				t.$last_selected = null;
 			}
-		});
+		}
 
+		$(document).on('click', document_click);
+		this.document_click = document_click;
         return $treeview;
 	}
 	clear_selection() {
 		function _clear_selection(data) {
-			for (var i = 0; i < data.length; i++) {
-				var branch = data[i];
-				branch.selected = false;
+			$.each(data, (_, branch) => {
 				branch.$li.removeClass('selected');
 				if (branch.children) {
 					_clear_selection(branch.children);
 				}
-			}
+			});
 		}
 		_clear_selection(this.data);
+	}
+	get_selection() {
+		function _get_selection(data) {
+			var selected = Array();
+			$.each(data, (_, branch) => {
+				if (branch.$li.is('.selected') && branch.path) {
+					selected.push(branch.path);
+				}
+				if (branch.children) {
+					selected = selected.concat(_get_selection(branch.children));
+				}
+			});
+			return selected;
+		}
+		return _get_selection(this.data);
+	}
+	unregister() {
+		$(document).off('click', this.document_click);
 	}
 }

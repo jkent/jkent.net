@@ -10,6 +10,12 @@
 var filebrowser = $('.filebrowser');
 var browse_btn = $('#actionbar a[title="Browse"]');
 
+var tv = new Treeview({
+    //collapsed: true,
+    parent: 'Root',
+});
+
+
 function toggle_filebrowser() {
     var show = filebrowser.is('.hidden');
 
@@ -26,17 +32,16 @@ function toggle_filebrowser() {
         search.set('action', 'list');
         url.search = search;
         $.get(url, (data) => {
-            var tv = new Treeview({
-                collapsed: true,
-                parent: 'Test',
-            });
             filebrowser.append(tv.build(data.list));
         });
+    } else {
+        tv.unregister();
     }
 }
 
 browse_btn.on('click', () => {
     toggle_filebrowser();
+    console.log(tv.get_selection());
 });
 
 toggle_filebrowser();
