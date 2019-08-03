@@ -609,7 +609,8 @@ class Treeview {
 					found = true;
 					break;
 				} else if (this.options.folders_first) {
-					var compare_node = node.children ? ' ' + node.name : node.name;
+					var compare_node =
+						node.children ? ' ' + node.name : node.name;
 					var compare_part = dir ? ' ' + part : part;
 					if (compare_node > compare_part) {
 						break;
@@ -732,7 +733,8 @@ class Treeview {
 		var [node, parent] = this.find(path);
 		if (!this.options.select_one && shift) {
 			this.clear_selection();
-			if (this.last_selected && parent.children.includes(this.last_selected)) {
+			if (this.last_selected
+					&& parent.children.includes(this.last_selected)) {
 				var first = parent.children.indexOf(this.last_selected);
 				var last = parent.children.indexOf(node);
 				if (last < first) {
