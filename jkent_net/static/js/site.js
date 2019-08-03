@@ -532,159 +532,245 @@ class Subtree {
 }
 
 class Treeview {
-    constructor(options) {
-        var defaults = {
-            collapsed: false,
-            folders_only: false,
-			parent: null,
-			single_select: false,
-        };
-        this.options = $.extend({}, defaults, options);
-    }
-    build(data) {
-        var t = this;
-        function _build(data, parent, depth) {
-            var $ul = $('<ul class="fa-ul">');
-            if (t.options.collapsed && depth > 0) {
-                $ul.css('display', 'none');
+	constructor(options) {
+		Treeview.defaults = {
+			collapsed: false,
+			only_folders: false,
+			root_folder: null,
+			select_one: false,
+			folders_first: false,
+		};
+		this.options = $.extend({}, Treeview.defaults, options);
+		this.html = $('<div class="treeview">');
+		this.html.css('user-select', 'none');
+		this.empty();
+	}
+	empty() {
+		this.$ul = $('<ul class="fa-ul">');
+		this.html.html(this.$ul);
+		if (this.options.root_folder) {
+			this.node = {
+				children: [],
+				name: this.options.root_folder,
+				path: '',
+			};	
+			this.node.$li = $('<li class="folder">');
+			this.$ul.append(this.node.$li);
+			var $icon = $('<i class="fa-li fas">');
+			$icon.toggleClass('fa-folder', this.options.collapsed)
+				.toggleClass('fa-folder-open', !this.options.collapsed);
+			var $label = $('<span>').text(this.options.root_folder);
+			this.node.$ul = $('<ul class="fa-ul">');
+			this.node.$li.append($icon, $label, this.node.$ul);
+			if (this.options.collapsed) {
+				this.node.$ul.css('display', 'none');
 			}
-
-            $.each(data, (_, branch) => {
-                var $li = $('<li>');
-                var $icon = $('<i class="fa-li fas">');
-				var $label = $('<span>').text(branch.name);
-
-				var min_depth = t.options.parent ? 1 : 0;
-				if (t.options.parent && depth == 0) {
-					branch.path = '';
+			this.children = [this.node];
+			this.root = this.node;
+			$icon.on('click', (e) => {
+				var visible = this.node.$ul.is(':visible');
+				$icon.toggleClass('fa-folder', visible)
+					.toggleClass('fa-folder-open', !visible);
+				if (visible) {
+					this.node.$ul.slideUp(200);
+				} else {
+					this.node.$ul.slideDown(200);
 				}
-				if (depth >= min_depth) {
-					branch.path = depth > min_depth ? (parent.path ? parent.path
-						: parent.name) + '/' + branch.name : branch.name;
+			});
+			$label.on('click', ((e) => {
+				this.select('', e.shiftKey, e.ctrlKey);
+			}).bind(this));
+			$label.on('dblclick', ((e) => {
+				if (this.dblclick_handler) {
+					this.dblclick_handler('', e.shiftKey);
 				}
-                if (branch.children) {
-                    $li.addClass('directory');
-                    $icon.toggleClass('fa-folder', t.options.collapsed);
-                    $icon.toggleClass('fa-folder-open', !t.options.collapsed);
-                    $li.append($icon, $label);
-                    $icon.on('click', (e) => {
-                        var $child_ul = $li.find('>ul');
-                        var visible = $child_ul.is(':visible');
-                        $icon.toggleClass('fa-folder', visible)
-							.toggleClass('fa-folder-open', !visible);
-                        if (visible) {
-                            $child_ul.slideUp(200);
-                        } else {
-							$child_ul.slideDown(200);
-						}
-                    });
-                    $li.append(_build(branch.children, branch, depth + 1));
-                } else if (!t.options.folders_only) {
-                    $li.addClass('file');
-                    $icon.addClass('fa-file')
-                    $li.append($icon, $label);
-                }
-				branch.$li = $li;
-                $label.on('click', (e) => {
-					var $li = $(e.target).closest('li');
-					var $parent = $li.parent();
-					if (!t.options.single_select && e.shiftKey) {
-						t.clear_selection();
-						var $children = $parent.children();
-						var last = null, current;
-						$.each($children, (i, $child) => {
-							if (t.$last_selected &&
-									t.$last_selected.is($child)) {
-								last = i;
-							}
-							if ($li.is($child)) {
-								current = i;
-							}
-						});
-						if (last == null) {
-							last = current;
-							t.$last_selected = $li;
-						}
-						if (last < current) {
-							$children.slice(last, current + 1)
-									.addClass('selected');
-						} else {
-							$children.slice(current, last + 1)
-									.addClass('selected');
-						}
-					} else if (!t.options.single_select && e.ctrlKey) {
-						if (t.$last_selected &&
-								!t.$last_selected.closest('ul').is($parent)) {
-							t.clear_selection();
-						}					
-						var selected = branch.$li.is('.selected');
-						$li.toggleClass('selected', !selected);
-						t.$last_selected = !selected ? $li : null;
+			}).bind(this));
+		} else {
+			this.root = this;
+			this.children = [];
+		}
+	}
+	insert(path) {
+		var matches = path.match(/[^\/]+\/?/g);
+		var stack = [this.root];
+		for (var depth = 0; depth < matches.length; depth++) {
+			var part = matches[depth];
+			var dir = false;
+			var found = false;
+			if (part.endsWith('/')) {
+				dir = true;
+				part = part.slice(0, -1);
+			}
+			var i;
+			for (i = 0; i < stack[depth].children.length; i++) {
+				var node = stack[depth].children[i];
+				if (node.name == part) {
+					stack.push(node);
+					found = true;
+					break;
+				} else if (this.options.folders_first) {
+					var compare_node = node.children ? ' ' + node.name : node.name;
+					var compare_part = dir ? ' ' + part : part;
+					if (compare_node > compare_part) {
+						break;
+					}
+				} else if (node.name > part) {
+					break;
+				}
+			}
+			if (found) {
+				continue;
+			}
+			var node = {
+				name: part,
+			}
+			if (!dir) {
+				if (this.options.only_folders) {
+					continue;
+				}
+			} else {
+				node.children = [];
+			}
+			if (depth == 0) {
+				node.path = node.name;
+			} else {
+				node.path = stack[depth].path + node.name;
+			}
+			node.$li = $('<li>');
+			var $icon = $('<i class="fa-li fas">');
+			var $label = $('<span>').text(part);
+			if (dir) {
+				node.path += '/';
+				node.$li.addClass('folder');
+				$icon.toggleClass('fa-folder', this.options.collapsed)
+					.toggleClass('fa-folder-open', !this.options.collapsed);
+				node.$ul = $('<ul class="fa-ul">');
+				node.$li.append($icon, $label, node.$ul);
+				if (this.options.collapsed) {
+					node.$ul.css('display', 'none');
+				}
+				$icon.on('click', (e) => {
+					var visible = node.$ul.is(':visible');
+					$icon.toggleClass('fa-folder', visible)
+						.toggleClass('fa-folder-open', !visible);
+					if (visible) {
+						node.$ul.slideUp(200);
 					} else {
-						t.clear_selection();
-						$li.addClass('selected');
-						t.$last_selected = $li;
+						node.$ul.slideDown(200);
 					}
 				});
-                $ul.append($li);
-            });
-            return $ul;
-        }
-
-        var $treeview = $('<div class="treeview">');
-        $treeview.css('user-select', 'none');
-
-		/* deep copy */
-		t.data = JSON.parse(JSON.stringify(data))
-		if (t.options.parent) {
-			var data = [{}];
-			data[0]['name'] = t.options.parent;
-			data[0]['children'] = t.data;
-			t.data = data;
-		}
-		$treeview.append(_build(t.data, null, 0));
-	
-		function document_click(e) {
-			if (e.ctrlKey) {
-				return;
+			} else {
+				node.$li.addClass('file');
+				$icon.addClass('fa-file');
+				node.$li.append($icon, $label);
 			}
-			if (!$(e.target).closest($treeview.find('span, i')).length) {
-				t.clear_selection();
-				t.$last_selected = null;
+			$label.on('click', ((e) => {
+				this.select(node.path, e.shiftKey, e.ctrlKey);
+			}).bind(this));
+			$label.on('dblclick', ((e) => {
+				if (this.dblclick_handler) {
+					this.dblclick_handler(node.path, e.shiftKey);
+				}
+			}).bind(this));
+			var $ul = stack[depth].$ul;
+			if (i == 0) {
+				$ul.prepend(node.$li);
+			} else {
+				$ul.find('>li:nth-child(' + i + ')').after(node.$li);
+			}
+			stack[depth].children.splice(i, 0, node);
+			stack.push(node);
+		}
+		console.log(this.children);
+	}
+	find(path) {
+		if (path == '' && this.options.root_folder) {
+			return [this.node, this];
+		}
+		var matches = path.match(/[^\/]+\/?/g);
+		var stack = [this.root];
+		for (var depth = 0; depth < matches.length; depth++) {
+			var part = matches[depth];			
+			if (part.endsWith('/')) {
+				part = part.slice(0, -1);
+			}
+			for (var i = 0; i < stack[depth].children.length; i++) {
+				var node = stack[depth].children[i];
+				if (node.name == part) {
+					if (stack.length < matches.length) {
+						stack.push(node);
+						break;
+					}
+					return [node, stack[depth]];
+				}
 			}
 		}
-
-		$(document).on('click', document_click);
-		this.document_click = document_click;
-        return $treeview;
+		return [null, null];	
+	}
+	remove(path) {
+		const [node, parent] = find(path);
+		var i = parent.indexOf(node);
+		parent.$ul.slice(i).remove();
+		parent.splice(i, 1);
 	}
 	clear_selection() {
 		function _clear_selection(data) {
-			$.each(data, (_, branch) => {
-				branch.$li.removeClass('selected');
-				if (branch.children) {
-					_clear_selection(branch.children);
+			for (var i = 0; i < data.length; i++) {
+				var node = data[i];
+				node.$li.removeClass('selected');
+				if (node.children) {
+					_clear_selection(node.children);
 				}
-			});
+			}
 		}
-		_clear_selection(this.data);
+		_clear_selection(this.children);
+		if (this.$li) {
+			this.$li.removeClass('selected');
+		}
 	}
-	get_selection() {
-		function _get_selection(data) {
-			var selected = Array();
-			$.each(data, (_, branch) => {
-				if (branch.$li.is('.selected') && branch.path) {
-					selected.push(branch.path);
+	select(path, shift, ctrl) {
+		var [node, parent] = this.find(path);
+		if (!this.options.select_one && shift) {
+			this.clear_selection();
+			if (this.last_selected && parent.children.includes(this.last_selected)) {
+				var first = parent.children.indexOf(this.last_selected);
+				var last = parent.children.indexOf(node);
+				if (last < first) {
+					[first, last] = [last, first];
 				}
-				if (branch.children) {
-					selected = selected.concat(_get_selection(branch.children));
+				for (var i = first; i <= last; i++) {
+					parent.children[i].$li.addClass('selected');
 				}
-			});
+			} else {
+				this.last_selected = node;
+				node.$li.addClass('selected');
+			}
+		} else if (!this.options.select_one && ctrl) {
+			if (parent && !parent.children.includes(this.last_selected)) {
+				this.clear_selection();
+			}
+			node.$li.toggleClass('selected')
+			this.last_selected = node;
+		} else {
+			this.clear_selection();
+			node.$li.addClass('selected');
+			this.last_selected = node;
+		}
+	}
+	get_selected() {
+		function _get_selected(data) {
+			var selected = [];
+			for (var i = 0; i < data.length; i++) {
+				var node = data[i];
+				if (node.$li.is('.selected')) {
+					selected.push(node.path);
+				}
+				if (node.children) {
+					selected = selected.concat(_get_selected(node.children));
+				}
+			}
 			return selected;
 		}
-		return _get_selection(this.data);
-	}
-	unregister() {
-		$(document).off('click', this.document_click);
+		return _get_selected(this.children);
 	}
 }

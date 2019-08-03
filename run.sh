@@ -16,7 +16,6 @@ if [[ "$1" =~ ^dev.* ]]; then
   pipenv run flask create-user user@example.com --password password
   pipenv run flask create-user admin@example.com --password password --is-admin
   pipenv run flask create-user jeff@jkent.net --is-admin
-  pipenv run flask create-tree
   args="$args --reload"
 else
   echo "Starting in production mode"

@@ -16,8 +16,6 @@ def get_list(tree, path):
     if not tree.isdir(path):
         abort(404)
 
-    root = []
-    stack = []
     try:
         paths = tree.list(path, recursive=True)
     except FileNotFoundError:
@@ -25,32 +23,9 @@ def get_list(tree, path):
     except PermissionError:
         abort(403)
 
-    for path in tree.list(path, recursive=True):
-        depth = 0
-        for name in re.findall('[^/]+/?', path):
-            directory = name.endswith('/')
-            if directory:
-                name = name[:-1]
-            if len(stack) <= depth or stack[depth]['name'] != name:
-                stack = stack[:depth]
-                stack.append({'name': name})
-                if directory:
-                    stack[depth]['children'] = []
-
-                if depth == 0:
-                    parent = root
-                else:
-                    parent = stack[depth - 1]['children'] 
-
-                # TODO: perhaps sort only once
-                parent.append(stack[depth])
-                parent.sort(key=lambda x: ' ' + x['name'] if 'children' in x else x['name'])
-
-            depth += 1
-
     return {
         'version': tree.version,
-        'list': root,
+        'paths': paths,
     }
 
 

@@ -3,49 +3,61 @@
 {% block main %}
 
 
-<div class="filebrowser hidden"></div>
+<div class="filebrowser"></div>
+
+<button>selection</button>
+
 
 {% include 'actionbar.html' %}
 <script>
-var filebrowser = $('.filebrowser');
+var filebrowser = $('.filebrowser').hide();
 var browse_btn = $('#actionbar a[title="Browse"]');
 
-var tv = new Treeview({
-    collapsed: true,
-    parent: 'Root',
-    //single_select: true,
+var treeview = new Treeview({
+    //collapsed: true,
+    //root_folder: 'Root',
+    folders_first: true,
+    //only_folders: true,
+    //select_one: true,
 });
-
+filebrowser.append(treeview.html);
+treeview.dblclick_handler = (path, shift) => {
+    console.log(path, shift);
+};
 
 function toggle_filebrowser() {
-    var show = filebrowser.is('.hidden');
+    var visible = filebrowser.is(':visible');
 
-    browse_btn.toggleClass('highlight', show)
-        .find('i').toggleClass('fa-folder', !show)
-        .toggleClass('fa-folder-open', show);
+    browse_btn.toggleClass('highlight', !visible)
+        .find('i').toggleClass('fa-folder', visible)
+        .toggleClass('fa-folder-open', !visible);
 
-    filebrowser.toggleClass('hidden', !show);
+    filebrowser.toggle(!visible);
 
-    if (show) {
-        filebrowser.empty();
+    if (!visible) {
         var url = new URL(window.location);
         var search = new URLSearchParams();
         search.set('action', 'list');
         url.search = search;
         $.get(url, (data) => {
-            filebrowser.append(tv.build(data.list));
+            treeview.empty();
+            $.each(data.paths, (_, path) => {
+                console.log(path);
+                treeview.insert(path);
+            });
         });
-    } else {
-        tv.unregister();
     }
 }
 
 browse_btn.on('click', () => {
     toggle_filebrowser();
-    console.log(tv.get_selection());
 });
 
 toggle_filebrowser();
+
+$('button').on('click', () => {
+    console.log(treeview.get_selected());
+});
 
 </script>
 {% endblock %}
