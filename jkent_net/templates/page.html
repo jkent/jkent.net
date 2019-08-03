@@ -42,7 +42,6 @@ function toggle_filebrowser() {
         $.get(url, (data) => {
             treeview.empty();
             $.each(data.paths, (_, path) => {
-                console.log(path);
                 treeview.insert(path);
             });
         });

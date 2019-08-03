@@ -682,7 +682,6 @@ class Treeview {
 			stack[depth].children.splice(i, 0, node);
 			stack.push(node);
 		}
-		console.log(this.children);
 	}
 	find(path) {
 		if (path == '' && this.options.root_folder) {
