@@ -534,9 +534,12 @@ class Subtree {
 class Treeview {
 	constructor(options) {
 		Treeview.defaults = {
-			collapsed: false,
-			folders_first: false,
-			foreign_drop: true,
+			collapseable: true,
+			collapsed: true,
+			draggable: false,
+			droppable: false,
+			folders_first: true,
+			foreign_drop: false,
 			only_folders: false,
 			root_folder: null,
 			select_mode: 'siblings',
@@ -556,22 +559,26 @@ class Treeview {
 		});
 	}
 	_set_node_handlers(node) {
-		node.$li.attr('draggable', true);
+		if (this.options.draggable) {
+			node.$li.attr('draggable', true);
+		}
 		node.$li.on('mousedown', ((e) => {
 			e.stopPropagation();
 			this.select(node.path, e.shiftKey, e.ctrlKey);
+			this._check_selection();
 		}).bind(this));
-
 		node.$li.on('dblclick', ((e) => {
 			e.stopPropagation();
 			if (node.path == '' || node.path.endsWith('/')) {
-				var visible = node.$ul.is(':visible');
-				node.$li.find('>i').toggleClass('fa-folder', visible)
-					.toggleClass('fa-folder-open', !visible);
-				if (visible) {
-					node.$ul.slideUp(200);
-				} else {
-					node.$ul.slideDown(200);
+				if (this.options.collapseable) {
+					var visible = node.$ul.is(':visible');
+					node.$li.find('>i').toggleClass('fa-folder', visible)
+						.toggleClass('fa-folder-open', !visible);
+					if (visible) {
+						node.$ul.slideUp(200);
+					} else {
+						node.$ul.slideDown(200);
+					}
 				}
 			} else {
 				if (this.dblclick_handler) {
@@ -600,6 +607,7 @@ class Treeview {
 			e.originalEvent.dataTransfer.setData('text', node.path);
 			Treeview.drag_tree = this;
 			Treeview.drag_node = node;
+			this._check_selection();
 		}).bind(this));
 		node.$li.on('dragend', ((e) => {
 			e.stopPropagation();
@@ -608,6 +616,9 @@ class Treeview {
 			Treeview.drag_node = null;
 		}).bind(this));
 		node.$li.on('dragover', ((e) => {
+			if (!this.options.droppable) {
+				return;
+			}
 			e.stopPropagation();
 			e.preventDefault();
 			this.clear_selection();
@@ -639,8 +650,12 @@ class Treeview {
 			} else if (node.path.endsWith('/')) {
 				this.select(node.path);
 			}
+			this._check_selection();
 		}).bind(this));
 		node.$li.on('drop', ((e) => {
+			if (!this.options.droppable) {
+				return;
+			}
 			e.stopPropagation();
 			e.preventDefault();
 			if (Treeview.drag_node) {
@@ -663,7 +678,7 @@ class Treeview {
 				} else if (!this.options.foreign_drop) {
 					return;
 				}
-				if (typeof this.drop_handler == 'function') {
+				if (this.drop_handler) {
 					var data = {
 						source_path: path,
 						dest_path: node.path,
@@ -678,7 +693,7 @@ class Treeview {
 					this.drop_handler(data);
 				}
 			} else if (node.path.endsWith('/')) {
-				if (typeof this.drop_handler == 'function') {
+				if (this.drop_handler) {
 					var data = {
 						type: 'file',
 						source_files: e.originalEvent.dataTransfer.files,
@@ -689,6 +704,14 @@ class Treeview {
 				}
 			}
 		}).bind(this));
+	}
+	_check_selection() {
+		var selection = this.get_selected();
+		if (this.select_handler && JSON.stringify(this.selection) !==
+				JSON.stringify(selection)) {
+			this.select_handler(selection);
+			this.selection = selection;
+		}
 	}
 	empty() {
 		this.$ul = $('<ul class="fa-ul">');
@@ -837,9 +860,6 @@ class Treeview {
 			}
 		}
 		_clear_selection(this.children);
-		if (this.$li) {
-			this.$li.removeClass('selected');
-		}
 	}
 	select(path, shift, ctrl) {
 		var [node, parent] = this.find(path);
@@ -859,6 +879,11 @@ class Treeview {
 				this.last_selected = node;
 				node.$li.addClass('selected');
 			}
+		} else if (this.options.select_mode == 'single' && ctrl) {
+			var selected = node.$li.is('.selected');
+			this.clear_selection();
+			node.$li.toggleClass('selected', !selected);
+			this.last_selected = node;
 		} else if (this.options.select_mode == 'siblings' && ctrl) {
 			if (!parent.children.includes(this.last_selected)) {
 				this.clear_selection();
