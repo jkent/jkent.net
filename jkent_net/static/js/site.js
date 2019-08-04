@@ -571,7 +571,7 @@ class Treeview {
 			e.stopPropagation();
 			if (node.path == '' || node.path.endsWith('/')) {
 				if (this.options.collapseable) {
-					var visible = node.$ul.is(':visible');
+					let visible = node.$ul.is(':visible');
 					node.$li.find('>i').toggleClass('fa-folder', visible)
 						.toggleClass('fa-folder-open', !visible);
 					if (visible) {
@@ -590,9 +590,9 @@ class Treeview {
 			e.stopPropagation();
 			this.clear_selection();
 			this.$ghost = $('<div class="drag-ghost treeview">');
-			var $ul = $('<ul class="fa-ul">');
+			let $ul = $('<ul class="fa-ul">');
 			this.$ghost.append($ul);
-			var $li = $('<li>');
+			let $li = $('<li>');
 			if (node.$li.has('.file')) {
 				$li.addClass('file');
 			} else {
@@ -623,7 +623,7 @@ class Treeview {
 			e.preventDefault();
 			this.clear_selection();
 			if (Treeview.drag_node) {
-				var path = Treeview.drag_node.path;
+				let path = Treeview.drag_node.path;
 				if (!node.path.endsWith('/') && node.path != '') {
 					e.originalEvent.dataTransfer.dropEffect = 'none';
 					return;
@@ -633,9 +633,9 @@ class Treeview {
 						e.originalEvent.dataTransfer.dropEffect = 'none';
 						return;
 					}
-					var parent = path.endsWith('/') ? path.slice(0, -1) : path;
-					var last = parent.lastIndexOf('/');
-					var parent = last == -1 ? '' : parent.slice(0, last + 1);
+					let parent = path.endsWith('/') ? path.slice(0, -1) : path;
+					let last = parent.lastIndexOf('/');
+					parent = last == -1 ? '' : parent.slice(0, last + 1);
 					if (node.path == parent) {
 						e.originalEvent.dataTransfer.dropEffect = 'none';
 						return;
@@ -659,27 +659,25 @@ class Treeview {
 			e.stopPropagation();
 			e.preventDefault();
 			if (Treeview.drag_node) {
-				var path = e.originalEvent.dataTransfer.getData('text');
+				let path = e.originalEvent.dataTransfer.getData('text');
 				if (!node.path.endsWith('/') && node.path != '') {
 					return;
 				}
 				if (Treeview.drag_tree == this) {
 					if (node.path.startsWith(path)) {
-						console.log('startsWith got me');
 						return;
 					}
-					var parent = path.endsWith('/') ? path.slice(0, -1) : path;
-					var last = parent.lastIndexOf('/');
-					var parent = last == -1 ? '' : parent.slice(0, last + 1);
+					let parent = path.endsWith('/') ? path.slice(0, -1) : path;
+					let last = parent.lastIndexOf('/');
+					parent = last == -1 ? '' : parent.slice(0, last + 1);
 					if (node.path == parent || parent == undefined) {
-						console.log('regex got me');
 						return;
 					}
 				} else if (!this.options.foreign_drop) {
 					return;
 				}
 				if (this.drop_handler) {
-					var data = {
+					let data = {
 						source_path: path,
 						dest_path: node.path,
 						source_tree: Treeview.drag_tree.id,
@@ -694,7 +692,7 @@ class Treeview {
 				}
 			} else if (node.path.endsWith('/')) {
 				if (this.drop_handler) {
-					var data = {
+					let data = {
 						type: 'file',
 						source_files: e.originalEvent.dataTransfer.files,
 						dest_path: node.path,
@@ -706,7 +704,7 @@ class Treeview {
 		}).bind(this));
 	}
 	_check_selection() {
-		var selection = this.get_selected();
+		let selection = this.get_selected();
 		if (this.select_handler && JSON.stringify(this.selection) !==
 				JSON.stringify(selection)) {
 			this.select_handler(selection);
@@ -724,10 +722,10 @@ class Treeview {
 			};	
 			this.node.$li = $('<li class="folder">');
 			this.$ul.append(this.node.$li);
-			var $icon = $('<i class="fa-li fas">');
+			let $icon = $('<i class="fa-li fas">');
 			$icon.toggleClass('fa-folder', this.options.collapsed)
 				.toggleClass('fa-folder-open', !this.options.collapsed);
-			var $label = $('<span>').text(this.options.root_folder);
+			let $label = $('<span>').text(this.options.root_folder);
 			this.node.$ul = $('<ul class="fa-ul">');
 			this.node.$li.append($icon, $label, this.node.$ul);
 			if (this.options.collapsed) {
@@ -745,27 +743,27 @@ class Treeview {
 		if (path == '') {
 			return;
 		}
-		var matches = path.match(/[^\/]+\/?/g);
-		var stack = [this.root];
-		for (var depth = 0; depth < matches.length; depth++) {
-			var part = matches[depth];
-			var dir = false;
-			var found = false;
+		let matches = path.match(/[^\/]+\/?/g);
+		let stack = [this.root];
+		for (let depth = 0; depth < matches.length; depth++) {
+			let part = matches[depth];
+			let dir = false;
+			let found = false;
 			if (part.endsWith('/')) {
 				dir = true;
 				part = part.slice(0, -1);
 			}
-			var i;
+			let i;
 			for (i = 0; i < stack[depth].children.length; i++) {
-				var node = stack[depth].children[i];
+				let node = stack[depth].children[i];
 				if (node.name == part) {
 					stack.push(node);
 					found = true;
 					break;
 				} else if (this.options.folders_first) {
-					var compare_node =
+					let compare_node =
 						node.children ? ' ' + node.name : node.name;
-					var compare_part = dir ? ' ' + part : part;
+					let compare_part = dir ? ' ' + part : part;
 					if (compare_node > compare_part) {
 						break;
 					}
@@ -779,7 +777,7 @@ class Treeview {
 			if (!dir && this.options.only_folders) {
 				continue;
 			}
-			var node = {
+			let node = {
 				name: part,
 			}
 			if (dir) {
@@ -791,8 +789,8 @@ class Treeview {
 				node.path = stack[depth].path + node.name;
 			}
 			node.$li = $('<li>');
-			var $icon = $('<i class="fa-li fas">');
-			var $label = $('<span>').text(part);
+			let $icon = $('<i class="fa-li fas">');
+			let $label = $('<span>').text(part);
 			if (dir) {
 				node.path += '/';
 				node.$li.addClass('folder');
@@ -809,7 +807,7 @@ class Treeview {
 				node.$li.append($icon, $label);
 			}
 			this._set_node_handlers(node);
-			var $ul = stack[depth].$ul;
+			let $ul = stack[depth].$ul;
 			if (i == 0) {
 				$ul.prepend(node.$li);
 			} else {
@@ -823,15 +821,15 @@ class Treeview {
 		if (path == '' && this.options.root_folder) {
 			return [this.node, this];
 		}
-		var matches = path.match(/[^\/]+\/?/g);
-		var stack = [this.root];
-		for (var depth = 0; depth < matches.length; depth++) {
-			var part = matches[depth];			
+		let matches = path.match(/[^\/]+\/?/g);
+		let stack = [this.root];
+		for (let depth = 0; depth < matches.length; depth++) {
+			let part = matches[depth];			
 			if (part.endsWith('/')) {
 				part = part.slice(0, -1);
 			}
-			for (var i = 0; i < stack[depth].children.length; i++) {
-				var node = stack[depth].children[i];
+			for (let i = 0; i < stack[depth].children.length; i++) {
+				let node = stack[depth].children[i];
 				if (node.name == part) {
 					if (stack.length < matches.length) {
 						stack.push(node);
@@ -845,14 +843,14 @@ class Treeview {
 	}
 	remove(path) {
 		const [node, parent] = find(path);
-		var i = parent.indexOf(node);
+		let i = parent.indexOf(node);
 		parent.$ul.slice(i).remove();
 		parent.splice(i, 1);
 	}
 	clear_selection() {
 		function _clear_selection(data) {
-			for (var i = 0; i < data.length; i++) {
-				var node = data[i];
+			for (let i = 0; i < data.length; i++) {
+				let node = data[i];
 				node.$li.removeClass('selected');
 				if (node.children) {
 					_clear_selection(node.children);
@@ -862,17 +860,17 @@ class Treeview {
 		_clear_selection(this.children);
 	}
 	select(path, shift, ctrl) {
-		var [node, parent] = this.find(path);
+		let [node, parent] = this.find(path);
 		if (this.options.select_mode != 'single' && shift) {
 			this.clear_selection();
 			if (this.last_selected
 					&& parent.children.includes(this.last_selected)) {
-				var first = parent.children.indexOf(this.last_selected);
-				var last = parent.children.indexOf(node);
+				let first = parent.children.indexOf(this.last_selected);
+				let last = parent.children.indexOf(node);
 				if (last < first) {
 					[first, last] = [last, first];
 				}
-				for (var i = first; i <= last; i++) {
+				for (let i = first; i <= last; i++) {
 					parent.children[i].$li.addClass('selected');
 				}
 			} else {
@@ -880,7 +878,7 @@ class Treeview {
 				node.$li.addClass('selected');
 			}
 		} else if (this.options.select_mode == 'single' && ctrl) {
-			var selected = node.$li.is('.selected');
+			let selected = node.$li.is('.selected');
 			this.clear_selection();
 			node.$li.toggleClass('selected', !selected);
 			this.last_selected = node;
@@ -901,9 +899,9 @@ class Treeview {
 	}
 	get_selected() {
 		function _get_selected(data) {
-			var selected = [];
-			for (var i = 0; i < data.length; i++) {
-				var node = data[i];
+			let selected = [];
+			for (let i = 0; i < data.length; i++) {
+				let node = data[i];
 				if (node.$li.is('.selected')) {
 					selected.push(node.path);
 				}
@@ -917,10 +915,10 @@ class Treeview {
 	}
 	clone(options) {
 		options = $.extend({}, this.options, options);
-		var treeview = new Treeview(options);
+		let treeview = new Treeview(options);
 		function _clone(data) {
-			for (var i = 0; i < data.length; i++) {
-				var node = data[i];
+			for (let i = 0; i < data.length; i++) {
+				let node = data[i];
 				treeview.insert(node.path);
 				if (node.children) {
 					_clone(node.children);

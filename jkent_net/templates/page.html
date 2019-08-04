@@ -4,7 +4,7 @@
 
 {% include 'actionbar.html' %}
 <script>
-var treeview = new Treeview({
+let treeview = new Treeview({
     draggable: true,
 });
 $('#content').append(treeview.html);
@@ -18,8 +18,8 @@ treeview.drop_handler = (data) => {
     console.log('drop', data);
 }
 
-var url = new URL(window.location);
-var search = new URLSearchParams();
+let url = new URL(window.location);
+let search = new URLSearchParams();
 search.set('action', 'list');
 url.search = search;
 $.get(url, (data) => {
@@ -28,7 +28,7 @@ $.get(url, (data) => {
         treeview.insert(path);
     });
 
-    var treeview2 = treeview.clone({
+    let treeview2 = treeview.clone({
         collapseable: false,
         collapsed: false,
         draggable: false,
@@ -44,7 +44,7 @@ $.get(url, (data) => {
     $('#content').append('<hr>');
     $('#content').append(treeview2.html);
 
-    var treeview3 = treeview.clone({
+    let treeview3 = treeview.clone({
         collapseable: true,
         collapsed: true,
         draggable: true,
