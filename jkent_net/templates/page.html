@@ -2,25 +2,13 @@
 
 {% block main %}
 
-
-<div class="filebrowser"></div>
-
-<div class="buttons">
-<button>Selection</button>
-<button>Clone</button>
-<button>Special Clone</button>
-</div>
-
 {% include 'actionbar.html' %}
 <script>
-var filebrowser = $('.filebrowser').hide();
-var browse_btn = $('#actionbar a[title="Browse"]');
-
 var treeview = new Treeview({
     collapsed: true,
     folders_first: true,
 });
-filebrowser.append(treeview.html);
+$('#content').append(treeview.html);
 treeview.dblclick_handler = (path, shift) => {
     console.log('dblclick', path, shift);
 };
@@ -28,49 +16,16 @@ treeview.drop_handler = (data) => {
     console.log('drop', data);
 }
 
-function toggle_filebrowser() {
-    var visible = filebrowser.is(':visible');
+var url = new URL(window.location);
+var search = new URLSearchParams();
+search.set('action', 'list');
+url.search = search;
+$.get(url, (data) => {
+    treeview.empty();
+    $.each(data.paths, (_, path) => {
+        treeview.insert(path);
+    });
 
-    browse_btn.toggleClass('highlight', !visible)
-        .find('i').toggleClass('fa-folder', visible)
-        .toggleClass('fa-folder-open', !visible);
-
-    filebrowser.toggle(!visible);
-
-    if (!visible) {
-        var url = new URL(window.location);
-        var search = new URLSearchParams();
-        search.set('action', 'list');
-        url.search = search;
-        $.get(url, (data) => {
-            treeview.empty();
-            $.each(data.paths, (_, path) => {
-                treeview.insert(path);
-            });
-        });
-    }
-}
-
-browse_btn.on('click', () => {
-    toggle_filebrowser();
-});
-
-toggle_filebrowser();
-
-$('.buttons :nth-child(1)').on('click', () => {
-    alert(treeview.get_selected().join());
-});
-
-$('.buttons :nth-child(2)').on('click', () => {
-    var treeview2 = treeview.clone();
-    treeview2.drop_handler = (data) => {
-        console.log('drop', data);
-    }
-    filebrowser.append('<hr>');
-    filebrowser.append(treeview2.html);
-});
-
-$('.buttons :nth-child(3)').on('click', () => {
     var treeview2 = treeview.clone({
         collapsed: false,
         only_folders: true,
@@ -80,11 +35,9 @@ $('.buttons :nth-child(3)').on('click', () => {
     treeview2.drop_handler = (data) => {
         console.log('drop', data);
     }
-    filebrowser.append('<hr>');
-    filebrowser.append(treeview2.html);
+    $('#content').append('<hr>');
+    $('#content').append(treeview2.html);
 });
-
-
 
 </script>
 {% endblock %}

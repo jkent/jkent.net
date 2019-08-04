@@ -613,16 +613,19 @@ class Treeview {
 			this.clear_selection();
 			if (Treeview.drag_node) {
 				var path = Treeview.drag_node.path;
-				if (!node.path.endsWith('/')) {
+				if (!node.path.endsWith('/') && node.path != '') {
 					e.originalEvent.dataTransfer.dropEffect = 'none';
 					return;
 				}
 				if (Treeview.drag_tree == this) {
 					if (node.path.startsWith(path)) {
 						e.originalEvent.dataTransfer.dropEffect = 'none';
-						return;	
+						return;
 					}
-					if (node.path == path.match(/(.*\/)?[^\/]+\/?$/)[1]) {
+					var parent = path.endsWith('/') ? path.slice(0, -1) : path;
+					var last = parent.lastIndexOf('/');
+					var parent = last == -1 ? '' : parent.slice(0, last + 1);
+					if (node.path == parent) {
 						e.originalEvent.dataTransfer.dropEffect = 'none';
 						return;
 					}
@@ -642,14 +645,19 @@ class Treeview {
 			e.preventDefault();
 			if (Treeview.drag_node) {
 				var path = e.originalEvent.dataTransfer.getData('text');
-				if (!node.path.endsWith('/')) {
+				if (!node.path.endsWith('/') && node.path != '') {
 					return;
 				}
 				if (Treeview.drag_tree == this) {
 					if (node.path.startsWith(path)) {
+						console.log('startsWith got me');
 						return;
 					}
-					if (node.path == path.match(/(.*\/)?[^\/]+\/?$/)[1]) {
+					var parent = path.endsWith('/') ? path.slice(0, -1) : path;
+					var last = parent.lastIndexOf('/');
+					var parent = last == -1 ? '' : parent.slice(0, last + 1);
+					if (node.path == parent || parent == undefined) {
+						console.log('regex got me');
 						return;
 					}
 				} else if (!this.options.foreign_drop) {
