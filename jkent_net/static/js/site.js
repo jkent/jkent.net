@@ -535,10 +535,10 @@ class Treeview {
 	constructor(options) {
 		Treeview.defaults = {
 			collapsed: false,
+			folders_first: false,
 			only_folders: false,
 			root_folder: null,
-			select_one: false,
-			folders_first: false,
+			select_mode: 'siblings',
 		};
 		this.options = $.extend({}, Treeview.defaults, options);
 		this.html = $('<div class="treeview">');
@@ -591,6 +591,9 @@ class Treeview {
 		}
 	}
 	insert(path) {
+		if (path == '') {
+			return;
+		}
 		var matches = path.match(/[^\/]+\/?/g);
 		var stack = [this.root];
 		for (var depth = 0; depth < matches.length; depth++) {
@@ -730,7 +733,7 @@ class Treeview {
 	}
 	select(path, shift, ctrl) {
 		var [node, parent] = this.find(path);
-		if (!this.options.select_one && shift) {
+		if (this.options.select_mode != 'single' && shift) {
 			this.clear_selection();
 			if (this.last_selected
 					&& parent.children.includes(this.last_selected)) {
@@ -746,11 +749,14 @@ class Treeview {
 				this.last_selected = node;
 				node.$li.addClass('selected');
 			}
-		} else if (!this.options.select_one && ctrl) {
-			if (parent && !parent.children.includes(this.last_selected)) {
+		} else if (this.options.select_mode == 'siblings' && ctrl) {
+			if (!parent.children.includes(this.last_selected)) {
 				this.clear_selection();
 			}
-			node.$li.toggleClass('selected')
+			node.$li.toggleClass('selected');
+			this.last_selected = node;
+		} else if (this.options.select_mode == 'any' && ctrl) {
+			node.$li.toggleClass('selected');
 			this.last_selected = node;
 		} else {
 			this.clear_selection();
@@ -773,5 +779,20 @@ class Treeview {
 			return selected;
 		}
 		return _get_selected(this.children);
+	}
+	clone(options) {
+		options = $.extend({}, this.options, options);
+		var treeview = new Treeview(options);
+		function _clone(data) {
+			for (var i = 0; i < data.length; i++) {
+				var node = data[i];
+				treeview.insert(node.path);
+				if (node.children) {
+					_clone(node.children);
+				}
+			}
+		}
+		_clone(this.children);
+		return treeview;
 	}
 }

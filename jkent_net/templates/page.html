@@ -5,8 +5,11 @@
 
 <div class="filebrowser"></div>
 
-<button>selection</button>
-
+<div class="buttons">
+<button>Selection</button>
+<button>Clone</button>
+<button>Special Clone</button>
+</div>
 
 {% include 'actionbar.html' %}
 <script>
@@ -14,11 +17,7 @@ var filebrowser = $('.filebrowser').hide();
 var browse_btn = $('#actionbar a[title="Browse"]');
 
 var treeview = new Treeview({
-    //collapsed: true,
-    root_folder: 'Root',
-    folders_first: true,
-    //only_folders: true,
-    //select_one: true,
+    collapsed: true,
 });
 filebrowser.append(treeview.html);
 treeview.dblclick_handler = (path, shift) => {
@@ -54,9 +53,27 @@ browse_btn.on('click', () => {
 
 toggle_filebrowser();
 
-$('button').on('click', () => {
-    console.log(treeview.get_selected());
+$('.buttons :nth-child(1)').on('click', () => {
+    alert(treeview.get_selected().join());
 });
+
+$('.buttons :nth-child(2)').on('click', () => {
+    var treeview2 = treeview.clone();
+    filebrowser.append('<hr>');
+    filebrowser.append(treeview2.html);
+});
+
+$('.buttons :nth-child(3)').on('click', () => {
+    var treeview2 = treeview.clone({
+        collapsed: false,
+        only_folders: true,
+        root_folder: 'Tree',
+    });
+    filebrowser.append('<hr>');
+    filebrowser.append(treeview2.html);
+});
+
+
 
 </script>
 {% endblock %}
