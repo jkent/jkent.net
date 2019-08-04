@@ -531,6 +531,16 @@ class Subtree {
 	}
 }
 
+$(() => {
+	window.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'none';
+	});
+	window.addEventListener('drop', (e) => {
+		e.preventDefault();
+	});
+});
+
 class Treeview {
 	constructor(options) {
 		Treeview.defaults = {
@@ -539,6 +549,7 @@ class Treeview {
 			draggable: false,
 			droppable: false,
 			folders_first: true,
+			file_drop: false,
 			foreign_drop: false,
 			only_folders: false,
 			root_folder: null,
@@ -549,14 +560,6 @@ class Treeview {
 		this.html = $('<div class="treeview">');
 		this.html.css('user-select', 'none');
 		this.empty();
-
-		window.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			e.dataTransfer.dropEffect = 'none';
-		});
-		window.addEventListener('drop', (e) => {
-			e.preventDefault();
-		});
 	}
 	_set_node_handlers(node) {
 		if (this.options.draggable) {
@@ -623,32 +626,37 @@ class Treeview {
 			e.preventDefault();
 			this.clear_selection();
 			if (Treeview.drag_node) {
+				let droppable = true;
 				let path = Treeview.drag_node.path;
 				if (!node.path.endsWith('/') && node.path != '') {
-					e.originalEvent.dataTransfer.dropEffect = 'none';
-					return;
+					droppable = false;
 				}
 				if (Treeview.drag_tree == this) {
 					if (node.path.startsWith(path)) {
-						e.originalEvent.dataTransfer.dropEffect = 'none';
-						return;
+						droppable = false;
 					}
 					let parent = path.endsWith('/') ? path.slice(0, -1) : path;
 					let last = parent.lastIndexOf('/');
 					parent = last == -1 ? '' : parent.slice(0, last + 1);
 					if (node.path == parent) {
-						e.originalEvent.dataTransfer.dropEffect = 'none';
-						return;
+						droppable = false
 					}
 				} else if (!this.options.foreign_drop) {
-					e.originalEvent.dataTransfer.dropEffect = 'none';
-					return;
+					droppable = false;
 				}
-				e.originalEvent.dataTransfer.dropEffect =
-					e.shiftKey ? 'copy' : 'move';
+				if (droppable) {
+					e.originalEvent.dataTransfer.dropEffect =
+						e.shiftKey ? 'copy' : 'move';
+					this.select(node.path);
+				} else {
+					e.originalEvent.dataTransfer.dropEffect = 'none';
+				}
+			} else if (this.options.file_drop
+					&& (node.path.endsWith('/') || node.path == '')) {
 				this.select(node.path);
-			} else if (node.path.endsWith('/')) {
-				this.select(node.path);
+				e.originalEvent.dataTransfer.dropEffect = 'copy';
+			} else {
+				e.originalEvent.dataTransfer.dropEffect = 'none';
 			}
 			this._check_selection();
 		}).bind(this));
@@ -690,7 +698,8 @@ class Treeview {
 					}
 					this.drop_handler(data);
 				}
-			} else if (node.path.endsWith('/')) {
+			} else if (this.options.file_drop
+					&& (node.path.endsWith('/') || node.path == '')) {
 				if (this.drop_handler) {
 					let data = {
 						type: 'file',

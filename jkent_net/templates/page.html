@@ -9,13 +9,13 @@ let treeview = new Treeview({
 });
 $('#content').append(treeview.html);
 treeview.select_handler = (selection) => {
-    console.log('select', selection);
+    console.log('treeview', 'select', selection);
 }
 treeview.dblclick_handler = (path, shift) => {
-    console.log('dblclick', path, shift);
+    console.log('treeview', 'dblclick', path, shift);
 };
 treeview.drop_handler = (data) => {
-    console.log('drop', data);
+    console.log('treeview', 'drop', data);
 }
 
 let url = new URL(window.location);
@@ -38,8 +38,14 @@ $.get(url, (data) => {
         root_folder: 'Root',
         select_mode: 'single',
     });
+    treeview2.select_handler = (selection) => {
+        console.log('treeview2', 'select', selection);
+    }
+    treeview2.dblclick_handler = (path, shift) => {
+        console.log('treeview2', 'dblclick', path, shift);
+    };
     treeview2.drop_handler = (data) => {
-        console.log('drop', data);
+        console.log('treeview2', 'drop', data);
     }
     $('#content').append('<hr>');
     $('#content').append(treeview2.html);
@@ -49,13 +55,20 @@ $.get(url, (data) => {
         collapsed: true,
         draggable: true,
         droppable: true,
+        file_drop: true,
         foreign_drop: true,
         only_folders: false,
         root_folder: 'Root',
         select_mode: 'any',
     });
+    treeview3.select_handler = (selection) => {
+        console.log('treeview3', 'select', selection);
+    }
+    treeview3.dblclick_handler = (path, shift) => {
+        console.log('treeview3', 'dblclick', path, shift);
+    };
     treeview3.drop_handler = (data) => {
-        console.log('drop', data);
+        console.log('treeview3', 'drop', data);
     }
     $('#content').append('<hr>');
     $('#content').append(treeview3.html);
