@@ -22,8 +22,11 @@ var treeview = new Treeview({
 });
 filebrowser.append(treeview.html);
 treeview.dblclick_handler = (path, shift) => {
-    console.log(path, shift);
+    console.log('dblclick', path, shift);
 };
+treeview.drop_handler = (data) => {
+    console.log('drop', data);
+}
 
 function toggle_filebrowser() {
     var visible = filebrowser.is(':visible');
@@ -60,6 +63,9 @@ $('.buttons :nth-child(1)').on('click', () => {
 
 $('.buttons :nth-child(2)').on('click', () => {
     var treeview2 = treeview.clone();
+    treeview2.drop_handler = (data) => {
+        console.log('drop', data);
+    }
     filebrowser.append('<hr>');
     filebrowser.append(treeview2.html);
 });
@@ -71,6 +77,9 @@ $('.buttons :nth-child(3)').on('click', () => {
         root_folder: 'Tree',
         select_mode: 'single',
     });
+    treeview2.drop_handler = (data) => {
+        console.log('drop', data);
+    }
     filebrowser.append('<hr>');
     filebrowser.append(treeview2.html);
 });

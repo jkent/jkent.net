@@ -536,14 +536,151 @@ class Treeview {
 		Treeview.defaults = {
 			collapsed: false,
 			folders_first: false,
+			foreign_drop: true,
 			only_folders: false,
 			root_folder: null,
 			select_mode: 'siblings',
 		};
 		this.options = $.extend({}, Treeview.defaults, options);
+		this.id = Treeview.counter++;
 		this.html = $('<div class="treeview">');
 		this.html.css('user-select', 'none');
 		this.empty();
+
+		window.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'none';
+		});
+		window.addEventListener('drop', (e) => {
+			e.preventDefault();
+		});
+	}
+	_set_node_handlers(node) {
+		node.$li.attr('draggable', true);
+		node.$li.on('mousedown', ((e) => {
+			e.stopPropagation();
+			this.select(node.path, e.shiftKey, e.ctrlKey);
+		}).bind(this));
+
+		node.$li.on('dblclick', ((e) => {
+			e.stopPropagation();
+			if (node.path == '' || node.path.endsWith('/')) {
+				var visible = node.$ul.is(':visible');
+				node.$li.find('>i').toggleClass('fa-folder', visible)
+					.toggleClass('fa-folder-open', !visible);
+				if (visible) {
+					node.$ul.slideUp(200);
+				} else {
+					node.$ul.slideDown(200);
+				}
+			} else {
+				if (this.dblclick_handler) {
+					this.dblclick_handler(node.path, e.shiftKey);
+				}
+			}
+		}).bind(this));
+		node.$li.on('dragstart', ((e) => {
+			e.stopPropagation();
+			this.clear_selection();
+			this.$ghost = $('<div class="drag-ghost treeview">');
+			var $ul = $('<ul class="fa-ul">');
+			this.$ghost.append($ul);
+			var $li = $('<li>');
+			if (node.$li.has('.file')) {
+				$li.addClass('file');
+			} else {
+				$li.addClass('folder');
+			}
+			$ul.append($li);
+			$li.append(node.$li.find('>i').clone(), node.$li.find('>span').clone());
+			this.$ghost.css('position', 'absolute');
+			this.$ghost.css('top', '-150px');
+			$(document.body).append(this.$ghost);
+			e.originalEvent.dataTransfer.setDragImage(this.$ghost[0], 0, 0);
+			e.originalEvent.dataTransfer.setData('text', node.path);
+			Treeview.drag_tree = this;
+			Treeview.drag_node = node;
+		}).bind(this));
+		node.$li.on('dragend', ((e) => {
+			e.stopPropagation();
+			this.$ghost.remove();
+			Treeview.drag_tree = null;
+			Treeview.drag_node = null;
+		}).bind(this));
+		node.$li.on('dragover', ((e) => {
+			e.stopPropagation();
+			e.preventDefault();
+			this.clear_selection();
+			if (Treeview.drag_node) {
+				var path = Treeview.drag_node.path;
+				if (!node.path.endsWith('/')) {
+					e.originalEvent.dataTransfer.dropEffect = 'none';
+					return;
+				}
+				if (Treeview.drag_tree == this) {
+					if (node.path.startsWith(path)) {
+						e.originalEvent.dataTransfer.dropEffect = 'none';
+						return;	
+					}
+					if (node.path == path.match(/(.*\/)?[^\/]+\/?$/)[1]) {
+						e.originalEvent.dataTransfer.dropEffect = 'none';
+						return;
+					}
+				} else if (!this.options.foreign_drop) {
+					e.originalEvent.dataTransfer.dropEffect = 'none';
+					return;
+				}
+				e.originalEvent.dataTransfer.dropEffect =
+					e.shiftKey ? 'copy' : 'move';
+				this.select(node.path);
+			} else if (node.path.endsWith('/')) {
+				this.select(node.path);
+			}
+		}).bind(this));
+		node.$li.on('drop', ((e) => {
+			e.stopPropagation();
+			e.preventDefault();
+			if (Treeview.drag_node) {
+				var path = e.originalEvent.dataTransfer.getData('text');
+				if (!node.path.endsWith('/')) {
+					return;
+				}
+				if (Treeview.drag_tree == this) {
+					if (node.path.startsWith(path)) {
+						return;
+					}
+					if (node.path == path.match(/(.*\/)?[^\/]+\/?$/)[1]) {
+						return;
+					}
+				} else if (!this.options.foreign_drop) {
+					return;
+				}
+				if (typeof this.drop_handler == 'function') {
+					var data = {
+						source_path: path,
+						dest_path: node.path,
+						source_tree: Treeview.drag_tree.id,
+						dest_tree: this.id,
+					};
+					if (Treeview.drag_tree.id == this.id) {
+						data.type = 'local';
+					} else {
+						data.type = 'foreign';
+					}
+					this.drop_handler(data);
+				}
+			} else if (node.path.endsWith('/')) {
+				if (typeof this.drop_handler == 'function') {
+					var data = {
+						type: 'file',
+						source_files: e.originalEvent.dataTransfer.files,
+						dest_path: node.path,
+						dest_tree: this.id,
+					};
+					this.drop_handler(data);
+				}
+			}
+		}).bind(this));
 	}
 	empty() {
 		this.$ul = $('<ul class="fa-ul">');
@@ -565,26 +702,9 @@ class Treeview {
 			if (this.options.collapsed) {
 				this.node.$ul.css('display', 'none');
 			}
-			this.children = [this.node];
 			this.root = this.node;
-			$icon.on('click', (e) => {
-				var visible = this.node.$ul.is(':visible');
-				$icon.toggleClass('fa-folder', visible)
-					.toggleClass('fa-folder-open', !visible);
-				if (visible) {
-					this.node.$ul.slideUp(200);
-				} else {
-					this.node.$ul.slideDown(200);
-				}
-			});
-			$label.on('click', ((e) => {
-				this.select('', e.shiftKey, e.ctrlKey);
-			}).bind(this));
-			$label.on('dblclick', ((e) => {
-				if (this.dblclick_handler) {
-					this.dblclick_handler('', e.shiftKey);
-				}
-			}).bind(this));
+			this.children = [this.node];
+			this._set_node_handlers(this.node);
 		} else {
 			this.root = this;
 			this.children = [];
@@ -625,14 +745,13 @@ class Treeview {
 			if (found) {
 				continue;
 			}
+			if (!dir && this.options.only_folders) {
+				continue;
+			}
 			var node = {
 				name: part,
 			}
-			if (!dir) {
-				if (this.options.only_folders) {
-					continue;
-				}
-			} else {
+			if (dir) {
 				node.children = [];
 			}
 			if (depth == 0) {
@@ -653,29 +772,12 @@ class Treeview {
 				if (this.options.collapsed) {
 					node.$ul.css('display', 'none');
 				}
-				$icon.on('click', (e) => {
-					var visible = node.$ul.is(':visible');
-					$icon.toggleClass('fa-folder', visible)
-						.toggleClass('fa-folder-open', !visible);
-					if (visible) {
-						node.$ul.slideUp(200);
-					} else {
-						node.$ul.slideDown(200);
-					}
-				});
 			} else {
 				node.$li.addClass('file');
 				$icon.addClass('fa-file');
 				node.$li.append($icon, $label);
 			}
-			$label.on('click', ((e) => {
-				this.select(node.path, e.shiftKey, e.ctrlKey);
-			}).bind(this));
-			$label.on('dblclick', ((e) => {
-				if (this.dblclick_handler) {
-					this.dblclick_handler(node.path, e.shiftKey);
-				}
-			}).bind(this));
+			this._set_node_handlers(node);
 			var $ul = stack[depth].$ul;
 			if (i == 0) {
 				$ul.prepend(node.$li);
@@ -796,3 +898,4 @@ class Treeview {
 		return treeview;
 	}
 }
+Treeview.counter = 0;

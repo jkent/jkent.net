@@ -218,14 +218,17 @@ p a{
 	text-align: initial;
 }
 
-#content .filebrowser .fa-ul {
+.treeview .fa-ul {
 	margin: 0 0 0 1.6em;
 }
-#content .filebrowser span {
+.treeview.drag-ghost .fa-ul {
+	margin: 0;
+}
+.treeview span {
 	display: inline-block;
 	padding: 1px 2px;
 }
-#content .filebrowser .selected > span {
+.treeview .selected > span {
 	background-color: blue;
 	color: white;
 }
