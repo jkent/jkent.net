@@ -43,6 +43,22 @@ $.get(url, (data) => {
     }
     $('#content').append('<hr>');
     $('#content').append(treeview2.html);
+
+    var treeview3 = treeview.clone({
+        collapseable: true,
+        collapsed: true,
+        draggable: true,
+        droppable: true,
+        foreign_drop: true,
+        only_folders: false,
+        root_folder: 'Root',
+        select_mode: 'any',
+    });
+    treeview3.drop_handler = (data) => {
+        console.log('drop', data);
+    }
+    $('#content').append('<hr>');
+    $('#content').append(treeview3.html);
 });
 
 </script>
