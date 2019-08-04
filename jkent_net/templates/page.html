@@ -18,6 +18,7 @@ var browse_btn = $('#actionbar a[title="Browse"]');
 
 var treeview = new Treeview({
     collapsed: true,
+    folders_first: true,
 });
 filebrowser.append(treeview.html);
 treeview.dblclick_handler = (path, shift) => {
