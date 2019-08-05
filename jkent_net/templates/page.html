@@ -21,8 +21,8 @@ treeview.drop_handler = (data) => {
     var paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        Treeview.$drag_ghost.remove();
         Treeview.drag_tree.remove(data.source_path);
+        Treeview.drag_node.$li.trigger('dragend');
     }
 }
 
@@ -55,8 +55,8 @@ treeview2.drop_handler = ((data) => {
     var paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        Treeview.$drag_ghost.remove();
         Treeview.drag_tree.remove(data.source_path);
+        Treeview.drag_node.$li.trigger('dragend');
     }
 }).bind(this);
 </script>
