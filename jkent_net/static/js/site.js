@@ -599,9 +599,9 @@ class Treeview {
 		node.$li.on('dragstart', ((e) => {
 			e.stopPropagation();
 			this.clear_selection();
-			this.$ghost = $('<div class="drag-ghost treeview">');
+			Treeview.$drag_ghost = $('<div class="drag-ghost treeview">');
 			let $ul = $('<ul class="fa-ul">');
-			this.$ghost.append($ul);
+			Treeview.$drag_ghost.append($ul);
 			let $li = $('<li>');
 			if (node.$li.has('.file')) {
 				$li.addClass('file');
@@ -610,10 +610,10 @@ class Treeview {
 			}
 			$ul.append($li);
 			$li.append(node.$li.find('>i').clone(), node.$li.find('>span').clone());
-			this.$ghost.css('position', 'absolute');
-			this.$ghost.css('top', '-150px');
-			$(document.body).append(this.$ghost);
-			e.originalEvent.dataTransfer.setDragImage(this.$ghost[0], 0, 0);
+			Treeview.$drag_ghost.css('position', 'absolute');
+			Treeview.$drag_ghost.css('top', '-150px');
+			$(document.body).append(Treeview.$drag_ghost);
+			e.originalEvent.dataTransfer.setDragImage(Treeview.$drag_ghost[0], 0, 0);
 			e.originalEvent.dataTransfer.setData('text', node.path);
 			Treeview.drag_tree = this;
 			Treeview.drag_node = node;
@@ -621,7 +621,8 @@ class Treeview {
 		}).bind(this));
 		node.$li.on('dragend', ((e) => {
 			e.stopPropagation();
-			this.$ghost.remove();
+			console.log('dragend');
+			Treeview.$drag_ghost.remove();
 			Treeview.drag_tree = null;
 			Treeview.drag_node = null;
 		}).bind(this));

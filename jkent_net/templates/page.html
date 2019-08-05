@@ -21,7 +21,8 @@ treeview.drop_handler = (data) => {
     var paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        data.source_tree.remove(data.source_path);
+        Treeview.$drag_ghost.remove();
+        Treeview.drag_tree.remove(data.source_path);
     }
 }
 
@@ -50,12 +51,13 @@ treeview2.select_handler = (selection) => {
 treeview2.dblclick_handler = (path, shift) => {
     console.log('treeview2', 'dblclick', path, shift);
 };
-treeview2.drop_handler = (data) => {
+treeview2.drop_handler = ((data) => {
     var paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        data.source_tree.remove(data.source_path);
+        Treeview.$drag_ghost.remove();
+        Treeview.drag_tree.remove(data.source_path);
     }
-}
+}).bind(this);
 </script>
 {% endblock %}
