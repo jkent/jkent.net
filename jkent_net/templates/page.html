@@ -18,11 +18,12 @@ treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
 treeview.drop_handler = (data) => {
-    var paths = data.source_tree.list(data.source_path);
+    let paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        Treeview.drag_tree.remove(data.source_path);
+        let tree = Treeview.drag_tree;
         Treeview.drag_node.$li.trigger('dragend');
+        tree.remove(data.source_path);
     }
 }
 
@@ -52,11 +53,12 @@ treeview2.dblclick_handler = (path, shift) => {
     console.log('treeview2', 'dblclick', path, shift);
 };
 treeview2.drop_handler = ((data) => {
-    var paths = data.source_tree.list(data.source_path);
+    let paths = data.source_tree.list(data.source_path);
     data.dest_tree.insert(paths, data.dest_path);
     if (!data.shift) {
-        Treeview.drag_tree.remove(data.source_path);
+        let tree = Treeview.drag_tree;
         Treeview.drag_node.$li.trigger('dragend');
+        tree.remove(data.source_path);
     }
 }).bind(this);
 </script>
