@@ -6,6 +6,9 @@
 <script>
 let treeview = new Treeview({
     draggable: true,
+    droppable: true,
+    foreign_drop: true,
+    root_folder: 'Root',
 });
 $('#content').append(treeview.html);
 treeview.select_handler = (selection) => {
@@ -15,7 +18,11 @@ treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
 treeview.drop_handler = (data) => {
-    console.log('treeview', 'drop', data);
+    var paths = data.source_tree.list(data.source_path);
+    data.dest_tree.insert(paths, data.dest_path);
+    if (!data.shift) {
+        data.source_tree.remove(data.source_path);
+    }
 }
 
 let url = new URL(window.location);
@@ -27,52 +34,28 @@ $.get(url, (data) => {
     $.each(data.paths, (_, path) => {
         treeview.insert(path);
     });
-
-    let treeview2 = treeview.clone({
-        collapseable: false,
-        collapsed: false,
-        draggable: false,
-        droppable: true,
-        foreign_drop: true,
-        only_folders: true,
-        root_folder: 'Root',
-        select_mode: 'single',
-    });
-    treeview2.select_handler = (selection) => {
-        console.log('treeview2', 'select', selection);
-    }
-    treeview2.dblclick_handler = (path, shift) => {
-        console.log('treeview2', 'dblclick', path, shift);
-    };
-    treeview2.drop_handler = (data) => {
-        console.log('treeview2', 'drop', data);
-    }
-    $('#content').append('<hr>');
-    $('#content').append(treeview2.html);
-
-    let treeview3 = treeview.clone({
-        collapseable: true,
-        collapsed: true,
-        draggable: true,
-        droppable: true,
-        file_drop: true,
-        foreign_drop: true,
-        only_folders: false,
-        root_folder: 'Root',
-        select_mode: 'any',
-    });
-    treeview3.select_handler = (selection) => {
-        console.log('treeview3', 'select', selection);
-    }
-    treeview3.dblclick_handler = (path, shift) => {
-        console.log('treeview3', 'dblclick', path, shift);
-    };
-    treeview3.drop_handler = (data) => {
-        console.log('treeview3', 'drop', data);
-    }
-    $('#content').append('<hr>');
-    $('#content').append(treeview3.html);
 });
 
+$('#content').append('<hr>');
+let treeview2 = new Treeview({
+    draggable: true,
+    droppable: true,
+    foreign_drop: true,
+    root_folder: 'Root',
+});
+$('#content').append(treeview2.html);
+treeview2.select_handler = (selection) => {
+    console.log('treeview2', 'select', selection);
+}
+treeview2.dblclick_handler = (path, shift) => {
+    console.log('treeview2', 'dblclick', path, shift);
+};
+treeview2.drop_handler = (data) => {
+    var paths = data.source_tree.list(data.source_path);
+    data.dest_tree.insert(paths, data.dest_path);
+    if (!data.shift) {
+        data.source_tree.remove(data.source_path);
+    }
+}
 </script>
 {% endblock %}

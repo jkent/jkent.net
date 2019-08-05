@@ -544,8 +544,10 @@ $(() => {
 class Treeview {
 	constructor(options) {
 		Treeview.defaults = {
-			collapseable: true,
+			can_collapse: true,
+			can_collapse_root: false,
 			collapsed: true,
+			collapsed_root: false,
 			draggable: false,
 			droppable: false,
 			folders_first: true,
@@ -560,9 +562,10 @@ class Treeview {
 		this.html = $('<div class="treeview">');
 		this.html.css('user-select', 'none');
 		this.empty();
+		this.path = '';
 	}
 	_set_node_handlers(node) {
-		if (this.options.draggable) {
+		if (this.options.draggable && node.path != '') {
 			node.$li.attr('draggable', true);
 		}
 		node.$li.on('mousedown', ((e) => {
@@ -573,15 +576,19 @@ class Treeview {
 		node.$li.on('dblclick', ((e) => {
 			e.stopPropagation();
 			if (node.path == '' || node.path.endsWith('/')) {
-				if (this.options.collapseable) {
-					let visible = node.$ul.is(':visible');
-					node.$li.find('>i').toggleClass('fa-folder', visible)
-						.toggleClass('fa-folder-open', !visible);
-					if (visible) {
-						node.$ul.slideUp(200);
-					} else {
-						node.$ul.slideDown(200);
-					}
+				if (!this.options.can_collapse) {
+					return;
+				}
+				if (node.path == '' && !this.options.can_collapse_root) {
+					return;
+				}
+				let visible = node.$ul.is(':visible');
+				node.$li.find('>i').toggleClass('fa-folder', visible)
+					.toggleClass('fa-folder-open', !visible);
+				if (visible) {
+					node.$ul.slideUp(200);
+				} else {
+					node.$ul.slideDown(200);
 				}
 			} else {
 				if (this.dblclick_handler) {
@@ -688,10 +695,11 @@ class Treeview {
 					let data = {
 						source_path: path,
 						dest_path: node.path,
-						source_tree: Treeview.drag_tree.id,
-						dest_tree: this.id,
+						source_tree: Treeview.drag_tree,
+						dest_tree: this,
+						shift: e.shiftKey,
 					};
-					if (Treeview.drag_tree.id == this.id) {
+					if (Treeview.drag_tree == this) {
 						data.type = 'local';
 					} else {
 						data.type = 'foreign';
@@ -705,7 +713,8 @@ class Treeview {
 						type: 'file',
 						source_files: e.originalEvent.dataTransfer.files,
 						dest_path: node.path,
-						dest_tree: this.id,
+						dest_tree: this,
+						shift: e.shiftKey,
 					};
 					this.drop_handler(data);
 				}
@@ -723,32 +732,39 @@ class Treeview {
 	empty() {
 		this.$ul = $('<ul class="fa-ul">');
 		this.html.html(this.$ul);
+		this.node = {
+			children: [],
+			path: '',
+		};
+		this.root = this;
+		this.children = this.node.children;
+
 		if (this.options.root_folder) {
-			this.node = {
-				children: [],
-				name: this.options.root_folder,
-				path: '',
-			};	
+			this.node.name = this.options.root_folder;
 			this.node.$li = $('<li class="folder">');
 			this.$ul.append(this.node.$li);
 			let $icon = $('<i class="fa-li fas">');
-			$icon.toggleClass('fa-folder', this.options.collapsed)
-				.toggleClass('fa-folder-open', !this.options.collapsed);
+			$icon.toggleClass('fa-folder', this.options.collapsed_root)
+				.toggleClass('fa-folder-open', !this.options.collapsed_root);
 			let $label = $('<span>').text(this.options.root_folder);
 			this.node.$ul = $('<ul class="fa-ul">');
 			this.node.$li.append($icon, $label, this.node.$ul);
-			if (this.options.collapsed) {
+			if (this.options.collapsed_root) {
 				this.node.$ul.css('display', 'none');
 			}
 			this.root = this.node;
 			this.children = [this.node];
 			this._set_node_handlers(this.node);
-		} else {
-			this.root = this;
-			this.children = [];
 		}
 	}
-	insert(path) {
+	insert(path, prefix='') {
+		if (Array.isArray(path)) {
+			for (let i = 0; i < path.length; i++) {
+				this.insert(path[i], prefix);
+			}
+			return;
+		}
+		path = prefix + path;
 		if (path == '') {
 			return;
 		}
@@ -827,8 +843,8 @@ class Treeview {
 		}
 	}
 	find(path) {
-		if (path == '' && this.options.root_folder) {
-			return [this.node, this];
+		if (path == '') {
+			return [this.node, this, 0];
 		}
 		let matches = path.match(/[^\/]+\/?/g);
 		let stack = [this.root];
@@ -844,17 +860,16 @@ class Treeview {
 						stack.push(node);
 						break;
 					}
-					return [node, stack[depth]];
+					return [node, stack[depth], i];
 				}
 			}
 		}
-		return [null, null];	
+		return [null, null, -1];
 	}
 	remove(path) {
-		const [node, parent] = find(path);
-		let i = parent.indexOf(node);
-		parent.$ul.slice(i).remove();
-		parent.splice(i, 1);
+		let [node, parent, i] = this.find(path);
+		node.$li.remove();
+		parent.children.splice(i, 1);
 	}
 	clear_selection() {
 		function _clear_selection(data) {
@@ -922,19 +937,25 @@ class Treeview {
 		}
 		return _get_selected(this.children);
 	}
-	clone(options) {
-		options = $.extend({}, this.options, options);
-		let treeview = new Treeview(options);
-		function _clone(data) {
-			for (let i = 0; i < data.length; i++) {
-				let node = data[i];
-				treeview.insert(node.path);
-				if (node.children) {
-					_clone(node.children);
+	list(path='') {
+		let [node, parent] = this.find(path);
+		let paths = [];
+		function _list(data) {
+			if (data) {
+				for (let i = 0; i < data.length; i++) {
+					let node = data[i];
+					paths.push(node.path.slice(parent.path.length));
+					_list(node.children);
 				}
 			}
 		}
-		_clone(this.children);
+		_list([node]);
+		return paths;
+	}
+	clone(options) {
+		options = $.extend({}, this.options, options);
+		let treeview = new Treeview(options);
+		treeview.insert(this.list());
 		return treeview;
 	}
 }
