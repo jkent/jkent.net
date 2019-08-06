@@ -25,7 +25,7 @@ treeview.drop_handler = (data) => {
         Treeview.drag_node.$li.trigger('dragend');
         tree.remove(data.source_node);
     }
-}
+};
 
 let url = new URL(window.location);
 let search = new URLSearchParams();
@@ -52,7 +52,7 @@ treeview2.select_handler = (selection) => {
 treeview2.dblclick_handler = (path, shift) => {
     console.log('treeview2', 'dblclick', path, shift);
 };
-treeview2.drop_handler = ((data) => {
+treeview2.drop_handler = (data) => {
     let paths = data.source_tree.list(data.source_node);
     data.dest_tree.insert(paths, data.dest_node.path);
     if (!data.shift) {
@@ -60,6 +60,6 @@ treeview2.drop_handler = ((data) => {
         Treeview.drag_node.$li.trigger('dragend');
         tree.remove(data.source_node);
     }
-}).bind(this);
+};
 </script>
 {% endblock %}

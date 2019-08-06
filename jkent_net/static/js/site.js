@@ -942,21 +942,21 @@ class Treeview {
 		}
 		return _get_selected(this.children);
 	}
-	list(node) {
-		if (typeof node == 'string') {
-			node = this.find(node);
+	list(root) {
+		if (typeof root == 'string') {
+			root = this.find(root);
 		}
 		let paths = [];
 		function _list(data) {
 			if (data) {
 				for (let i = 0; i < data.length; i++) {
 					let node = data[i];
-					paths.push(node.path.slice(node.parent.path.length));
+					paths.push(node.path.slice(root.parent.path.length));
 					_list(node.children);
 				}
 			}
 		}
-		_list([node]);
+		_list([root]);
 		return paths;
 	}
 	clone(options) {
