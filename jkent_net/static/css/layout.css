@@ -219,7 +219,7 @@ p a{
 }
 
 .treeview .fa-ul {
-	margin: 0 0 0 1.6em;
+	margin: 0 0 0 0.8em;
 }
 .treeview.drag-ghost .fa-ul {
 	margin: 0;
