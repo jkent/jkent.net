@@ -573,6 +573,7 @@ class Treeview {
 		};
 		this.root = this;
 		this.children = this.node.children;
+		this.selected_nodes = [];
 
 		if (this.options.root_folder) {
 			this.node.name = this.options.root_folder;
@@ -665,7 +666,7 @@ class Treeview {
 			Treeview.drag_tree = null;
 			Treeview.drag_node = null;
 		}).bind(this));
-		node.$li.on('dragover', ((e) => {
+		node.$li.on('dragenter dragover', ((e) => {
 			if (!this.options.droppable) {
 				return;
 			}
@@ -1008,7 +1009,6 @@ class Treeview {
 			this.last_selected = node;
 		} else {
 			this.clear_selection();
-			console.log(node);
 			node.$li.addClass('selected');
 			this.last_selected = node;
 		}

@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "jquery": "^3.4.1",
-    "fontawesome": "^5.10.0"
+    "fontawesome": "^5.10.0",
+    "mobile-drag-drop": "^2.2.0"
   }
 }

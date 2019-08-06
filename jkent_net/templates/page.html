@@ -3,7 +3,14 @@
 {% block main %}
 
 {% include 'actionbar.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='bower_components/mobile-drag-drop/release/default.css') }}">
+<script src="{{ url_for('static', filename='bower_components/mobile-drag-drop/release/index.min.js') }}"></script>
+
 <script>
+MobileDragDrop.polyfill({
+    iterationInterval: 100,
+});
+
 let treeview = new Treeview({
     draggable: true,
     droppable: true,
@@ -66,5 +73,6 @@ treeview2.drop_handler = (data) => {
         }
     }
 };
+
 </script>
 {% endblock %}
