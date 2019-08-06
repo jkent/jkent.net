@@ -14,8 +14,8 @@ MobileDragDrop.polyfill({
 let treeview = new Treeview({
     draggable: true,
     droppable: true,
-    foreign_drop: true,
     root_folder: 'Root',
+    file_drop: true,
 });
 $('#content').append(treeview.html);
 treeview.select_handler = (selection) => {
@@ -25,15 +25,51 @@ treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
 treeview.drop_handler = (data) => {
-    if (!data.shift) {
-        data.source_node.$li.trigger('dragend');
-    }
-    for (let node of data.selected_parents) {
-        [_, paths] = data.source_tree.list(node);
-        data.dest_tree.insert(paths, data.dest_node.path);
-        if (!data.shift) {
-            data.source_tree.remove(node);
+    if (data.type == 'file') {
+        let url = new URL(window.location);
+        let search = new URLSearchParams();
+        search.set('action', 'upload');
+        url.search = search;
+        let fd = new FormData();
+        fd.append('dest', data.dest_node.path);
+        $.each(data.source_files, (_, file) => fd.append('files', file));
+        $.post({
+            url: url,
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: (json) => {
+                $.each(json.paths, (_, path) =>
+                    treeview.insert(data.dest_node.path + path));
+            },
+        });
+    } else if (data.type == 'local') {
+        let url = new URL(window.location);
+        let search = new URLSearchParams();
+        search.set('action', data.shift ? 'copy' : 'move');
+        url.search = search;
+        let fd = new FormData();
+        fd.append('dest', data.dest_node.path);
+        console.log(data.selected_parents);
+        for (let node of data.selected_parents) {
+            fd.append('paths', node.path);
         }
+        $.post({
+            url: url,
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: (json) => {
+                if (!data.shift) {
+                    data.source_node.$li.trigger('dragend');
+                    for (let node of data.selected_parents) {
+                        data.source_tree.remove(node);
+                    }
+                }
+                $.each(json.paths, (_, path) =>
+                    treeview.insert(data.dest_node.path + path));
+            }
+        });
     }
 };
 
@@ -42,37 +78,8 @@ let search = new URLSearchParams();
 search.set('action', 'list');
 url.search = search;
 $.get(url, (data) => {
-    $.each(data.paths, (_, path) => {
-        treeview.insert(path);
-    });
+    $.each(data.paths, (_, path) => treeview.insert(path));
 });
-
-$('#content').append('<hr>');
-let treeview2 = new Treeview({
-    draggable: true,
-    droppable: true,
-    foreign_drop: true,
-    root_folder: 'Root',
-});
-$('#content').append(treeview2.html);
-treeview2.select_handler = (selection) => {
-    console.log('treeview2', 'select', selection);
-}
-treeview2.dblclick_handler = (path, shift) => {
-    console.log('treeview2', 'dblclick', path, shift);
-};
-treeview2.drop_handler = (data) => {
-    if (!data.shift) {
-        data.source_node.$li.trigger('dragend');
-    }
-    for (let node of data.selected_parents) {
-        [_, paths] = data.source_tree.list(node);
-        data.dest_tree.insert(paths, data.dest_node.path);
-        if (!data.shift) {
-            data.source_tree.remove(node);
-        }
-    }
-};
 
 </script>
 {% endblock %}

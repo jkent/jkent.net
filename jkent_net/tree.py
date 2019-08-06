@@ -35,6 +35,10 @@ class Tree:
             yaml.dump(self._metadata, f)
 
     @property
+    def repo(self):
+        return self._repo
+
+    @property
     def id(self):
         return self._tree_id
 

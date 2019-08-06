@@ -546,7 +546,7 @@ class Treeview {
 		Treeview.defaults = {
 			can_collapse: true,
 			can_collapse_root: false,
-			collapsed: false,
+			collapsed: true,
 			collapsed_root: false,
 			draggable: false,
 			droppable: false,
@@ -730,6 +730,10 @@ class Treeview {
 			}
 			e.stopPropagation();
 			e.preventDefault();
+			if (this.dragover_timeout) {
+				clearTimeout(this.dragover_timeout);
+				this.dragover_timeout = null;
+			}
 			let $icon = node.$li.find('>i');
 			if ($icon.is('.fa-folder-open')) {
 				$icon.removeClass('fa-folder-open').addClass('fa-folder');
