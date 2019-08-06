@@ -563,9 +563,10 @@ class Treeview {
 		this.html.css('user-select', 'none');
 		this.empty();
 		this.path = '';
+		this.selected_paths = [];
 	}
 	_set_node_handlers(node) {
-		if (this.options.draggable && node.path != '') {
+		if (this.options.draggable) {
 			node.$li.attr('draggable', true);
 		}
 		node.$li.on('mousedown', ((e) => {
@@ -608,9 +609,15 @@ class Treeview {
 			Treeview.$drag_ghost = $('<div class="drag-ghost treeview">');
 			let $ul = $('<ul class="fa-ul">');
 			Treeview.$drag_ghost.append($ul);
-			let selection = this.get_selected();
-			for (let path of selection) {
-				let node = this.find(path);
+			let nodes = new Set();
+			for (let node of this.selected_nodes) {
+				while (node != this.root && node.parent.$li.is('.selected')) {
+					node = node.parent;
+				}
+				console.log('add', node);
+				nodes.add(node);
+			}
+			for (let node of nodes) {
 				let $li = node.$li.clone();
 				$li.find('ul').remove();
 				$ul.append($li);
@@ -625,8 +632,10 @@ class Treeview {
 		}).bind(this));
 		node.$li.on('dragend', ((e) => {
 			e.stopPropagation();
-			Treeview.$drag_ghost.remove();
-			Treeview.$drag_ghost = null;
+			if (Treeview.$drag_ghost) {
+				Treeview.$drag_ghost.remove();
+				Treeview.$drag_ghost = null;
+			}
 			Treeview.drag_tree = null;
 			Treeview.drag_node = null;
 		}).bind(this));
@@ -641,14 +650,15 @@ class Treeview {
 				if (!node.path.endsWith('/') && node.path != '') {
 					break;
 				}
-				if (Treeview.drag_node) {
+				if (Treeview.drag_tree) {
 					if (Treeview.drag_tree == this) {
-						if (node.path.startsWith(Treeview.drag_node.path)) {
+						/*if (node.path.startsWith(Treeview.drag_node.path)) {
 							break;
 						}
 						if (node.path == Treeview.drag_node.parent.path) {
 							break;
-						}
+						}*/
+						/* TODO: fixme */
 					} else if (!this.options.foreign_drop) {
 						break;
 					}
@@ -660,14 +670,14 @@ class Treeview {
 			} while(false);
 
 			if (e.originalEvent.dataTransfer.dropEffect != 'none') {
-				var $icon = node.$li.find('>i');
+				let $icon = node.$li.find('>i');
 				$icon.removeClass('fa-folder').addClass('fa-folder-open');
 			}
 		}).bind(this));
 		node.$li.on('dragleave', ((e) => {
 			e.stopPropagation();
 			e.preventDefault();
-			var $icon = node.$li.find('>i');
+			let $icon = node.$li.find('>i');
 			if ($icon.is('.fa-folder-open')) {
 				$icon.removeClass('fa-folder-open').addClass('fa-folder');
 			}
@@ -678,57 +688,77 @@ class Treeview {
 			}
 			e.stopPropagation();
 			e.preventDefault();
-			var $icon = node.$li.find('>i');
+			let $icon = node.$li.find('>i');
 			if ($icon.is('.fa-folder-open')) {
 				$icon.removeClass('fa-folder-open').addClass('fa-folder');
 			}
 			if (!node.path.endsWith('/') && node.path != '') {
 				return;
 			}
-			if (Treeview.drag_node) {
+			if (Treeview.drag_tree) {
 				if (Treeview.drag_tree == this) {
-					if (node.path.startsWith(Treeview.drag_node.path)) {
+					/* TODO: fixme */
+					/*if (node.path.startsWith(Treeview.drag_node.path)) {
 						return;
 					}
 					if (node.path == Treeview.drag_node.parent.path) {
 						return;
-					}
+					}*/
 				} else if (!this.options.foreign_drop) {
 					return;
 				}
 				if (this.drop_handler) {
-					let data = {
-						source_node: Treeview.drag_node,
-						dest_node: node,
+					this.drop_handler({
+						type: Treeview.drag_tree == this ? 'local' : 'foreign',
 						source_tree: Treeview.drag_tree,
+						source_node: Treeview.drag_node,
+						selected_parents: Treeview.drag_tree.selected_parents,
 						dest_tree: this,
+						dest_node: node,
 						shift: e.shiftKey,
-					};
-					if (Treeview.drag_tree == this) {
-						data.type = 'local';
-					} else {
-						data.type = 'foreign';
-					}
-					this.drop_handler(data);
+					});
 				}
 			} else if (this.options.file_drop && this.drop_handler) {
-				let data = {
+				this.drop_handler({
 					type: 'file',
 					source_files: e.originalEvent.dataTransfer.files,
-					dest_node: node,
 					dest_tree: this,
+					dest_node: node,
 					shift: e.shiftKey,
-				};
-				this.drop_handler(data);
+				});
 			}
 		}).bind(this));
 	}
 	_check_selection() {
-		let selection = this.get_selected();
-		if (this.select_handler && JSON.stringify(this.selection) !==
-				JSON.stringify(selection)) {
-			this.select_handler(selection);
-			this.selection = selection;
+		let paths = [];
+		let nodes = [];
+		function get_selected(data) {
+			for (let i = 0; i < data.length; i++) {
+				let node = data[i];
+				if (node.$li.is('.selected')) {
+					nodes.push(node);
+					paths.push(node.path);
+				}
+				if (node.children) {
+					get_selected(node.children);
+				}
+			}
+		}
+		get_selected(this.children);
+
+		let parents = new Set();
+		for (let node of nodes) {
+			while (node != this.root && node.parent.$li.is('.selected')) {
+				node = node.parent;
+			}
+			parents.add(node);
+		}
+		if (this.select_handler &&
+				JSON.stringify(this.selected_paths) !== JSON.stringify(paths)) {
+			this.select_handler(nodes);
+			this.selected_parents = parents;
+			this.selected_nodes = nodes;
+			this.selected_paths = paths;
 		}
 	}
 	empty() {
@@ -842,6 +872,8 @@ class Treeview {
 			stack[depth].children.splice(i, 0, node);
 			stack.push(node);
 		}
+		this.clear_selection();
+		this._check_selection();
 	}
 	find(path) {
 		if (path == '') {
@@ -867,15 +899,21 @@ class Treeview {
 		}
 		return null;
 	}
-	remove(node) {
-		if (typeof node == 'string') {
-			node = this.find(node);
+	remove(root) {
+		if (typeof root == 'string') {
+			root = this.find(root);
 		}
-		if (!node) {
+		if (root == this.root) {
+			let children = root.children.slice(0);
+			for (let node of children) {
+				this.remove(node);
+			}
 			return;
 		}
-		node.$li.remove();
-		node.parent.children.splice(node.parent.children.indexOf(node), 1);
+		this.clear_selection();
+		this._check_selection();
+		root.$li.remove();
+		root.parent.children.splice(root.parent.children.indexOf(root), 1);
 	}
 	clear_selection() {
 		function _clear_selection(data) {
@@ -900,14 +938,14 @@ class Treeview {
 				this.last_selected = node;
 				return;
 			}
-			let list = this.list_nodes();
-			var first = list.indexOf(this.last_selected);
-			var last = list.indexOf(node);
+			let [nodes] = this.list();
+			var first = nodes.indexOf(this.last_selected);
+			var last = nodes.indexOf(node);
 			if (last < first) {
 				[first, last] = [last, first];
 			}
 			for (let i = first; i <= last; i++) {
-				list[i].$li.addClass('selected');
+				nodes[i].$li.addClass('selected');
 			}
 		} else if (!this.options.multiselect && ctrl) {
 			let selected = node.$li.is('.selected');
@@ -923,42 +961,6 @@ class Treeview {
 			this.last_selected = node;
 		}
 	}
-	get_selected() {
-		function _get_selected(data) {
-			let selected = [];
-			for (let i = 0; i < data.length; i++) {
-				let node = data[i];
-				if (node.$li.is('.selected')) {
-					selected.push(node.path);
-				}
-				if (node.children) {
-					selected = selected.concat(_get_selected(node.children));
-				}
-			}
-			return selected;
-		}
-		return _get_selected(this.children);
-	}
-	list_nodes(root) {
-		if (!root) {
-			root = this.root;
-		}
-		if (typeof root == 'string') {
-			root = this.find(root);
-		}
-		let nodes = [];
-		function _list(data) {
-			if (data) {
-				for (let i = 0; i < data.length; i++) {
-					let node = data[i];
-					nodes.push(node);
-					_list(node.children);
-				}
-			}
-		}
-		_list([root]);
-		return nodes;
-	}
 	list(root) {
 		if (!root) {
 			root = this.root;
@@ -966,17 +968,26 @@ class Treeview {
 		if (typeof root == 'string') {
 			root = this.find(root);
 		}
-		let paths = []
-		let nodes = this.list_nodes(root);
-		for (let node of nodes) {
-			paths.push(node.path.slice(root.parent.path.length));
+		let nodes = [];
+		let paths = [];
+		function _list(data) {
+			for (let i = 0; i < data.length; i++) {
+				let node = data[i];
+				nodes.push(node);
+				paths.push(node.path.slice(root.parent.path.length));
+				if (node.children) {
+					_list(node.children);
+				}
+			}
 		}
-		return paths;
+		_list([root]);
+		return [nodes, paths];
 	}
 	clone(options) {
 		options = $.extend({}, this.options, options);
 		let treeview = new Treeview(options);
-		treeview.insert(this.list());
+		let [_, paths] = this.list();
+		treeview.insert(paths);
 		return treeview;
 	}
 }
