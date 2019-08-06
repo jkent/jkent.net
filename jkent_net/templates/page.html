@@ -35,7 +35,6 @@ let search = new URLSearchParams();
 search.set('action', 'list');
 url.search = search;
 $.get(url, (data) => {
-    treeview.empty();
     $.each(data.paths, (_, path) => {
         treeview.insert(path);
     });

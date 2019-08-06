@@ -232,3 +232,6 @@ p a{
 	background-color: blue;
 	color: white;
 }
+.treeview .empty {
+	color: #999;
+}
