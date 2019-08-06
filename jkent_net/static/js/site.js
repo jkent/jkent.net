@@ -614,7 +614,6 @@ class Treeview {
 				while (node != this.root && node.parent.$li.is('.selected')) {
 					node = node.parent;
 				}
-				console.log('add', node);
 				nodes.add(node);
 			}
 			for (let node of nodes) {
@@ -652,13 +651,20 @@ class Treeview {
 				}
 				if (Treeview.drag_tree) {
 					if (Treeview.drag_tree == this) {
-						/*if (node.path.startsWith(Treeview.drag_node.path)) {
+						let not_allowed = false;
+						for (let parent of Treeview.drag_tree.selected_parents) {
+							if (node.path.startsWith(parent.path)) {
+								not_allowed = true;
+								break;
+							}
+							if (node.path == parent.parent.path) {
+								not_allowed = true;
+								break;
+							}
+						}
+						if (not_allowed) {
 							break;
 						}
-						if (node.path == Treeview.drag_node.parent.path) {
-							break;
-						}*/
-						/* TODO: fixme */
 					} else if (!this.options.foreign_drop) {
 						break;
 					}
@@ -697,13 +703,16 @@ class Treeview {
 			}
 			if (Treeview.drag_tree) {
 				if (Treeview.drag_tree == this) {
-					/* TODO: fixme */
-					/*if (node.path.startsWith(Treeview.drag_node.path)) {
-						return;
+					for (let parent of Treeview.drag_tree.selected_parents) {
+						if (node.path.startsWith(parent.path)) {
+							not_allowed = true;
+							return;
+						}
+						if (node.path == parent.parent.path) {
+							not_allowed = true;
+							return;
+						}
 					}
-					if (node.path == Treeview.drag_node.parent.path) {
-						return;
-					}*/
 				} else if (!this.options.foreign_drop) {
 					return;
 				}
