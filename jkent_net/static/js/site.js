@@ -674,15 +674,23 @@ class Treeview {
 					e.originalEvent.dataTransfer.dropEffect = 'copy';
 				}
 			} while(false);
-
 			if (e.originalEvent.dataTransfer.dropEffect != 'none') {
 				let $icon = node.$li.find('>i');
 				$icon.removeClass('fa-folder').addClass('fa-folder-open');
+				if (!this.dragover_timeout && node.children
+						&& !node.$ul.is(':visible')) {
+					this.dragover_timeout =
+						setTimeout(() => node.$ul.slideDown(200), 1000);
+				}
 			}
 		}).bind(this));
 		node.$li.on('dragleave', ((e) => {
 			e.stopPropagation();
 			e.preventDefault();
+			if (this.dragover_timeout) {
+				clearTimeout(this.dragover_timeout);
+				this.dragover_timeout = null;
+			}
 			let $icon = node.$li.find('>i');
 			if ($icon.is('.fa-folder-open')) {
 				$icon.removeClass('fa-folder-open').addClass('fa-folder');
