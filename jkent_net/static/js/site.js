@@ -895,29 +895,26 @@ class Treeview {
 		}
 		if (this.options.multiselect && shift) {
 			this.clear_selection();
-			if (this.last_selected
-					&& node.parent.children.includes(this.last_selected)) {
-				let first = node.parent.children.indexOf(this.last_selected);
-				let last = node.parent.children.indexOf(node);
-				if (last < first) {
-					[first, last] = [last, first];
-				}
-				for (let i = first; i <= last; i++) {
-					node.parent.children[i].$li.addClass('selected');
-				}
-			} else {
+			if (!this.last_selected) {
+				node.$li.addclass('selected');
 				this.last_selected = node;
-				node.$li.addClass('selected');
+				return;
 			}
-		} else if (this.options.multiselect && ctrl) {
+			let list = this.list_nodes();
+			var first = list.indexOf(this.last_selected);
+			var last = list.indexOf(node);
+			if (last < first) {
+				[first, last] = [last, first];
+			}
+			for (let i = first; i <= last; i++) {
+				list[i].$li.addClass('selected');
+			}
+		} else if (!this.options.multiselect && ctrl) {
 			let selected = node.$li.is('.selected');
 			this.clear_selection();
 			node.$li.toggleClass('selected', !selected);
 			this.last_selected = node;
-		} else if (!this.options.multiselect && ctrl) {
-			if (!node.parent.children.includes(this.last_selected)) {
-				this.clear_selection();
-			}
+		} else if (this.options.multiselect && ctrl) {
 			node.$li.toggleClass('selected');
 			this.last_selected = node;
 		} else {
@@ -942,21 +939,38 @@ class Treeview {
 		}
 		return _get_selected(this.children);
 	}
-	list(root) {
+	list_nodes(root) {
+		if (!root) {
+			root = this.root;
+		}
 		if (typeof root == 'string') {
 			root = this.find(root);
 		}
-		let paths = [];
+		let nodes = [];
 		function _list(data) {
 			if (data) {
 				for (let i = 0; i < data.length; i++) {
 					let node = data[i];
-					paths.push(node.path.slice(root.parent.path.length));
+					nodes.push(node);
 					_list(node.children);
 				}
 			}
 		}
 		_list([root]);
+		return nodes;
+	}
+	list(root) {
+		if (!root) {
+			root = this.root;
+		}
+		if (typeof root == 'string') {
+			root = this.find(root);
+		}
+		let paths = []
+		let nodes = this.list_nodes(root);
+		for (let node of nodes) {
+			paths.push(node.path.slice(root.parent.path.length));
+		}
 		return paths;
 	}
 	clone(options) {
