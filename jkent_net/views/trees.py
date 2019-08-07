@@ -91,11 +91,11 @@ def tree_post(tree_id, tree_path=''):
     action = request.args.get('action')
     if action == 'upload':
         dest = re.sub('^/|\.\./', '', request.form['dest'])
-        for file in request.files.getlist('files'):
-            path = secure_filename(file.filename)
-            path = os.path.join(tree.repo.path, tree.path, dest, filename)
-            file.save(path)
-        return get_list(tree, dest)
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+        path = os.path.join(tree.repo.path, tree.path, dest, filename)
+        file.save(path)
+        return {'success': True}
     elif action == 'copy' or action == 'move':
         dest = re.sub('^/|\.\./', '', request.form['dest'])
         for path in request.form.getlist('paths'):
@@ -119,4 +119,4 @@ def tree_post(tree_id, tree_path=''):
                         os.path.join(dst_dir, file))
                 if action == 'move':
                     shutil.rmtree(src_path)
-        return get_list(tree, dest)
+        return {'success': True}

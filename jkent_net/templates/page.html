@@ -5,6 +5,7 @@
 {% include 'actionbar.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='libs/mobile-drag-drop/release/default.css') }}">
 <script src="{{ url_for('static', filename='libs/mobile-drag-drop/release/index.min.js') }}"></script>
+<script src="{{ url_for('static', filename='libs/progressbar.js/dist/progressbar.min.js') }}"></script>
 
 <script>
 MobileDragDrop.polyfill({
@@ -30,19 +31,48 @@ treeview.drop_handler = (data) => {
         let search = new URLSearchParams();
         search.set('action', 'upload');
         url.search = search;
-        let fd = new FormData();
-        fd.append('dest', data.dest_node.path);
-        $.each(data.source_files, (_, file) => fd.append('files', file));
-        $.post({
-            url: url,
-            data: fd,
-            processData: false,
-            contentType: false,
-            success: (json) => {
-                $.each(json.paths, (_, path) =>
-                    treeview.insert(data.dest_node.path + path));
-            },
-        });
+
+        for (let file of data.source_files) {
+            let node = treeview.insert(data.dest_node.path + file.name);
+            let $progress = $('<span class="progress">');
+            node.$li.find('>span').after($progress);
+
+            let progress = new ProgressBar.Circle($progress[0], {
+                color: '#77f',
+                strokeWidth: 16,
+                trailWidth: 16,
+            });
+
+            let fd = new FormData();
+            fd.append('dest', data.dest_node.path);
+            fd.append('file', file);
+            $.post({
+                url: url,
+                data: fd,
+                xhr: () => {
+                    let xhr = $.ajaxSettings.xhr();
+                    xhr.upload.onprogress = (e) => {
+                        let percent = e.loaded / e.total;
+                        progress.animate(percent);
+                    };
+                    return xhr;
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: (json) => {
+                    $progress.remove();
+                },
+                error: (e) => {
+                    setTimeout(() => {
+                        progress.animate(100, {
+                            color: '#f00',
+                        });
+                        treeview.remove(node);
+                    }, 500);
+                }
+            });
+        }
     } else if (data.type == 'local') {
         let url = new URL(window.location);
         let search = new URLSearchParams();
@@ -62,13 +92,15 @@ treeview.drop_handler = (data) => {
             success: (json) => {
                 if (!data.shift) {
                     data.source_node.$li.trigger('dragend');
-                    for (let node of data.selected_parents) {
+                }
+                for (let node of data.selected_parents) {
+                    [_, paths] = data.source_tree.list(node);
+                    data.dest_tree.insert(paths, data.dest_node.path);
+                    if (!data.shift) {
                         data.source_tree.remove(node);
                     }
                 }
-                $.each(json.paths, (_, path) =>
-                    treeview.insert(data.dest_node.path + path));
-            }
+            },
         });
     }
 };

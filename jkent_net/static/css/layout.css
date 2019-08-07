@@ -228,10 +228,17 @@ p a{
 	display: inline-block;
 	padding: 1px 2px;
 }
-.treeview .selected > span {
+.treeview .selected > span:first-of-type {
 	background-color: blue;
 	color: white;
 }
 .treeview .empty {
 	color: #999;
+}
+.treeview .progress {
+	display: inline-block;
+	height: 1em;
+	width: 1em;
+	vertical-align: sub;
+	margin: 0 0.25em;
 }

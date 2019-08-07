@@ -18,6 +18,7 @@
   "dependencies": {
     "jquery": "^3.4.1",
     "fontawesome": "^5.10.1",
-    "mobile-drag-drop": "2.3.0-rc.2"
+    "mobile-drag-drop": "2.3.0-rc.2",
+    "progressbar.js": "^1.0.1"
   }
 }

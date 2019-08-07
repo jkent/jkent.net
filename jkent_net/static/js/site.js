@@ -918,12 +918,13 @@ class Treeview {
 			}
 			stack.push(node);
 		}
-		let parent = stack[stack.length-1];
-		if (parent.type == 'folder' && parent.children.length == '0') {
-			this._add_empty(parent);
+		let node = stack[stack.length-1];
+		if (node.type == 'folder' && node.children.length == '0') {
+			this._add_empty(node);
 		}
 		this.clear_selection();
 		this._check_selection();
+		return node;
 	}
 	find(path) {
 		if (path == '') {
