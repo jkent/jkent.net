@@ -25,53 +25,93 @@ treeview.select_handler = (selection) => {
 treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
-treeview.drop_handler = (data) => {
-    if (data.type == 'file') {
+class Upload {
+    constructor(treeview, parent, file) {
+        if (Upload.active === undefined) {
+            Upload.active = 0;
+            Upload.queue = [];
+        }
+
+        this.treeview = treeview;
+        this.file = file;
+        this.parent = parent;
+        this.node = treeview.insert(parent.path + file.name);
+
+        if (this.node.$li.has('.progress').length) {
+            return;
+        };
+
+        this.$progress = $('<span class="progress">');
+        this.node.$li.find('>span').after(this.$progress);
+        this.progressbar = new ProgressBar.Circle(this.$progress[0], {
+            color: '#77f',
+            strokeWidth: 16,
+            trailWidth: 16,
+        });
+        this.$progress.addClass('rotating');
+        this.progressbar.set(0.25);
+
+        if (Upload.active < 2) {
+            this.start()
+        } else {
+            Upload.queue.push(this);
+        }
+    }
+    start() {
+        Upload.active += 1;
+        this.$progress.removeClass('rotating');
+        this.progressbar.set(0);
         let url = new URL(window.location);
         let search = new URLSearchParams();
         search.set('action', 'upload');
         url.search = search;
-
-        for (let file of data.source_files) {
-            let node = treeview.insert(data.dest_node.path + file.name);
-            let $progress = $('<span class="progress">');
-            node.$li.find('>span').after($progress);
-
-            let progress = new ProgressBar.Circle($progress[0], {
-                color: '#77f',
-                strokeWidth: 16,
-                trailWidth: 16,
-            });
-
-            let fd = new FormData();
-            fd.append('dest', data.dest_node.path);
-            fd.append('file', file);
-            $.post({
-                url: url,
-                data: fd,
-                xhr: () => {
-                    let xhr = $.ajaxSettings.xhr();
-                    xhr.upload.onprogress = (e) => {
-                        let percent = e.loaded / e.total;
-                        progress.animate(percent);
-                    };
-                    return xhr;
-                },
-                cache: false,
-                contentType: false,
-                processData: false,
-                success: (json) => {
-                    $progress.remove();
-                },
-                error: (e) => {
-                    setTimeout(() => {
-                        progress.animate(100, {
-                            color: '#f00',
-                        });
-                        treeview.remove(node);
-                    }, 500);
+        let fd = new FormData();
+        fd.append('dest', this.parent.path);
+        fd.append('file', this.file);
+        $.post({
+            url: url,
+            data: fd,
+            xhr: (() => {
+                let xhr = $.ajaxSettings.xhr();
+                xhr.upload.onprogress = (e) => {
+                    let percent = e.loaded / e.total;
+                    this.progressbar.animate(percent);
+                };
+                return xhr;
+            }).bind(this),
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: ((json) => {
+                Upload.active -= 1;
+                this.$progress.remove();
+                let upload;
+                if (upload = Upload.queue.shift()) {
+                    upload.start();
                 }
-            });
+            }).bind(this),
+            error: ((e) => {
+                Upload.active -= 1;
+                let upload;
+                if (upload = Upload.queue.shift()) {
+                    upload.start();
+                }                
+                setTimeout((() => {
+                    this.progressbar.animate(100, {
+                        spin: false,
+                        color: '#f00',
+                    });
+                    this.treeview.remove(this.node);
+                }).bind(this), 500);
+            }).bind(this),
+        });
+    }
+}
+
+treeview.drop_handler = (data) => {
+    if (data.type == 'file') {
+        for (let file of data.source_files) {
+            let upload = new Upload(treeview, data.dest_node, file);
         }
     } else if (data.type == 'local') {
         let url = new URL(window.location);
