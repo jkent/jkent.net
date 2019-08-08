@@ -569,6 +569,7 @@ class Treeview {
 			children: [],
 			path: '',
 			parent: this,
+			tree: this,
 			type: 'folder',
 		};
 		this.root = this;
@@ -654,7 +655,6 @@ class Treeview {
 			$(document.body).append(Treeview.$drag_ghost);
 			e.originalEvent.dataTransfer.setDragImage(Treeview.$drag_ghost[0], 0, 0);
 			e.originalEvent.dataTransfer.setData('text', node.path);
-			Treeview.drag_tree = this;
 			Treeview.drag_node = node;
 		}).bind(this));
 		node.$li.on('dragend', ((e) => {
@@ -663,7 +663,6 @@ class Treeview {
 				Treeview.$drag_ghost.remove();
 				Treeview.$drag_ghost = null;
 			}
-			Treeview.drag_tree = null;
 			Treeview.drag_node = null;
 		}).bind(this));
 		node.$li.on('dragenter dragover', ((e) => {
@@ -677,10 +676,10 @@ class Treeview {
 				if (node.type != 'folder') {
 					break;
 				}
-				if (Treeview.drag_tree) {
-					if (Treeview.drag_tree == this) {
+				if (Treeview.drag_node) {
+					if (Treeview.drag_node.tree == this) {
 						let not_allowed = false;
-						for (let parent of Treeview.drag_tree.selected_parents) {
+						for (let parent of Treeview.drag_node.tree.selected_parents) {
 							if (node.path.startsWith(parent.path)) {
 								not_allowed = true;
 								break;
@@ -741,9 +740,9 @@ class Treeview {
 			if (node.type != 'folder') {
 				return;
 			}
-			if (Treeview.drag_tree) {
-				if (Treeview.drag_tree == this) {
-					for (let parent of Treeview.drag_tree.selected_parents) {
+			if (Treeview.drag_node) {
+				if (Treeview.drag_node.tree == this) {
+					for (let parent of Treeview.drag_node.tree.selected_parents) {
 						if (node.path.startsWith(parent.path)) {
 							not_allowed = true;
 							return;
@@ -758,20 +757,17 @@ class Treeview {
 				}
 				if (this.drop_handler) {
 					this.drop_handler({
-						type: Treeview.drag_tree == this ? 'local' : 'foreign',
-						source_tree: Treeview.drag_tree,
+						type: Treeview.drag_node.tree == this ? 'local' : 'foreign',
 						source_node: Treeview.drag_node,
-						selected_parents: Treeview.drag_tree.selected_parents,
-						dest_tree: this,
+						selected_parents: Treeview.drag_node.tree.selected_parents,
 						dest_node: node,
 						shift: e.shiftKey,
 					});
 				}
 			} else if (this.options.file_drop && this.drop_handler) {
 				this.drop_handler({
-					type: 'file',
-					source_files: e.originalEvent.dataTransfer.files,
-					dest_tree: this,
+					type: 'items',
+					source_items: e.originalEvent.dataTransfer.items,
 					dest_node: node,
 					shift: e.shiftKey,
 				});
@@ -875,6 +871,7 @@ class Treeview {
 				$li: $('<li>'),
 				name: part,
 				parent: stack[depth],
+				tree: this,
 			}
 			if (is_folder) {
 				node.children = [];

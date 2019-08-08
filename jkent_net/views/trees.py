@@ -93,8 +93,9 @@ def tree_post(tree_id, tree_path=''):
         dest = re.sub('^/|\.\./', '', request.form['dest'])
         file = request.files['file']
         filename = secure_filename(file.filename)
-        path = os.path.join(tree.repo.path, tree.path, dest, filename)
-        file.save(path)
+        path = os.path.join(tree.repo.path, tree.path, dest)
+        os.makedirs(path, exist_ok=True)
+        file.save(os.path.join(path, filename))
         return {'success': True}
     elif action == 'copy' or action == 'move':
         dest = re.sub('^/|\.\./', '', request.form['dest'])

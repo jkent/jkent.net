@@ -26,16 +26,16 @@ treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
 class Upload {
-    constructor(treeview, parent, file) {
+    constructor(file, root, parent) {
         if (Upload.active === undefined) {
             Upload.active = 0;
             Upload.queue = [];
         }
 
-        this.treeview = treeview;
         this.file = file;
+        this.root = root;
         this.parent = parent;
-        this.node = treeview.insert(parent.path + file.name);
+        this.node = parent.tree.insert(parent.path + this.root + file.name);
 
         if (this.node.$li.has('.progress').length) {
             return;
@@ -66,7 +66,7 @@ class Upload {
         search.set('action', 'upload');
         url.search = search;
         let fd = new FormData();
-        fd.append('dest', this.parent.path);
+        fd.append('dest', this.parent.path + this.root);
         fd.append('file', this.file);
         $.post({
             url: url,
@@ -92,26 +92,52 @@ class Upload {
             }).bind(this),
             error: ((e) => {
                 Upload.active -= 1;
+                this.progressbar.animate(100, {
+                    color: '#f00',
+                });
+                setTimeout((() => {
+                    this.parent.treeview.remove(this.node);
+                }).bind(this), 500);
                 let upload;
                 if (upload = Upload.queue.shift()) {
                     upload.start();
                 }                
-                setTimeout((() => {
-                    this.progressbar.animate(100, {
-                        spin: false,
-                        color: '#f00',
-                    });
-                    this.treeview.remove(this.node);
-                }).bind(this), 500);
             }).bind(this),
         });
     }
 }
 
-treeview.drop_handler = (data) => {
-    if (data.type == 'file') {
-        for (let file of data.source_files) {
-            let upload = new Upload(treeview, data.dest_node, file);
+treeview.drop_handler = (data, path) => {
+    if (data.type == 'items') {
+            function handle_item(item, root='') {
+            if (item.isFile) {
+                item.file((file) => {
+                    new Upload(file, root, data.dest_node);
+                });
+            } else if (item.isDirectory) {
+                let reader = item.createReader();
+                let entries = [];
+                root += item.name + '/';
+                function read_entries() {
+                    reader.readEntries((results) => {
+                        if (!results.length) {
+                            entries.forEach((entry) => {
+                                handle_item(entry, root); 
+                            });
+                            return;
+                        }
+                        entries = entries.concat(results.slice(0));
+                        read_entries();
+                    });
+                }
+                read_entries();
+            }
+        }
+
+        let items = data.source_items;
+        for (let i = 0; i < data.source_items.length; i++) {
+            let item = data.source_items[i].webkitGetAsEntry();
+            handle_item(item);
         }
     } else if (data.type == 'local') {
         let url = new URL(window.location);
@@ -120,7 +146,6 @@ treeview.drop_handler = (data) => {
         url.search = search;
         let fd = new FormData();
         fd.append('dest', data.dest_node.path);
-        console.log(data.selected_parents);
         for (let node of data.selected_parents) {
             fd.append('paths', node.path);
         }
@@ -134,10 +159,10 @@ treeview.drop_handler = (data) => {
                     data.source_node.$li.trigger('dragend');
                 }
                 for (let node of data.selected_parents) {
-                    [_, paths] = data.source_tree.list(node);
-                    data.dest_tree.insert(paths, data.dest_node.path);
+                    [_, paths] = data.source_node.tree.list(node);
+                    data.dest_node.tree.insert(paths, data.dest_node.path);
                     if (!data.shift) {
-                        data.source_tree.remove(node);
+                        data.source_node.tree.remove(node);
                     }
                 }
             },
