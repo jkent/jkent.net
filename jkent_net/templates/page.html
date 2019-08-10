@@ -7,7 +7,7 @@
 <script src="{{ url_for('static', filename='libs/mobile-drag-drop/release/index.min.js') }}"></script>
 <script src="{{ url_for('static', filename='libs/progressbar.js/dist/progressbar.min.js') }}"></script>
 
-<div id="dialog" style="display: none;">
+<div id="ask_dialog" style="display: none;">
     <p>
         <span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
         <span></span>
@@ -18,7 +18,16 @@
     </div>
 </div>
 
+<div id="alert_dialog" style="display: none;">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float: left; margin: 12px 12px 20px 0;"></span>
+        <span></span>
+    </p>
+</div>
+
 <script>
+let MAX_UPLAOAD_SIZE = {{ config.MAX_UPLOAD_SIZE | tojson }};
+
 MobileDragDrop.polyfill({
     iterationInterval: 100,
 });
@@ -42,7 +51,7 @@ treeview.drop_handler = (data, path) => {
             let state = false;
             let canceled = true;
             let defer = $.Deferred();
-            let $dialog = $('#dialog');
+            let $dialog = $('#ask_dialog');
             $dialog.find('span:nth-of-type(2)').html(message);
             $('#dontask_cb').prop('checked', false);
             let dialog = $dialog.dialog({
@@ -66,6 +75,24 @@ treeview.drop_handler = (data, path) => {
                         state = true;
                         dialog.dialog('close');
                     },
+                },
+            });
+            return defer.promise();
+        }
+
+        async function alert(title, message) {
+            let defer = $.Deferred();
+            let $dialog = $('#alert_dialog');
+            $dialog.find('span:nth-of-type(2)').html(message);
+            let dialog = $dialog.dialog({
+                resizable: false,
+                title: title,
+                height: "auto",
+                width: 400,
+                modal: true,
+                close: () => defer.resolve(),
+                buttons: {
+                    OK: () => dialog.dialog('close'),
                 },
             });
             return defer.promise();
@@ -104,9 +131,16 @@ treeview.drop_handler = (data, path) => {
                             continue;
                         }
                     }
-                    let root = path.match(/(.+\/)?[^\/]*/)[1];
-                    entry.file(file =>
-                        new TreeviewUpload(file, root, data.dest_node));
+                    let root = path.match(/(.+\/)?[^\/]*/)[1] || '';
+                    let file = await getFilePromise(entry);
+                    if (file.size <= MAX_UPLAOAD_SIZE) {
+                        new TreeviewUpload(file, root, data.dest_node);
+                    } else {
+                        console.log(file.name);
+                        await alert('File too big', 'The file <b>'
+                            + root + file.name + '</b> is too big and '
+                            + 'will not be uploaded.');
+                    }
                 }
             }
         }

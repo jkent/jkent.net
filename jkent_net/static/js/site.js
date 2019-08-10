@@ -1177,3 +1177,13 @@ async function readEntriesPromise(directoryReader) {
         console.log(err);
     }
 }
+
+async function getFilePromise(entry) {
+    try {
+        return await new Promise((resolve, reject) => {
+            entry.file(resolve, reject);
+        });
+    } catch (err) {
+        console.log(err);
+    }
+}
