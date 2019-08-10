@@ -7,6 +7,17 @@
 <script src="{{ url_for('static', filename='libs/mobile-drag-drop/release/index.min.js') }}"></script>
 <script src="{{ url_for('static', filename='libs/progressbar.js/dist/progressbar.min.js') }}"></script>
 
+<div id="dialog" style="display: none;">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
+        <span></span>
+    </p>
+    <div>
+        <input type="checkbox" id="dontask_cb">
+        <label for="dontask_cb">Don't ask again</label>
+    </div>
+</div>
+
 <script>
 MobileDragDrop.polyfill({
     iterationInterval: 100,
@@ -25,120 +36,82 @@ treeview.select_handler = (selection) => {
 treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };
-class Upload {
-    constructor(file, root, parent) {
-        if (Upload.active === undefined) {
-            Upload.active = 0;
-            Upload.queue = [];
-        }
-
-        this.file = file;
-        this.root = root;
-        this.parent = parent;
-        this.node = parent.tree.insert(parent.path + this.root + file.name);
-
-        if (this.node.$li.has('.progress').length) {
-            return;
-        };
-
-        this.$progress = $('<span class="progress">');
-        this.node.$li.find('>span').after(this.$progress);
-        this.progressbar = new ProgressBar.Circle(this.$progress[0], {
-            color: '#77f',
-            strokeWidth: 16,
-            trailWidth: 16,
-        });
-        this.$progress.addClass('rotating');
-        this.progressbar.set(0.25);
-
-        if (Upload.active < 2) {
-            this.start()
-        } else {
-            Upload.queue.push(this);
-        }
-    }
-    start() {
-        Upload.active += 1;
-        this.$progress.removeClass('rotating');
-        this.progressbar.set(0);
-        let url = new URL(window.location);
-        let search = new URLSearchParams();
-        search.set('action', 'upload');
-        url.search = search;
-        let fd = new FormData();
-        fd.append('dest', this.parent.path + this.root);
-        fd.append('file', this.file);
-        $.post({
-            url: url,
-            data: fd,
-            xhr: (() => {
-                let xhr = $.ajaxSettings.xhr();
-                xhr.upload.onprogress = (e) => {
-                    let percent = e.loaded / e.total;
-                    this.progressbar.animate(percent);
-                };
-                return xhr;
-            }).bind(this),
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: ((json) => {
-                Upload.active -= 1;
-                this.$progress.remove();
-                let upload;
-                if (upload = Upload.queue.shift()) {
-                    upload.start();
-                }
-            }).bind(this),
-            error: ((e) => {
-                Upload.active -= 1;
-                this.progressbar.animate(100, {
-                    color: '#f00',
-                });
-                setTimeout((() => {
-                    this.parent.treeview.remove(this.node);
-                }).bind(this), 500);
-                let upload;
-                if (upload = Upload.queue.shift()) {
-                    upload.start();
-                }                
-            }).bind(this),
-        });
-    }
-}
-
 treeview.drop_handler = (data, path) => {
     if (data.type == 'items') {
-            function handle_item(item, root='') {
-            if (item.isFile) {
-                item.file((file) => {
-                    new Upload(file, root, data.dest_node);
-                });
-            } else if (item.isDirectory) {
-                let reader = item.createReader();
-                let entries = [];
-                root += item.name + '/';
-                function read_entries() {
-                    reader.readEntries((results) => {
-                        if (!results.length) {
-                            entries.forEach((entry) => {
-                                handle_item(entry, root); 
-                            });
-                            return;
-                        }
-                        entries = entries.concat(results.slice(0));
-                        read_entries();
-                    });
+        async function ask(title, message) {
+            let state = false;
+            let canceled = true;
+            let defer = $.Deferred();
+            let $dialog = $('#dialog');
+            $dialog.find('span:nth-of-type(2)').html(message);
+            $('#dontask_cb').prop('checked', false);
+            let dialog = $dialog.dialog({
+                resizable: false,
+                title: title,
+                height: "auto",
+                width: 400,
+                modal: true,
+                close: () => {
+                    defer.resolve([state,
+                        !canceled && $('#dontask_cb').is(':checked')]);
+                },
+                buttons: {
+                    No: () => {
+                        canceled = false;
+                        state = false;
+                        dialog.dialog('close');
+                    },
+                    Yes: () => {
+                        canceled = false;
+                        state = true;
+                        dialog.dialog('close');
+                    },
+                },
+            });
+            return defer.promise();
+        }
+
+        async function upload_handler() {
+            let entries = await getAllEntries(data.source_items);
+            let merge, merge_dontask = false;
+            let overwrite, overwrite_dontask = false;
+
+            for (let i = 0; i < entries.length; i++) {
+                let entry = entries[i];
+                let path = data.dest_node.path + entry.fullPath.slice(1);
+                if (entry.isDirectory) {
+                    path += '/';
                 }
-                read_entries();
+                let exists = data.dest_node.tree.exists(path);
+                if (exists && entry.isDirectory) {
+                    if (!merge_dontask) {
+                        [merge, merge_dontask] = await ask('Merge folders?', 
+                            'The folder <b>' + path + '</b> already exists. '
+                            + 'Do you wish to merge?');
+                    }
+                    if (!merge) {
+                        entries = entries.filter(e =>
+                            !e.fullPath.startsWith(entry.fullPath));
+                    }
+                } else if (entry.isFile) {
+                    if (exists) {
+                        if (!overwrite_dontask) {
+                            [overwrite, overwrite_dontask] = await ask(
+                                'Overwrite?', 'The file <b>' + path + '</b> '
+                                + 'already exists. Overwrite?');
+                        }
+                        if (!overwrite) {
+                            continue;
+                        }
+                    }
+                    let root = path.match(/(.+\/)?[^\/]*/)[1];
+                    entry.file(file =>
+                        new TreeviewUpload(file, root, data.dest_node));
+                }
             }
         }
 
-        let items = data.source_items;
-        for (let i = 0; i < data.source_items.length; i++) {
-            let item = data.source_items[i].webkitGetAsEntry();
-            handle_item(item);
-        }
+        upload_handler();
     } else if (data.type == 'local') {
         let url = new URL(window.location);
         let search = new URLSearchParams();
@@ -146,9 +119,7 @@ treeview.drop_handler = (data, path) => {
         url.search = search;
         let fd = new FormData();
         fd.append('dest', data.dest_node.path);
-        for (let node of data.selected_parents) {
-            fd.append('paths', node.path);
-        }
+        data.selected_parents.forEach(node => fd.append('paths', node.path));
         $.post({
             url: url,
             data: fd,
@@ -160,7 +131,8 @@ treeview.drop_handler = (data, path) => {
                 }
                 for (let node of data.selected_parents) {
                     [_, paths] = data.source_node.tree.list(node);
-                    data.dest_node.tree.insert(paths, data.dest_node.path);
+                    paths.forEach(path =>
+                        data.dest_node.tree.insert(data.dest_node.path + path));
                     if (!data.shift) {
                         data.source_node.tree.remove(node);
                     }
@@ -174,8 +146,8 @@ let url = new URL(window.location);
 let search = new URLSearchParams();
 search.set('action', 'list');
 url.search = search;
-$.get(url, (data) => {
-    $.each(data.paths, (_, path) => treeview.insert(path));
+$.get(url, data => {
+    data.paths.forEach(path => treeview.insert(path));
 });
 
 </script>

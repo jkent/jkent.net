@@ -558,6 +558,9 @@ class Treeview {
 			root_folder: null,
 		};
 		this.options = $.extend({}, Treeview.defaults, options);
+		if (Treeview.counter === undefined) {
+			Treeview.counter = 0;
+		}
 		this.id = Treeview.counter++;
 		this.html = $('<div class="treeview">');
 		this.html.css('user-select', 'none');
@@ -822,14 +825,7 @@ class Treeview {
 		parent.$ul.prepend(node.$li);
 		parent.children.splice(0, 0, node);
 	}
-	insert(path, prefix='') {
-		if (Array.isArray(path)) {
-			for (let i = 0; i < path.length; i++) {
-				this.insert(path[i], prefix);
-			}
-			return;
-		}
-		path = prefix + path;
+	insert(path) {
 		if (path == '') {
 			return;
 		}
@@ -925,24 +921,28 @@ class Treeview {
 	}
 	find(path) {
 		if (path == '') {
-			return this.node;
+			return this.root;
 		}
-		let matches = path.match(/[^\/]+\/?/g);
+		let parts = path.match(/[^\/]+\/?/g);
 		let stack = [this.root];
-		for (let depth = 0; depth < matches.length; depth++) {
-			let part = matches[depth];			
-			if (part.type == 'folder') {
+		for (let depth = 0; depth < parts.length; depth++) {
+			let part = parts[depth];
+			if (part.endsWith('/')) {
 				part = part.slice(0, -1);
 			}
-			for (let i = 0; i < stack[depth].children.length; i++) {
+			let i;
+			for (i = 0; i < stack[depth].children.length; i++) {
 				let node = stack[depth].children[i];
 				if (node.name == part) {
-					if (stack.length < matches.length) {
-						stack.push(node);
-						break;
+					if (stack.length == parts.length) {
+						return node;
 					}
-					return node;
+					stack.push(node);
+					break;
 				}
+			}
+			if (i == stack[depth].children.length) {
+				return null;
 			}
 		}
 		return null;
@@ -1046,5 +1046,134 @@ class Treeview {
 		treeview.insert(paths);
 		return treeview;
 	}
+	exists(root) {
+		return this.find(root) !== null;
+	}
 }
-Treeview.counter = 0;
+
+class TreeviewUpload {
+    constructor(file, root, parent) {
+        if (TreeviewUpload.active === undefined) {
+            TreeviewUpload.active = 0;
+            TreeviewUpload.queue = [];
+        }
+
+        this.file = file;
+        this.root = root;
+        this.parent = parent;
+		this.node = parent.tree.insert(this.root + file.name);
+		let node = this.node;
+		while (node) {
+			if (node.type == 'folder') {
+				if (!node.$ul.is(':visible')) {
+					node.$ul.slideDown(200);
+				}
+			}
+			node = node.parent;
+		}
+
+        if (this.node.$li.has('.progress').length) {
+            return;
+        };
+
+        this.$progress = $('<span class="progress">');
+        this.node.$li.find('>span').after(this.$progress);
+        this.progressbar = new ProgressBar.Circle(this.$progress[0], {
+            color: '#77f',
+            strokeWidth: 16,
+            trailWidth: 16,
+        });
+        this.$progress.addClass('rotating');
+        this.progressbar.set(0.25);
+
+        if (TreeviewUpload.active < 2) {
+            this.start()
+        } else {
+            TreeviewUpload.queue.push(this);
+        }
+    }
+    start() {
+        TreeviewUpload.active += 1;
+        this.$progress.removeClass('rotating');
+        this.progressbar.set(0);
+        let url = new URL(window.location);
+        let search = new URLSearchParams();
+        search.set('action', 'upload');
+        url.search = search;
+        let fd = new FormData();
+        fd.append('dest', this.root);
+        fd.append('file', this.file);
+        $.post({
+            url: url,
+            data: fd,
+            xhr: (() => {
+                let xhr = $.ajaxSettings.xhr();
+                xhr.upload.onprogress = (e) => {
+                    let percent = e.loaded / e.total;
+                    this.progressbar.animate(percent);
+                };
+                return xhr;
+            }).bind(this),
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: ((json) => {
+                TreeviewUpload.active -= 1;
+                this.$progress.remove();
+                let upload;
+                if (upload = TreeviewUpload.queue.shift()) {
+                    upload.start();
+                }
+            }).bind(this),
+            error: ((e) => {
+                TreeviewUpload.active -= 1;
+                this.progressbar.animate(100, {
+                    color: '#f00',
+                });
+                setTimeout((() => {
+                    this.parent.treeview.remove(this.node);
+                }).bind(this), 500);
+                let upload;
+                if (upload = TreeviewUpload.queue.shift()) {
+                    upload.start();
+                }
+            }).bind(this),
+        });
+    }
+}
+
+async function getAllEntries(dataTransferItemList) {
+    let entries = [];
+    let queue = [];
+    for (let i = 0; i < dataTransferItemList.length; i++) {
+        queue.push(dataTransferItemList[i].webkitGetAsEntry());
+    }
+    while (queue.length > 0) {
+        let entry = queue.shift();
+        entries.push(entry);
+        if (entry.isDirectory) {
+            queue.push(...await readAllDirectoryEntries(entry.createReader()));
+        }
+    }
+    return entries;
+}
+
+async function readAllDirectoryEntries(directoryReader) {
+    let entries = [];
+    let readEntries = await readEntriesPromise(directoryReader);
+    while (readEntries.length > 0) {
+        entries.push(...readEntries);
+        readEntries = await readEntriesPromise(directoryReader);
+    }
+    return entries;
+}
+
+async function readEntriesPromise(directoryReader) {
+    try {
+        return await new Promise((resolve, reject) => {
+            directoryReader.readEntries(resolve, reject);
+        });
+    } catch (err) {
+        console.log(err);
+    }
+}
