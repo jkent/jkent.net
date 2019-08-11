@@ -144,7 +144,6 @@ treeview.drop_handler = (data, path) => {
                 }
             }
         }
-
         upload_handler();
     } else if (data.type == 'local') {
         let url = new URL(window.location);
@@ -181,7 +180,10 @@ let search = new URLSearchParams();
 search.set('action', 'list');
 url.search = search;
 $.get(url, data => {
-    data.paths.forEach(path => treeview.insert(path));
+    data.paths.forEach(path => {
+        let node = treeview.insert(path);
+        node.exists = true;
+    });
 });
 
 </script>

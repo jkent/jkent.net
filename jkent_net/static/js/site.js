@@ -1076,9 +1076,15 @@ class TreeviewUpload {
             return;
         };
 
-        this.$progress = $('<span class="progress">');
-        this.node.$li.find('>span').after(this.$progress);
-        this.progressbar = new ProgressBar.Circle(this.$progress[0], {
+		this.$progress = $('<span class="progress">');
+		this.$buttons = $('<span class="buttons">');
+		this.$cancel_btn = $('<a href="#"><i class="fas fa-times"></i></a>');
+		this.$cancel_btn.on('click', (() => {
+			this.cancel();
+		}).bind(this));
+		this.$buttons.append(this.$cancel_btn);
+		this.node.$li.find('>span').after(this.$progress, this.$buttons);
+		this.progressbar = new ProgressBar.Circle(this.$progress[0], {
             color: '#77f',
             strokeWidth: 16,
             trailWidth: 16,
@@ -1103,7 +1109,7 @@ class TreeviewUpload {
         let fd = new FormData();
         fd.append('dest', this.root);
         fd.append('file', this.file);
-        $.post({
+        this.upload = $.post({
             url: url,
             data: fd,
             xhr: (() => {
@@ -1119,7 +1125,9 @@ class TreeviewUpload {
             processData: false,
             success: ((json) => {
                 TreeviewUpload.active -= 1;
-                this.$progress.remove();
+				this.$progress.remove();
+				this.$buttons.remove();
+				this.node.exists = true;
                 let upload;
                 if (upload = TreeviewUpload.queue.shift()) {
                     upload.start();
@@ -1129,17 +1137,33 @@ class TreeviewUpload {
                 TreeviewUpload.active -= 1;
                 this.progressbar.animate(100, {
                     color: '#f00',
-                });
-                setTimeout((() => {
-                    this.parent.treeview.remove(this.node);
-                }).bind(this), 500);
+				});
+				this.$buttons.remove();
+				if (!this.node.exists) {
+					setTimeout((() => {
+						this.parent.tree.remove(this.node);
+					}).bind(this), 500);
+				}
                 let upload;
                 if (upload = TreeviewUpload.queue.shift()) {
                     upload.start();
                 }
             }).bind(this),
         });
-    }
+	}
+	cancel() {
+		let i = TreeviewUpload.queue.indexOf(this);
+		if (i >= 0) {
+			TreeviewUpload.queue = TreeviewUpload.queue.slice(i, 1);
+		} else if (this.upload) {
+			this.upload.abort();
+		}
+		this.$progress.remove();
+		this.$buttons.remove();
+		if (!this.node.exists) {
+			this.parent.tree.remove(this.node);
+		}
+	}
 }
 
 async function getAllEntries(dataTransferItemList) {
