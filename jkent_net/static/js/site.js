@@ -1128,13 +1128,10 @@ class TreeviewUpload {
 				this.$progress.remove();
 				this.$buttons.remove();
 				this.node.exists = true;
-                let upload;
-                if (upload = TreeviewUpload.queue.shift()) {
-                    upload.start();
-                }
+                this.next();
             }).bind(this),
             error: ((e) => {
-                TreeviewUpload.active -= 1;
+				TreeviewUpload.active -= 1;
                 this.progressbar.animate(100, {
                     color: '#f00',
 				});
@@ -1144,10 +1141,7 @@ class TreeviewUpload {
 						this.parent.tree.remove(this.node);
 					}).bind(this), 500);
 				}
-                let upload;
-                if (upload = TreeviewUpload.queue.shift()) {
-                    upload.start();
-                }
+				this.next();
             }).bind(this),
         });
 	}
@@ -1162,6 +1156,12 @@ class TreeviewUpload {
 		this.$buttons.remove();
 		if (!this.node.exists) {
 			this.parent.tree.remove(this.node);
+		}
+	}
+	next() {
+		let upload;
+		if (upload = TreeviewUpload.queue.shift()) {
+			upload.start();
 		}
 	}
 }
