@@ -1131,7 +1131,7 @@ class TreeviewUpload {
                 this.next();
             }).bind(this),
             error: ((e) => {
-				TreeviewUpload.active -= 1;
+                TreeviewUpload.active -= 1;
                 this.progressbar.animate(100, {
                     color: '#f00',
 				});
