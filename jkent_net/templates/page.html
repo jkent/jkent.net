@@ -32,6 +32,57 @@ MobileDragDrop.polyfill({
     iterationInterval: 100,
 });
 
+async function ask(title, message) {
+    let state = false;
+    let canceled = true;
+    let defer = $.Deferred();
+    let $dialog = $('#ask_dialog');
+    $dialog.find('span:nth-of-type(2)').html(message);
+    $('#dontask_cb').prop('checked', false);
+    let dialog = $dialog.dialog({
+        resizable: false,
+        title: title,
+        height: "auto",
+        width: 400,
+        modal: true,
+        close: () => {
+            defer.resolve([state,
+                !canceled && $('#dontask_cb').is(':checked')]);
+        },
+        buttons: {
+            No: () => {
+                canceled = false;
+                state = false;
+                dialog.dialog('close');
+            },
+            Yes: () => {
+                canceled = false;
+                state = true;
+                dialog.dialog('close');
+            },
+        },
+    });
+    return defer.promise();
+}
+
+async function alert(title, message) {
+    let defer = $.Deferred();
+    let $dialog = $('#alert_dialog');
+    $dialog.find('span:nth-of-type(2)').html(message);
+    let dialog = $dialog.dialog({
+        resizable: false,
+        title: title,
+        height: "auto",
+        width: 400,
+        modal: true,
+        close: () => defer.resolve(),
+        buttons: {
+            OK: () => dialog.dialog('close'),
+        },
+    });
+    return defer.promise();
+}
+
 let treeview = new Treeview({
     draggable: true,
     droppable: true,
@@ -39,65 +90,14 @@ let treeview = new Treeview({
     file_drop: true,
 });
 $('#content').append(treeview.html);
-treeview.select_handler = (selection) => {
+/*treeview.select_handler = (selection) => {
     console.log('treeview', 'select', selection);
-}
+};
 treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
-};
+};*/
 treeview.drop_handler = (data, path) => {
     if (data.type == 'items') {
-        async function ask(title, message) {
-            let state = false;
-            let canceled = true;
-            let defer = $.Deferred();
-            let $dialog = $('#ask_dialog');
-            $dialog.find('span:nth-of-type(2)').html(message);
-            $('#dontask_cb').prop('checked', false);
-            let dialog = $dialog.dialog({
-                resizable: false,
-                title: title,
-                height: "auto",
-                width: 400,
-                modal: true,
-                close: () => {
-                    defer.resolve([state,
-                        !canceled && $('#dontask_cb').is(':checked')]);
-                },
-                buttons: {
-                    No: () => {
-                        canceled = false;
-                        state = false;
-                        dialog.dialog('close');
-                    },
-                    Yes: () => {
-                        canceled = false;
-                        state = true;
-                        dialog.dialog('close');
-                    },
-                },
-            });
-            return defer.promise();
-        }
-
-        async function alert(title, message) {
-            let defer = $.Deferred();
-            let $dialog = $('#alert_dialog');
-            $dialog.find('span:nth-of-type(2)').html(message);
-            let dialog = $dialog.dialog({
-                resizable: false,
-                title: title,
-                height: "auto",
-                width: 400,
-                modal: true,
-                close: () => defer.resolve(),
-                buttons: {
-                    OK: () => dialog.dialog('close'),
-                },
-            });
-            return defer.promise();
-        }
-
         async function upload_handler() {
             let entries = await getAllEntries(data.source_items);
             let merge, merge_dontask = false;
@@ -136,7 +136,6 @@ treeview.drop_handler = (data, path) => {
                     if (file.size <= MAX_UPLAOAD_SIZE) {
                         new TreeviewUpload(file, root, data.dest_node);
                     } else {
-                        console.log(file.name);
                         await alert('File too big', 'The file <b>'
                             + root + file.name + '</b> is too big and '
                             + 'will not be uploaded.');
@@ -146,32 +145,124 @@ treeview.drop_handler = (data, path) => {
         }
         upload_handler();
     } else if (data.type == 'local') {
-        let url = new URL(window.location);
-        let search = new URLSearchParams();
-        search.set('action', data.shift ? 'copy' : 'move');
-        url.search = search;
-        let fd = new FormData();
-        fd.append('dest', data.dest_node.path);
-        data.selected_parents.forEach(node => fd.append('paths', node.path));
-        $.post({
-            url: url,
-            data: fd,
-            processData: false,
-            contentType: false,
-            success: (json) => {
-                if (!data.shift) {
-                    data.source_node.$li.trigger('dragend');
-                }
-                for (let node of data.selected_parents) {
-                    [_, paths] = data.source_node.tree.list(node);
-                    paths.forEach(path =>
-                        data.dest_node.tree.insert(data.dest_node.path + path));
-                    if (!data.shift) {
-                        data.source_node.tree.remove(node);
+        let merge = true, merge_dontask = false;
+        let overwrite = true, overwrite_dontask = false;
+
+        async function collect_rules(src_nodes, dest_node, move) {
+            let found = false;
+            let rules = [];
+            let rmtree = move;
+
+            for (let src_node of src_nodes) {
+                found = false;
+                for (let child of dest_node.children) {
+                    if (src_node.name == child.name) {
+                        found = true;
+                        if (src_node.type == 'folder') {
+                            if (!merge_dontask) {
+                                [merge, merge_dontask] = await ask('Merge '
+                                    + 'folders?', 'The folder <b>' + child.path
+                                    + '</b> already exists. Do you wish to '
+                                    + 'merge?');
+                            }
+                            if (merge) {
+                                let [subrules, rmtree] =
+                                    await collect_rules(src_node.children,
+                                                        child, move);
+                                rules.push(...subrules);
+                            } else {
+                                rmtree = false;
+                            }
+                        } else if (src_node.type == 'file') {
+                            if (!overwrite_dontask) {
+                                [overwrite, overwrite_dontask] = await ask(
+                                    'Overwrite?', 'The ' + child.type + ' <b>'
+                                    + child.path + '</b> already exists. '
+                                    + 'Overwrite?');
+                            }
+                            if (overwrite) {
+                                rules.push({
+                                    'op': move ? 'mv' : 'cp',
+                                    'from': src_node.path,
+                                    'to': child.path,
+                                });
+                            } else {
+                                rmtree = false;
+                            }
+                        }
                     }
                 }
-            },
-        });
+                if (!found) {
+                    rules.push({
+                        'op': move ? 'mv' : 'cp',
+                        'from': src_node.path,
+                        'to': dest_node.path,
+                    });
+                }
+                if (src_node.type == 'folder' && rmtree) {
+                    rules.push({
+                        'op': 'rmtree',
+                        'path': src_node.path,
+                    });
+                }
+            }
+            return [rules, rmtree];
+        }
+
+        async function dnd_handler() {
+            let [rules] = await collect_rules(data.selected_parents,
+                                              data.dest_node, !data.shift);
+            let url = new URL(window.location);
+            let search = new URLSearchParams();
+            search.set('action', 'dnd');
+            url.search = search;
+            $.post({
+                url: url,
+                data: JSON.stringify({'rules': rules}),
+                contentType: 'application/json',
+                success: (json) => {
+                    if (!json.success) {
+                        return;
+                    }
+                    for (let rule of rules) {
+                        if (rule.op == 'cp' || rule.op == 'mv') {
+                            function copy(from_node, to_path) {
+                                let dest_node;
+                                if (from_node.type == 'folder') {
+                                    if (!to_path.endsWith('/')) {
+                                        to_path += '/';
+                                    }
+                                    data.dest_node.tree.insert(to_path);
+                                    for (let child of from_node.children.slice()) {
+                                        copy(child, to_path + child.name);
+                                    }
+                                } else {
+                                    let node = data.source_node.tree.find(to_path);
+                                    if (node && node.type == 'folder') {
+                                        to_path += from_node.name;
+                                    }
+                                    data.dest_node.tree.insert(to_path);
+                                    if (rule.op == 'mv') {
+                                        data.source_node.tree.remove(from_node);
+                                    }
+                                }
+                            }
+                            let from_node = data.source_node.tree.find(rule.from);
+                            let to_path = rule.to;
+                            if (from_node.type == 'folder') {
+                                to_path += from_node.name;
+                            }
+                            copy(from_node, to_path);
+                            data.dest_node.$ul.slideDown(200);
+                        }
+                        if (rule.op == 'rmtree') {
+                            data.source_node.tree.remove(rule.path);
+                        }
+                    }
+                },
+            });
+        }
+        dnd_handler();
     }
 };
 

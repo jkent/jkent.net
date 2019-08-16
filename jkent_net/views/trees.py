@@ -90,34 +90,40 @@ def tree_post(tree_id, tree_path=''):
 
     action = request.args.get('action')
     if action == 'upload':
-        dest = re.sub('^/|\.\./', '', request.form['dest'])
+        dest = re.sub('^/|\.\./|/$', '', request.form['dest'])
         file = request.files['file']
         filename = secure_filename(file.filename)
         path = os.path.join(tree.repo.path, tree.path, dest)
         os.makedirs(path, exist_ok=True)
         file.save(os.path.join(path, filename))
         return {'success': True}
-    elif action == 'copy' or action == 'move':
-        dest = re.sub('^/|\.\./', '', request.form['dest'])
-        for path in request.form.getlist('paths'):
-            path = re.sub('^/|\.\./', '', path)
-            src_path = os.path.join(tree.repo.path, tree.path, path)
-            dst_path = os.path.join(tree.repo.path, tree.path, dest)
-            if os.path.isfile(src_path):
-                shutil.copy(src_path, dst_path)
-                if action == 'move':
-                    os.remove(src_path)
-                continue
-            if path.endswith('/') or path == '':
-                dst_path = os.path.join(dst_path, os.path.basename(path[:-1]))
-                print('dst_path', dst_path)
-            for src_dir, _, files in os.walk(src_path):
-                dst_dir = src_dir.replace(src_path, dst_path)
-                if not os.path.exists(dst_dir):
-                    os.mkdir(dst_dir)
-                for file in files:
-                    shutil.copy(os.path.join(src_dir, file),
-                        os.path.join(dst_dir, file))
-                if action == 'move':
-                    shutil.rmtree(src_path)
+    elif action == 'dnd':
+        json = request.json
+        for rule in json['rules']:
+            if rule['op'] in ['cp', 'mv']:
+                from_ = re.sub('^/|\.\./|/$', '', rule['from'])
+                to = re.sub('^/|\.\./|/$', '', rule['to'])
+                src_path = os.path.join(tree.repo.path, tree.path, from_)
+                dst_path = os.path.join(tree.repo.path, tree.path, to)
+                if os.path.isfile(src_path):
+                    shutil.copy(src_path, dst_path)
+                    if rule['op'] == 'mv':
+                        os.remove(src_path)
+                    continue
+                dst_path = os.path.join(dst_path, os.path.basename(src_path))
+                for src_dir, _, files, in os.walk(src_path):
+                    dst_dir = src_dir.replace(src_path, dst_path)
+                    if not os.path.exists(dst_dir):
+                        os.mkdir(dst_dir)
+                    for file in files:
+                        src = os.path.join(src_dir, file)
+                        dst = os.path.join(dst_dir, file)
+                        shutil.copy(src, dst)
+                        if rule['op'] == 'mv':
+                            os.remove(src)
+            elif rule['op'] == 'rmtree':
+                path = re.sub('^/|\.\./|/$', '', rule['path'])
+                path = os.path.join(tree.repo.path, tree.path, path)
+                shutil.rmtree(path)
+
         return {'success': True}

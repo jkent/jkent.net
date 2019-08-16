@@ -804,10 +804,10 @@ class Treeview {
 		if (this.select_handler &&
 				JSON.stringify(this.selected_paths) !== JSON.stringify(paths)) {
 			this.select_handler(nodes);
-			this.selected_parents = parents;
-			this.selected_nodes = nodes;
-			this.selected_paths = paths;
 		}
+		this.selected_parents = parents;
+		this.selected_nodes = nodes;
+		this.selected_paths = paths;
 	}
 	_add_empty(parent) {
 		let node = {
@@ -1062,15 +1062,7 @@ class TreeviewUpload {
         this.root = root;
         this.parent = parent;
 		this.node = parent.tree.insert(this.root + file.name);
-		let node = this.node;
-		while (node) {
-			if (node.type == 'folder') {
-				if (!node.$ul.is(':visible')) {
-					node.$ul.slideDown(200);
-				}
-			}
-			node = node.parent;
-		}
+		this.parent.$ul.slideDown(200);
 
         if (this.node.$li.has('.progress').length) {
             return;
