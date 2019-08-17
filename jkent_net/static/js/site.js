@@ -610,13 +610,51 @@ class Treeview {
 		}).bind(this));
 		node.$li.on('click', ((e) => {
 			e.stopPropagation();
+			if (this.last_clicked == node) {
+				this.last_clicked = null;
+				if (e.originalEvent.detail == 1) {
+					let span = node.$li.find('>span:first-of-type');
+					span.prop('contenteditable', true);
+					span.attr('tabindex', '-1');
+					span.focus();
+					/* TODO: unbind */
+					span.on('keydown', ((e) => {
+						if (e.keyCode == 13) {
+							span.blur();
+						} else if (e.keyCode == 27) {
+							span.text(node.name);
+							span.blur();
+						}
+					}).bind(this));
+				}
+			} else {
+				this.last_clicked = node;
+			}
 			if (!e.ctrlKey) {
 				this.select(node, e.shiftKey, e.ctrlKey);
 				this._check_selection();
 			}
 		}).bind(this));
+		node.$li.on('focusout', ((e) => {
+			e.stopPropagation();
+			let span = node.$li.find('>span:first-of-type');
+			span.prop('contenteditable', false);
+			span.removeAttr('tabindex');
+			if (this.rename_handler) {
+				let name = span.text().trim();
+				if (name != node.name) {
+					this.rename_handler(node, span.text().trim());
+				}
+				span.text(node.name);
+			}
+			this.last_clicked = null;
+		}).bind(this));
 		node.$li.on('dblclick', ((e) => {
 			e.stopPropagation();
+			let span = node.$li.find('>span:first-of-type');
+			if (span.is(':focus')) {
+				return;
+			}
 			if (node.path == '' || node.type == 'folder') {
 				if (!this.options.can_collapse) {
 					return;
@@ -1049,6 +1087,18 @@ class Treeview {
 	exists(root) {
 		return this.find(root) !== null;
 	}
+	rename(node, name) {
+		/* NB: should we check for dupes here? */
+		let span = node.$li.find('>span:first-of-type');
+		span.prop('contenteditable', false);
+		span.removeAttr('tabindex');
+		if (name == null) {
+			span.text(node.name);
+		} else {
+			span.text(name);
+			node.name = name;
+		}
+	}
 }
 
 class TreeviewUpload {
@@ -1202,4 +1252,55 @@ async function getFilePromise(entry) {
     } catch (err) {
         console.log(err);
     }
+}
+
+async function ask(title, message) {
+    let state = false;
+    let canceled = true;
+    let defer = $.Deferred();
+    let $dialog = $('#ask_dialog');
+    $dialog.find('span:nth-of-type(2)').html(message);
+    $('#dontask_cb').prop('checked', false);
+    let dialog = $dialog.dialog({
+        resizable: false,
+        title: title,
+        height: "auto",
+        width: 400,
+        modal: true,
+        close: () => {
+            defer.resolve([state,
+                !canceled && $('#dontask_cb').is(':checked')]);
+        },
+        buttons: {
+            No: () => {
+                canceled = false;
+                state = false;
+                dialog.dialog('close');
+            },
+            Yes: () => {
+                canceled = false;
+                state = true;
+                dialog.dialog('close');
+            },
+        },
+    });
+    return defer.promise();
+}
+
+async function alert(title, message) {
+    let defer = $.Deferred();
+    let $dialog = $('#alert_dialog');
+    $dialog.find('span:nth-of-type(2)').html(message);
+    let dialog = $dialog.dialog({
+        resizable: false,
+        title: title,
+        height: "auto",
+        width: 400,
+        modal: true,
+        close: () => defer.resolve(),
+        buttons: {
+            OK: () => dialog.dialog('close'),
+        },
+    });
+    return defer.promise();
 }

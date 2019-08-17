@@ -32,57 +32,6 @@ MobileDragDrop.polyfill({
     iterationInterval: 100,
 });
 
-async function ask(title, message) {
-    let state = false;
-    let canceled = true;
-    let defer = $.Deferred();
-    let $dialog = $('#ask_dialog');
-    $dialog.find('span:nth-of-type(2)').html(message);
-    $('#dontask_cb').prop('checked', false);
-    let dialog = $dialog.dialog({
-        resizable: false,
-        title: title,
-        height: "auto",
-        width: 400,
-        modal: true,
-        close: () => {
-            defer.resolve([state,
-                !canceled && $('#dontask_cb').is(':checked')]);
-        },
-        buttons: {
-            No: () => {
-                canceled = false;
-                state = false;
-                dialog.dialog('close');
-            },
-            Yes: () => {
-                canceled = false;
-                state = true;
-                dialog.dialog('close');
-            },
-        },
-    });
-    return defer.promise();
-}
-
-async function alert(title, message) {
-    let defer = $.Deferred();
-    let $dialog = $('#alert_dialog');
-    $dialog.find('span:nth-of-type(2)').html(message);
-    let dialog = $dialog.dialog({
-        resizable: false,
-        title: title,
-        height: "auto",
-        width: 400,
-        modal: true,
-        close: () => defer.resolve(),
-        buttons: {
-            OK: () => dialog.dialog('close'),
-        },
-    });
-    return defer.promise();
-}
-
 let treeview = new Treeview({
     draggable: true,
     droppable: true,
@@ -264,6 +213,25 @@ treeview.drop_handler = (data, path) => {
         }
         dnd_handler();
     }
+};
+treeview.rename_handler = (node, name) => {
+    name = name.trim();
+    let url = new URL(window.location);
+    let search = new URLSearchParams();
+    search.set('action', 'rename');
+    url.search = search;
+    $.post({
+        url: url,
+        data: JSON.stringify({'path': node.path, 'name': name}),
+        contentType: 'application/json',
+        success: (json) => {
+            node.tree.rename(node, json.name);
+            /* rebuild tree */
+        },
+        error: () => {
+            node.tree.rename(node, null);
+        },
+    });
 };
 
 let url = new URL(window.location);

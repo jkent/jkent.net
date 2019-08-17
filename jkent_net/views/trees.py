@@ -101,8 +101,8 @@ def tree_post(tree_id, tree_path=''):
         json = request.json
         for rule in json['rules']:
             if rule['op'] in ['cp', 'mv']:
-                from_ = re.sub('^/|\.\./|/$', '', rule['from'])
-                to = re.sub('^/|\.\./|/$', '', rule['to'])
+                from_ = re.sub('^/|\.\./|/$', '', rule['from']).strip()
+                to = re.sub('^/|\.\./|/$', '', rule['to']).strip()
                 src_path = os.path.join(tree.repo.path, tree.path, from_)
                 dst_path = os.path.join(tree.repo.path, tree.path, to)
                 if os.path.isfile(src_path):
@@ -122,8 +122,18 @@ def tree_post(tree_id, tree_path=''):
                         if rule['op'] == 'mv':
                             os.remove(src)
             elif rule['op'] == 'rmtree':
-                path = re.sub('^/|\.\./|/$', '', rule['path'])
+                path = re.sub('^/|\.\./|/$', '', rule['path']).strip()
                 path = os.path.join(tree.repo.path, tree.path, path)
                 shutil.rmtree(path)
-
         return {'success': True}
+    elif action == 'rename':
+        json = request.json
+        path = re.sub('^/|\.\./|/$', '', json['path']).strip()
+        name = re.sub('\.\.|/', '', json['name']).strip()
+        src_path = os.path.join(tree.repo.path, tree.path, path)
+        dst_path = os.path.join(os.path.dirname(src_path), name)
+        if os.path.exists(dst_path):
+            return {'success': False}
+        os.rename(src_path, dst_path)
+        return {'success': True, 'name': name}
+

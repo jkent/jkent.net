@@ -218,6 +218,7 @@ form .buttons button {
 	text-align: initial;
 }
 
+/* TODO: move non-layout things to theme */
 .treeview .fa-ul {
 	margin: 0 0 0 0.8em;
 }
@@ -242,6 +243,11 @@ form .buttons button {
 	vertical-align: sub;
 	margin: 0 0.25em;
 }
+.treeview .selected > span:first-of-type:focus {
+	background-color: initial;
+	color: initial;
+}
+
 
 .rotating {
 	-webkit-animation: rotating 2s linear infinite;
