@@ -663,8 +663,7 @@ class Treeview {
 				if (node.path == '' && !this.options.can_collapse_root) {
 					return;
 				}
-				let visible = node.$ul.is(':visible');
-				if (visible) {
+				if (node.$ul.is(':visible')) {
 					node.$ul.slideUp(200);
 				} else {
 					node.$ul.slideDown(200);
@@ -1053,6 +1052,12 @@ class Treeview {
 			node.$li.addClass('selected');
 			this.last_selected = node;
 		}
+		do {
+			node = node.parent;
+			if (!node.$ul.is(':visible')) {
+				node.$ul.slideDown(0);
+			}
+		} while (node != this.root);
 	}
 	list(root) {
 		if (!root) {
@@ -1102,7 +1107,6 @@ class Treeview {
 		if (node.type == 'folder' && !name.endsWith('/')) {
 			name += '/';
 		}
-
 		function copy(tree, node, path) {
 			let new_node = tree.insert(path);
 			new_node.exists = true;
@@ -1122,7 +1126,6 @@ class Treeview {
 				}
 			}
 		}
-
 		copy(this, node, node.parent.path + name);
 		this.remove(node);
 	}
@@ -1291,7 +1294,7 @@ async function ask(title, message) {
     let dialog = $dialog.dialog({
         resizable: false,
         title: title,
-        height: "auto",
+        height: 'auto',
         width: 400,
         modal: true,
         close: () => {
@@ -1321,7 +1324,7 @@ async function alert(title, message) {
     let dialog = $dialog.dialog({
         resizable: false,
         title: title,
-        height: "auto",
+        height: 'auto',
         width: 400,
         modal: true,
         close: () => defer.resolve(),
@@ -1336,7 +1339,7 @@ class FileTreeview extends Treeview {
 	constructor(options) {
 		super(options);
 	}
-	load() {
+	load(complete) {
 		let url = new URL(window.location);
 		let search = new URLSearchParams();
 		search.set('action', 'list');
@@ -1346,6 +1349,9 @@ class FileTreeview extends Treeview {
 			for (let path of data.paths) {
 				let node = tree.insert(path);
 				node.exists = true;
+			}
+			if (complete) {
+				complete();
 			}
 		});
 	}

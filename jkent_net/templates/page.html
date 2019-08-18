@@ -45,7 +45,10 @@ $('#content').append(treeview.html);
 treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };*/
-treeview.load();
+treeview.load(() => {
+    treeview.select('folder_a/subfolder/file');
+});
+
 
 </script>
 {% endblock %}
