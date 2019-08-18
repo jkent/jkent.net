@@ -532,11 +532,11 @@ class Subtree {
 }
 
 $(() => {
-	window.addEventListener('dragover', (e) => {
+	window.addEventListener('dragover', e => {
 		e.preventDefault();
 		e.dataTransfer.dropEffect = 'none';
 	});
-	window.addEventListener('drop', (e) => {
+	window.addEventListener('drop', e => {
 		e.preventDefault();
 	});
 });
@@ -601,14 +601,14 @@ class Treeview {
 		if (this.options.draggable) {
 			node.$li.attr('draggable', true);
 		}
-		node.$li.on('mousedown', ((e) => {
+		node.$li.on('mousedown', (e => {
 			e.stopPropagation();
 			if (e.ctrlKey || !node.$li.is('.selected')) {
 				this.select(node, e.shiftKey, e.ctrlKey);
 				this._check_selection();
 			}
 		}).bind(this));
-		node.$li.on('click', ((e) => {
+		node.$li.on('click', (e => {
 			e.stopPropagation();
 			if (node == this.last_clicked && node != this.root) {
 				this.last_clicked = null;
@@ -617,7 +617,7 @@ class Treeview {
 					span.prop('contenteditable', true);
 					span.attr('tabindex', '-1');
 					span.focus();
-					span.on('keydown', ((e) => {
+					span.on('keydown', (e => {
 						if (e.keyCode == 13) {
 							span.blur();
 							span.unbind('keydown');
@@ -636,7 +636,7 @@ class Treeview {
 				this._check_selection();
 			}
 		}).bind(this));
-		node.$li.on('focusout', ((e) => {
+		node.$li.on('focusout', (e => {
 			e.stopPropagation();
 			let span = node.$li.find('>span:first-of-type');
 			span.prop('contenteditable', false);
@@ -650,7 +650,7 @@ class Treeview {
 			}
 			this.last_clicked = null;
 		}).bind(this));
-		node.$li.on('dblclick', ((e) => {
+		node.$li.on('dblclick', (e => {
 			e.stopPropagation();
 			let span = node.$li.find('>span:first-of-type');
 			if (span.is(':focus')) {
@@ -675,7 +675,7 @@ class Treeview {
 				}
 			}
 		}).bind(this));
-		node.$li.on('dragstart', ((e) => {
+		node.$li.on('dragstart', (e => {
 			e.stopPropagation();
 			Treeview.$drag_ghost = $('<div class="drag-ghost treeview">');
 			let $ul = $('<ul class="fa-ul">');
@@ -699,7 +699,7 @@ class Treeview {
 			e.originalEvent.dataTransfer.setData('text', node.path);
 			Treeview.drag_node = node;
 		}).bind(this));
-		node.$li.on('dragend', ((e) => {
+		node.$li.on('dragend', (e => {
 			e.stopPropagation();
 			if (Treeview.$drag_ghost) {
 				Treeview.$drag_ghost.remove();
@@ -707,7 +707,7 @@ class Treeview {
 			}
 			Treeview.drag_node = null;
 		}).bind(this));
-		node.$li.on('dragenter dragover', ((e) => {
+		node.$li.on('dragenter dragover', (e => {
 			if (!this.options.droppable) {
 				return;
 			}
@@ -753,7 +753,7 @@ class Treeview {
 				}
 			}
 		}).bind(this));
-		node.$li.on('dragleave', ((e) => {
+		node.$li.on('dragleave', (e => {
 			e.stopPropagation();
 			e.preventDefault();
 			if (this.dragover_timeout) {
@@ -765,7 +765,7 @@ class Treeview {
 				$icon.removeClass('fa-folder-open').addClass('fa-folder');
 			}
 		}).bind(this));
-		node.$li.on('drop', ((e) => {
+		node.$li.on('drop', (e => {
 			if (!this.options.droppable) {
 				return;
 			}
@@ -1078,13 +1078,6 @@ class Treeview {
 		_list([root]);
 		return [nodes, paths];
 	}
-	clone(options) {
-		options = $.extend({}, this.options, options);
-		let treeview = new Treeview(options);
-		let [_, paths] = this.list();
-		treeview.insert(paths);
-		return treeview;
-	}
 	exists(root) {
 		return this.find(root) !== null;
 	}
@@ -1112,6 +1105,7 @@ class Treeview {
 
 		function copy(tree, node, path) {
 			let new_node = tree.insert(path);
+			new_node.exists = true;
 
 			if (node.type == 'folder') {
 				if (node.$ul.is(':visible')) {
@@ -1164,7 +1158,7 @@ class TreeviewUpload {
             strokeWidth: 16,
             trailWidth: 16,
         });
-        this.$progress.addClass('rotating');
+        this.$progress.addClass('queued');
         this.progressbar.set(0.25);
 
         if (TreeviewUpload.active < 2) {
@@ -1175,7 +1169,7 @@ class TreeviewUpload {
     }
     start() {
         TreeviewUpload.active += 1;
-        this.$progress.removeClass('rotating');
+        this.$progress.removeClass('queued');
         this.progressbar.set(0);
         let url = new URL(window.location);
         let search = new URLSearchParams();
@@ -1189,7 +1183,7 @@ class TreeviewUpload {
             data: fd,
             xhr: (() => {
                 let xhr = $.ajaxSettings.xhr();
-                xhr.upload.onprogress = (e) => {
+                xhr.upload.onprogress = e => {
                     let percent = e.loaded / e.total;
                     this.progressbar.animate(percent);
                 };
@@ -1198,14 +1192,14 @@ class TreeviewUpload {
             cache: false,
             contentType: false,
             processData: false,
-            success: ((json) => {
+            success: (json => {
                 TreeviewUpload.active -= 1;
 				this.$progress.remove();
 				this.$buttons.remove();
 				this.node.exists = true;
                 this.next();
             }).bind(this),
-            error: ((e) => {
+            error: (e => {
                 TreeviewUpload.active -= 1;
                 this.progressbar.animate(100, {
                     color: '#f00',
@@ -1336,4 +1330,208 @@ async function alert(title, message) {
         },
     });
     return defer.promise();
+}
+
+class FileTreeview extends Treeview {
+	constructor(options) {
+		super(options);
+	}
+	load() {
+		let url = new URL(window.location);
+		let search = new URLSearchParams();
+		search.set('action', 'list');
+		url.search = search;
+		let tree = this;
+		$.get(url, data => {
+			for (let path of data.paths) {
+				let node = tree.insert(path);
+				node.exists = true;
+			}
+		});
+	}
+	drop_handler(data) {
+		if (data.type == 'items') {
+			async function upload_handler() {
+				let entries = await getAllEntries(data.source_items);
+				let merge, merge_dontask = false;
+				let overwrite, overwrite_dontask = false;
+
+				for (let i = 0; i < entries.length; i++) {
+					let entry = entries[i];
+					let path = data.dest_node.path + entry.fullPath.slice(1);
+					if (entry.isDirectory) {
+						path += '/';
+					}
+					let exists = data.dest_node.tree.exists(path);
+					if (exists && entry.isDirectory) {
+						if (!merge_dontask) {
+							[merge, merge_dontask] = await ask('Merge folders?',
+								'The folder <b>' + path + '</b> already exists. '
+								+ 'Do you wish to merge?');
+						}
+						if (!merge) {
+							entries = entries.filter(e =>
+								!e.fullPath.startsWith(entry.fullPath));
+						}
+					} else if (entry.isFile) {
+						if (exists) {
+							if (!overwrite_dontask) {
+								[overwrite, overwrite_dontask] = await ask(
+									'Overwrite?', 'The file <b>' + path + '</b> '
+									+ 'already exists. Overwrite?');
+							}
+							if (!overwrite) {
+								continue;
+							}
+						}
+						let root = path.match(/(.+\/)?[^\/]*/)[1] || '';
+						let file = await getFilePromise(entry);
+						if (file.size <= MAX_UPLAOAD_SIZE) {
+							new TreeviewUpload(file, root, data.dest_node);
+						} else {
+							await alert('File too big', 'The file <b>'
+								+ root + file.name + '</b> is too big and '
+								+ 'will not be uploaded.');
+						}
+					}
+				}
+			}
+			upload_handler();
+		} else if (data.type == 'local') {
+			let merge = true, merge_dontask = false;
+			let overwrite = true, overwrite_dontask = false;
+
+			async function collect_rules(src_nodes, dest_node, move) {
+				let found = false;
+				let rules = [];
+				let rmtree = move;
+
+				for (let src_node of src_nodes) {
+					found = false;
+					for (let child of dest_node.children) {
+						if (src_node.name == child.name) {
+							found = true;
+							if (src_node.type == 'folder') {
+								if (!merge_dontask) {
+									[merge, merge_dontask] = await ask('Merge '
+										+ 'folders?', 'The folder <b>' + child.path
+										+ '</b> already exists. Do you wish to '
+										+ 'merge?');
+								}
+								if (merge) {
+									let [subrules, rmtree] =
+										await collect_rules(src_node.children,
+															child, move);
+									rules.push(...subrules);
+								} else {
+									rmtree = false;
+								}
+							} else if (src_node.type == 'file') {
+								if (!overwrite_dontask) {
+									[overwrite, overwrite_dontask] = await ask(
+										'Overwrite?', 'The ' + child.type + ' <b>'
+										+ child.path + '</b> already exists. '
+										+ 'Overwrite?');
+								}
+								if (overwrite) {
+									rules.push({
+										'op': move ? 'mv' : 'cp',
+										'from': src_node.path,
+										'to': child.path,
+									});
+								} else {
+									rmtree = false;
+								}
+							}
+						}
+					}
+					if (!found) {
+						rules.push({
+							'op': move ? 'mv' : 'cp',
+							'from': src_node.path,
+							'to': dest_node.path,
+						});
+					}
+					if (src_node.type == 'folder' && rmtree) {
+						rules.push({
+							'op': 'rmtree',
+							'path': src_node.path,
+						});
+					}
+				}
+				return [rules, rmtree];
+			}
+
+			async function dnd_handler() {
+				let [rules] = await collect_rules(data.selected_parents,
+												  data.dest_node, !data.shift);
+				let url = new URL(window.location);
+				let search = new URLSearchParams();
+				search.set('action', 'dnd');
+				url.search = search;
+				$.post({
+					url: url,
+					data: JSON.stringify({'rules': rules}),
+					contentType: 'application/json',
+					success: json => {
+						if (!json.success) {
+							return;
+						}
+						for (let rule of rules) {
+							if (rule.op == 'cp' || rule.op == 'mv') {
+								function copy(from_node, to_path) {
+									let dest_node;
+									if (from_node.type == 'folder') {
+										if (!to_path.endsWith('/')) {
+											to_path += '/';
+										}
+										let node = data.dest_node.tree.insert(to_path);
+										node.exists = true;
+										for (let child of from_node.children.slice()) {
+											copy(child, to_path + child.name);
+										}
+									} else {
+										let node = data.source_node.tree.find(to_path);
+										if (node && node.type == 'folder') {
+											to_path += from_node.name;
+										}
+										node = data.dest_node.tree.insert(to_path);
+										node.exists = true;
+										if (rule.op == 'mv') {
+											data.source_node.tree.remove(from_node);
+										}
+									}
+								}
+								let from_node = data.source_node.tree.find(rule.from);
+								let to_path = rule.to;
+								if (from_node.type == 'folder') {
+									to_path += from_node.name;
+								}
+								copy(from_node, to_path);
+								data.dest_node.$ul.slideDown(200);
+							}
+							if (rule.op == 'rmtree') {
+								data.source_node.tree.remove(rule.path);
+							}
+						}
+					},
+				});
+			}
+			dnd_handler();
+		}
+	}
+	rename_handler(node, name) {
+		let url = new URL(window.location);
+		let search = new URLSearchParams();
+		search.set('action', 'rename');
+		url.search = search;
+		$.post({
+			url: url,
+			data: JSON.stringify({'path': node.path, 'name': name}),
+			contentType: 'application/json',
+			success: json => {
+				node.tree.rename(node, json.name);
+			},
+		});
+	}
 }
