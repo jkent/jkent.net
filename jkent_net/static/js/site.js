@@ -610,20 +610,21 @@ class Treeview {
 		}).bind(this));
 		node.$li.on('click', ((e) => {
 			e.stopPropagation();
-			if (this.last_clicked == node) {
+			if (node == this.last_clicked && node != this.root) {
 				this.last_clicked = null;
 				if (e.originalEvent.detail == 1) {
 					let span = node.$li.find('>span:first-of-type');
 					span.prop('contenteditable', true);
 					span.attr('tabindex', '-1');
 					span.focus();
-					/* TODO: unbind */
 					span.on('keydown', ((e) => {
 						if (e.keyCode == 13) {
 							span.blur();
+							span.unbind('keydown');
 						} else if (e.keyCode == 27) {
 							span.text(node.name);
 							span.blur();
+							span.unbind('keydown');
 						}
 					}).bind(this));
 				}
@@ -1088,16 +1089,48 @@ class Treeview {
 		return this.find(root) !== null;
 	}
 	rename(node, name) {
-		/* NB: should we check for dupes here? */
-		let span = node.$li.find('>span:first-of-type');
-		span.prop('contenteditable', false);
-		span.removeAttr('tabindex');
-		if (name == null) {
-			span.text(node.name);
-		} else {
-			span.text(name);
-			node.name = name;
+		if (!name) {
+			return;
 		}
+		let found = false;
+		for (let sibling of node.parent.children) {
+			let sibling_name = sibling.name;
+			if (sibling_name.endsWith('/')) {
+				sibling_name = sibling_name.slice(0, -1);
+			}
+			if (sibling_name == name) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			return node.name;
+		}
+		if (node.type == 'folder' && !name.endsWith('/')) {
+			name += '/';
+		}
+
+		function copy(tree, node, path) {
+			let new_node = tree.insert(path);
+
+			if (node.type == 'folder') {
+				if (node.$ul.is(':visible')) {
+					new_node.$ul.slideDown(0);
+				} else {
+					new_node.$ul.slideUp(0)
+				}
+				for (let child of node.children) {
+					let new_path = path + '/' + child.name;
+					if (child.type == 'folder') {
+						new_path += '/';
+					}
+					copy(tree, child, new_path);
+				}
+			}
+		}
+
+		copy(this, node, node.parent.path + name);
+		this.remove(node);
 	}
 }
 

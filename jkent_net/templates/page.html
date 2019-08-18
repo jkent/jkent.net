@@ -215,7 +215,6 @@ treeview.drop_handler = (data, path) => {
     }
 };
 treeview.rename_handler = (node, name) => {
-    name = name.trim();
     let url = new URL(window.location);
     let search = new URLSearchParams();
     search.set('action', 'rename');
@@ -226,10 +225,6 @@ treeview.rename_handler = (node, name) => {
         contentType: 'application/json',
         success: (json) => {
             node.tree.rename(node, json.name);
-            /* rebuild tree */
-        },
-        error: () => {
-            node.tree.rename(node, null);
         },
     });
 };
