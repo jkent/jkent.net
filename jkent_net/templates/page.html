@@ -38,17 +38,24 @@ let treeview = new FileTreeview({
     root_folder: 'Root',
     file_drop: true,
 });
+treeview.buttons = $('<div class="treeview-buttons">');
+treeview.buttons.append('<span class="new-folder disabled"><i class="fas fa-folder-plus"></i> New Folder</span>')
+$('#content').append(treeview.buttons);
 $('#content').append(treeview.html);
-/*treeview.select_handler = (selection) => {
-    console.log('treeview', 'select', selection);
+treeview.select_handler = (selection) => {
+    let new_folder_button = treeview.buttons.find('>.new-folder');
+    if (selection.length == 1 && selection[0].type == 'folder') {
+        new_folder_button.removeClass('disabled');
+    } else {
+        new_folder_button.addClass('disabled');
+    }
 };
-treeview.dblclick_handler = (path, shift) => {
+/*treeview.dblclick_handler = (path, shift) => {
     console.log('treeview', 'dblclick', path, shift);
 };*/
 treeview.load(() => {
-    treeview.select('folder_a/subfolder/file');
+    treeview.select('folder_a/subfolder/');
 });
-
 
 </script>
 {% endblock %}

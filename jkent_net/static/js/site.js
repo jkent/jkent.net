@@ -605,7 +605,6 @@ class Treeview {
 			e.stopPropagation();
 			if (e.ctrlKey || !node.$li.is('.selected')) {
 				this.select(node, e.shiftKey, e.ctrlKey);
-				this._check_selection();
 			}
 		}).bind(this));
 		node.$li.on('click', (e => {
@@ -633,7 +632,6 @@ class Treeview {
 			}
 			if (!e.ctrlKey) {
 				this.select(node, e.shiftKey, e.ctrlKey);
-				this._check_selection();
 			}
 		}).bind(this));
 		node.$li.on('focusout', (e => {
@@ -1028,6 +1026,7 @@ class Treeview {
 			if (!this.last_selected) {
 				node.$li.addclass('selected');
 				this.last_selected = node;
+				this._check_selection();
 				return;
 			}
 			let [nodes] = this.list();
@@ -1054,10 +1053,14 @@ class Treeview {
 		}
 		do {
 			node = node.parent;
+			if (!node) {
+				break;
+			}
 			if (!node.$ul.is(':visible')) {
 				node.$ul.slideDown(0);
 			}
 		} while (node != this.root);
+		this._check_selection();
 	}
 	list(root) {
 		if (!root) {
