@@ -89,7 +89,6 @@ p a{
 	}
 	#header .menu ul ul li{
 		display: block;
-		padding: 0.25em;
 	}
 	#header .menu ul li:hover ul{
 		display: block;
@@ -216,6 +215,10 @@ form .buttons button {
 }
 #content .subtree .rendered {
 	text-align: initial;
+}
+#content .rendered.text {
+	font-family: monospace;
+	white-space: pre;
 }
 .treeview {
 	padding-left: 0.8em;

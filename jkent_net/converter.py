@@ -1,6 +1,11 @@
-from html import escape
 from io import BytesIO
 from markdown import markdownFromFile
+
+def escape(s):
+    s = s.replace(b'&', b'&amp;')
+    s = s.replace(b'<', b'&lt;')
+    s = s.replace(b'>', b'&gt;')
+    return s
 
 def convert_to_html(file, mimetype):
     out = BytesIO()

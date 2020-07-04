@@ -1,5 +1,5 @@
 from .models import User, db
-from .tree import Tree
+from .folder import Folder
 from . import user_datastore
 import click
 from flask import current_app
@@ -61,11 +61,11 @@ def remove_role_command(email, name):
     user_datastore.remove_role_from_user(email, name)
     db.session.commit()
 
-@click.command('create-tree')
+@click.command('create-folder')
 @with_appcontext
 def create_tree_command():
-    """Create a tree."""
-    tree = Tree.create(current_app.repo)
+    """Create a folder."""
+    tree = Folder.create(current_app.repo)
 
 def init_app(app):
     app.cli.add_command(init_db_command)

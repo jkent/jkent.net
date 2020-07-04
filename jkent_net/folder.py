@@ -6,32 +6,32 @@ import string
 import yaml
 
 
-class Tree:
+class Folder:
     @classmethod
     def create(cls, repo):
         while True:
-            tree_id = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-            if not repo.exists(os.path.join('trees', tree_id, '.metadata.yml')):
+            folder_id = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+            if not repo.exists(os.path.join('folders', folder_id, '.metadata.yml')):
                 break
 
-        os.makedirs(os.path.join(repo.path, 'trees', tree_id), exist_ok=True)
+        os.makedirs(os.path.join(repo.path, 'folders', folder_id), exist_ok=True)
         metadata = {'viewers': [], 'editors': []}
-        with open(os.path.join(repo.path, 'trees', tree_id, '.metadata.yml'), 'w') as f:
+        with open(os.path.join(repo.path, 'folders', folder_id, '.metadata.yml'), 'w') as f:
             yaml.dump(metadata, f)
 
-        return cls(repo, tree_id)
+        return cls(repo, folder_id)
 
-    def __init__(self, repo, tree_id, version=None):
+    def __init__(self, repo, folder_id, version=None):
         self._repo = repo
-        self._tree_id = tree_id
+        self._folder_id = folder_id
         self._version = version
-        with open(os.path.join(repo.path, 'trees', tree_id, '.metadata.yml'), 'r') as f:
+        with open(os.path.join(repo.path, 'folders', folder_id, '.metadata.yml'), 'r') as f:
             self._metadata = yaml.load(f, Loader=yaml.SafeLoader)
 
     def _save_metadata(self):
         if self._version != None:
             raise Exception
-        with open(os.path.join(repo.path, 'trees', tree_id, '.metadata.yml'), 'w') as f:
+        with open(os.path.join(repo.path, 'folders', folder_id, '.metadata.yml'), 'w') as f:
             yaml.dump(self._metadata, f)
 
     @property
@@ -40,7 +40,7 @@ class Tree:
 
     @property
     def id(self):
-        return self._tree_id
+        return self._folder_id
 
     @property
     def version(self):
@@ -52,7 +52,7 @@ class Tree:
 
     @property
     def path(self):
-        return os.path.join('trees', self.id)
+        return os.path.join('folders', self.id)
 
     @property
     def viewers(self):

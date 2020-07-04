@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block main %}
+{% include 'actionbar.html' %}
+{%- if page.mime.startswith('image/') %}
+<a href="{{ request.path|urlencode }}?action=raw"><img src="{{ request.path|urlencode }}?action=raw" width="100%" /></a>
+{%- endif %}
+{% endblock %}

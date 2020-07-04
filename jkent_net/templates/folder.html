@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block main %}
+
+{% include 'actionbar.html' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='libs/mobile-drag-drop/release/default.css') }}">
+<script src="{{ url_for('static', filename='libs/mobile-drag-drop/release/index.min.js') }}"></script>
+<script src="{{ url_for('static', filename='libs/progressbar.js/dist/progressbar.min.js') }}"></script>
+
+<div id="ask_dialog" style="display: none;">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
+        <span></span>
+    </p>
+    <div>
+        <input type="checkbox" id="dontask_cb">
+        <label for="dontask_cb">Don't ask again</label>
+    </div>
+</div>
+
+<div id="alert_dialog" style="display: none;">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float: left; margin: 12px 12px 20px 0;"></span>
+        <span></span>
+    </p>
+</div>
+
+<script>
+let MAX_UPLAOAD_SIZE = {{ config.MAX_UPLOAD_SIZE|tojson }};
+
+MobileDragDrop.polyfill({
+    iterationInterval: 100,
+});
+
+let treeview = new FileTreeview({
+    draggable: true,
+    droppable: true,
+    root_folder: 'Root',
+    file_drop: true,
+});
+treeview.buttons = $('<div class="treeview-buttons">');
+treeview.buttons.append('<span class="new-folder disabled"><i class="fas fa-folder-plus"></i> New Folder</span>')
+$('#content').append(treeview.buttons);
+$('#content').append(treeview.html);
+treeview.select_handler = (selection) => {
+    let new_folder_button = treeview.buttons.find('>.new-folder');
+    if (selection.length == 1 && selection[0].type == 'folder') {
+        new_folder_button.removeClass('disabled');
+    } else {
+        new_folder_button.addClass('disabled');
+    }
+};
+treeview.dblclick_handler = (path, shift) => {
+    window.location.href = '{{ page.base|urlencode }}/' + path;
+};
+treeview.load(() => {
+    treeview.select('{{ folder.path }}');
+});
+</script>
+{% endblock %}

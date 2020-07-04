@@ -6,6 +6,7 @@ verify_ssl = true
 [packages]
 bcrypt = "*"
 diff-match-patch = "*"
+email-validator = "*"
 flask = "*"
 flask-dance = "*"
 flask-mail = "*"

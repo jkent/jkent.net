@@ -956,7 +956,7 @@ class Treeview {
 		return node;
 	}
 	find(path) {
-		if (path == '') {
+		if (path == '' || path == '/') {
 			return this.root;
 		}
 		let parts = path.match(/[^\/]+\/?/g);
@@ -1144,7 +1144,7 @@ class TreeviewUpload {
         this.file = file;
         this.root = root;
         this.parent = parent;
-		this.node = parent.tree.insert(this.root + file.name);
+		this.node = parent.tree.insert(this.root + file.name.replace(/ /g, '_'));
 		this.parent.$ul.slideDown(200);
 
         if (this.node.$li.has('.progress').length) {
@@ -1199,12 +1199,16 @@ class TreeviewUpload {
             contentType: false,
             processData: false,
             success: (json => {
-                TreeviewUpload.active -= 1;
+				TreeviewUpload.active -= 1;
 				this.$progress.remove();
 				this.$buttons.remove();
 				this.node.exists = true;
+				if (this.node.name != json.name) {
+					this.parent.tree.remove(this.node);
+					this.parent.tree.insert(this.root + json.name);
+				}
                 this.next();
-            }).bind(this),
+			}).bind(this),
             error: (e => {
                 TreeviewUpload.active -= 1;
                 this.progressbar.animate(100, {
@@ -1368,6 +1372,7 @@ class FileTreeview extends Treeview {
 				for (let i = 0; i < entries.length; i++) {
 					let entry = entries[i];
 					let path = data.dest_node.path + entry.fullPath.slice(1);
+					path = path.replace(/ /g,'_');
 					if (entry.isDirectory) {
 						path += '/';
 					}
@@ -1541,6 +1546,21 @@ class FileTreeview extends Treeview {
 			success: json => {
 				node.tree.rename(node, json.name);
 			},
+		});
+	}
+}
+
+class ActionBar {
+	constructor(options) {
+		this.options = options;
+
+		this.browse_btn = $('#actionbar a.browse');
+		this.browse_btn.toggle(options.type == 'folder' && options.action != 'browse');
+		this.browse_btn.on('click', () => {
+			var params = new URLSearchParams(window.location.search);
+			params.set('action', 'browse');
+			window.location.search = params;
+			return false;
 		});
 	}
 }

@@ -3,30 +3,15 @@
 <!-- unused -->
 </span>
 <span style="float: right;">
-{%- if mode == 'render' or mode == 'raw' %}
-{%- if current_user.any_role('admin', 'editor') %}
-{%- if page.subtree.diff(None, None, version) %}
- <a href="#" title="Restore" class="restore"><i class="fas fa-history"></i></a>
-{%- endif %}
-{%- if page.subtree.diff(None, None, 'HEAD') %}
-{%- if not version %}
- <a href="#" title="Commit" class="commit"><i class="fas fa-save"></i></a>
-{%- endif %}
-{%- if page.subtree.exists(None, 'HEAD') %}
- <a href="#" title="{% if version == None %}View live{% else %}View draft{% endif %}" class="draft{% if version == None %} highlight{% endif %}"><i class="fas fa-drafting-compass"></i></a>
-{%- endif %}
-{%- endif %}
-{%- endif %}
- <a href="#" title="View source" class="raw{% if mode == 'raw' %} highlight{% endif %}"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
-{%- if current_user.any_role('admin', 'editor') and not version %}
- <a href="#" title="Edit" class="edit"><i class="fas fa-edit"></i></a>
-{%- endif %}
-{%- elif mode == 'edit' %}
- <a href="#" title="Commit" class="commit{% if not page.subtree.diff(None, None, 'HEAD') %} hidden{% endif %}"><i class="fas fa-save"></i></a>
- <a href="#" title="View source" class="raw"><i class="{% if mimetype == 'text/markdown' %}fab fa-markdown{% else %}fas fa-file-code{% endif %}"></i></a>
- <a href="#" title="Edit" class="edit highlight"><i class="fas fa-edit"></i></a>
-{%- endif %}
-<a href="#" title="Browse"><i class="fas fa-folder"></i></a>
+ <a href="#" title="Browse" class="browse"><i class="fas fa-folder"></i></a>
 </span>
 <span style="float: right" class="input"></span>
 </div>
+
+<script>
+let actionbar = new ActionBar({
+    type: '{{ page.type }}',
+    action: '{{ page.action }}',
+    version: '{{ page.version }}',
+});
+</script>

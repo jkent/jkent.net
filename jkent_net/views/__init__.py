@@ -2,7 +2,7 @@ from .admin import *
 from .login_facebook import *
 from .login_github import *
 from .login_google import *
-from .trees import *
+from .folders import *
 from .users import *
 from flask import render_template, session
 from flask_login import user_logged_in, user_logged_out
@@ -18,7 +18,7 @@ def init_app(app):
     app.register_blueprint(login_facebook.bp, url_prefix='/login')
     app.register_blueprint(login_github.bp, url_prefix='/login')
     app.register_blueprint(login_google.bp, url_prefix='/login')
-    app.register_blueprint(trees.bp)
+    app.register_blueprint(folders.bp)
     app.register_blueprint(users.bp)
 
     @app.route('/')
